@@ -1077,29 +1077,31 @@ void readPaddleValue() {
   int paddleR = digitalRead(pinPaddleR);
 
 #ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
-  /*
-   * automatic change between keyStraight and keySuper
-   */
-  if (keyerType == keySuper) {
-    if (paddleL == HIGH && paddleR == LOW) {
-      if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
-        keyerType = keyStraight;
-        changed_to_straight = 1;
-        count_straight_or_paddle = 0;
+  if (autoKeyerType) {
+    /*
+     * automatic change between keyStraight and keySuper
+     */
+    if (keyerType == keySuper) {
+      if (paddleL == HIGH && paddleR == LOW) {
+	if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
+	  keyerType = keyStraight;
+	  changed_to_straight = 1;
+	  count_straight_or_paddle = 0;
+	}
+      } else {
+	count_straight_or_paddle = 0;
       }
-    } else {
-      count_straight_or_paddle = 0;
     }
-  }
-  if (keyerType == keyStraight) {
-    if (changed_to_straight == 1 && paddleL == HIGH && paddleR == HIGH) {
-      if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
-        keyerType = keySuper;
-        changed_to_straight = 0;
-        count_straight_or_paddle = 0;
+    if (keyerType == keyStraight) {
+      if (changed_to_straight == 1 && paddleL == HIGH && paddleR == HIGH) {
+	if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
+	  keyerType = keySuper;
+	  changed_to_straight = 0;
+	  count_straight_or_paddle = 0;
+	}
+      } else {
+	count_straight_or_paddle = 0;
       }
-    } else {
-      count_straight_or_paddle = 0;
     }
   }
 #endif /* JG1WYW */
