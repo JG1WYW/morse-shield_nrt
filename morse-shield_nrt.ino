@@ -681,19 +681,6 @@ void goertzel() {
     if (filteredstate == HIGH) { /* key pushed */
       starttimehigh = millis();
       lowduration = (millis() - startttimelow);
-#ifdef OPT_BETTER_DECODE
-      if ((lowduration * 2) <= lowtimesavg) {
-        lowtimesavg = lowduration;  // if speed increased fast ..
-      }
-      if (lowduration < (2 * lowtimesavg) && lowtimesavg < (2 * lowduration)) {
-        lowtimesavg = (lowduration + lowtimesavg + lowtimesavg) / 3;
-      }
-#if 1
-      if (lowduration > (5 * lowtimesavg)) {
-        lowtimesavg = 5 * lowtimesavg;  // if speed decreased fast ..
-      }
-#endif
-#endif
     }
 
     if (filteredstate == LOW) { /* key released */
