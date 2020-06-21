@@ -56,9 +56,11 @@ int runner_mode = 0; // Runner mode instead of just callsigns
 int runner = 0;
 int runner_miss = 0;
 int runner_accel = 0;
-int invader_beep = 0;
-#define INVADER_BEEP    1
-#define INVADER_ERRBEEP 2
+int runner_beep = 0;
+#define RUNNER_HIT      1
+#define RUNNER_MISS     2
+#define INVADER_BEEP    3
+#define INVADER_ERRBEEP 4
 #endif
 
 #ifdef OPT_OFF_DELAY /* JG1WYW */
@@ -866,6 +868,22 @@ void errBeep() {
   tone(pinBz, 220, 20);
 }
 
+#ifdef OPT_RUNNER
+void tone_hit()
+{
+  tone(pinBz, 698, 100); // F4
+  delay(100);
+  tone(pinBz, 1397, 200); // F5
+}
+
+void tone_miss()
+{
+  tone(pinBz, 220, 100); // A2
+  delay(100);
+  tone(pinBz, 110, 200); // A1
+}
+#endif
+
 #ifdef OPT_AVOID_CHATTERING /* JG1WYW */
 int paddleL_stable = HIGH;
 int paddleR_stable = HIGH;
@@ -1179,14 +1197,22 @@ void readPaddleValue() {
   /*
    * to avoid conflict among tone()
    */
-  if (durationMark == 0) {
-    if (invader_beep == INVADER_BEEP) {
-      invader_beep = 0;
+  if (runner_beep != 0 && durationMark == 0) {
+    switch (runner_beep) {
+    case RUNNER_HIT:
+      tone_hit();
+      break;
+    case RUNNER_MISS:
+      tone_miss();
+      break;
+    case INVADER_BEEP:
       beep();
-    } else if (invader_beep == INVADER_ERRBEEP) {
-      invader_beep = 0;
+      break;
+    case INVADER_ERRBEEP:
       errBeep();
+      break;
     }
+    runner_beep = 0;
   }
 #endif
 }
@@ -1474,22 +1500,6 @@ void trainingMode(int pressedSw) {
   }
 }
 
-#ifdef OPT_RUNNER
-void tone_hit()
-{
-  tone(pinBz, 698, 100); // F4
-  delay(100);
-  tone(pinBz, 1397, 200); // F5
-}
-
-void tone_miss()
-{
-  tone(pinBz, 220, 100); // A2
-  delay(100);
-  tone(pinBz, 110, 200); // A1
-}
-#endif
-
 // translate cw code to ascii //
 void decode() {
   int i, j, k;
@@ -1541,6 +1551,7 @@ void decode() {
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
                   tone_hit();
+		  //runner_beep = RUNNER_HIT;
 		  if (runner_miss == 0) {
 		    runner_accel++; // no miss becomes 5% faster
 		  } else {
@@ -1555,7 +1566,8 @@ void decode() {
                   trainingMode(pinSw3);
 		}
 	      } else {
-	        tone_miss();
+	        //tone_miss();
+		runner_beep = RUNNER_MISS;
 		runner_miss++;
 		runner_ptr = 0;
 		printascii(SPACE);
@@ -1574,7 +1586,7 @@ void decode() {
                 lcd.write(SPACE);
 #ifdef OPT_RUNNER
 		if (runner_mode) {
-		  invader_beep = INVADER_BEEP;
+		  runner_beep = INVADER_BEEP;
 		}
 #endif
                 for (k = j; k > 1; k--) {
@@ -1589,7 +1601,7 @@ void decode() {
             if (j == colums) {
 	      combo = 0; // wrong
 	      if (runner_mode)
-                invader_beep = INVADER_ERRBEEP;
+                runner_beep = INVADER_ERRBEEP;
 	    }
 #else
             if (j == colums) combo = 0; // wrong
@@ -1600,10 +1612,11 @@ void decode() {
       }
 #ifdef OPT_RUNNER
       if (restInvader >=0 && runner_mode && i == sizeof(CharAbc) / sizeof(unsigned char)) {
-        invader_beep = INVADER_ERRBEEP;
+        runner_beep = INVADER_ERRBEEP;
       }
       if (runner == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
-        tone_miss();
+        //tone_miss();
+	runner_beep = RUNNER_MISS;
 	runner_ptr = 0;
 	printascii('_');
       }
