@@ -1815,6 +1815,9 @@ void decode() {
                 gamePts += (1 + combo);
                 if (combo < 4) combo++;
                 lcd.write(SPACE);
+#ifdef OPT_INVADER_SOUND
+		runner_beep = INVADER_BEEP;
+#endif
                 for (k = j; k > 1; k--) {
                   line1[k] = line1[k - 1];
                   lcd.setCursor(k, 1);
@@ -1823,10 +1826,20 @@ void decode() {
                 break;
               }
             }
+#ifdef OPT_INVADER_SOUND
+            if (j == colums - 1) {
+              runner_beep = INVADER_ERRBEEP;
+	    }
+#endif
           }
           break;
         }
       }
+#ifdef OPT_INVADER_SOUND
+      if (restInvader >=0 && i == sizeof(CharWabun) / sizeof(unsigned char)) {
+        runner_beep = INVADER_ERRBEEP;
+      }
+#endif
     }
   }
 }
