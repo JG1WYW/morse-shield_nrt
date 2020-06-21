@@ -16,7 +16,7 @@ String date = "19/12/20";
 #define SCROLL_ROW
 //#define SERIAL_PRINT_DIT_DAH
 
-#if 1
+#if 1 /* JG1WYW */
 /*
  * These options were written by JG1WYW
  */
@@ -91,7 +91,7 @@ int first_srand = 1;
 #endif
 
 #ifdef OPT_TONE_FREQ
-int toneFreqIndex = 5; // 440Hz
+int toneFreqIndex = 0;
 int menuIndexToneFreq;
 #endif
 
@@ -99,7 +99,7 @@ int menuIndexToneFreq;
 int sidetone = 1; // 0: disable, 1: enable
 int defToneFreq[] = {
 #ifdef OPT_TONE_FREQ
-  330, 349, 370, 392, 415,
+  220, 233, 247, 261, 277, 294, 311, 330, 349, 370, 392, 415,
 #endif
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
@@ -279,7 +279,7 @@ typedef struct PARAM_EEPROM {
   unsigned int defCqInterval;
   unsigned int defCqTimes;
 #ifdef OPT_TONE_FREQ
-  int toneFreqIndex;
+  int toneFreq;
 #endif
 #ifdef OPT_OFF_DELAY
   int offDelay;
@@ -316,8 +316,7 @@ int param_eeprom_load()
     defCqInterval = param.defCqInterval;
     defCqTimes = param.defCqTimes;
 #ifdef OPT_TONE_FREQ
-    toneFreqIndex = param.toneFreqIndex;
-    toneFreq = defToneFreq[toneFreqIndex];
+    toneFreq = param.toneFreq;
 #endif
 #ifdef OPT_OFF_DELAY
     offDelay = param.offDelay;
@@ -329,7 +328,7 @@ int param_eeprom_load()
     return 0; // success
   }
 
-  return -1; // fail
+  return -1; // return without setting params when fail
 }
 
 void param_eeprom_save()
@@ -346,7 +345,7 @@ void param_eeprom_save()
   param.defCqInterval = defCqInterval;
   param.defCqTimes = defCqTimes;
 #ifdef OPT_TONE_FREQ
-  param.toneFreqIndex = toneFreqIndex;
+  param.toneFreq = toneFreq;
 #endif
 #ifdef OPT_OFF_DELAY
   param.offDelay = offDelay;
@@ -760,6 +759,13 @@ void setup() {
 
 #ifdef OPT_PARAM_EEPROM
   param_eeprom_load();
+  // reset toneFreqIndex (no matter which result returned)
+  if (int i = 0 ; i < (sizeof(defToneFreq) / sizeof(int)) ; i++) {
+    toneFreqIndex = 0;
+    if (toneFreq <= defToneFreq[i]) {
+      toneFreqIndex = i;
+      break                                                                         }
+  }
 #endif
 }
 
