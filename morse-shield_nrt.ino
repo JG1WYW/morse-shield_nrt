@@ -34,7 +34,7 @@ String date = "19/12/20";
 #define OPT_WORD_SPACE                  /* word space dots */
 #define OPT_BETTER_IAMBIC_A             /* Improved behavior of IambicA */
 #define OPT_TIMING_DEBUG                /* Debug flag */
-#define OPT_MEMORY_IN_SPC               /* Memory in half space */
+#define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
 
 #define MOD_MISC      /* See comments for each modification */
 
@@ -101,9 +101,9 @@ int menuIndexOffDelayDot;
 int menuIndexOffDelayDash;
 #endif
 
-#ifdef OPT_MEMORY_IN_SPC
-int memoryInSpc = 0; // memoryInSpc is disabled by default (Experimental)
-int menuIndexMemoryInSpc;
+#ifdef OPT_LOOK_AHEAD_MEMORY
+int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
+int menuIndexLookAheadMemory;
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
@@ -306,9 +306,9 @@ char *setMenu[] {
   "OfDlyDot",  // off delay dot ratio
   "OfDlyDsh"   // off delay dash ratio
 #endif
-#ifdef OPT_MEMORY_IN_SPC
+#ifdef OPT_LOOK_AHEAD_MEMORY
   ,
-  "MemInSpc"   // memory in half space
+  "LkAhdMem"   // look ahead memory
 #endif
 #ifdef OPT_AVOID_CHATTERING
   ,
@@ -352,8 +352,8 @@ typedef struct PARAM_EEPROM {
   int off_timer_ratio_dot;
   int off_timer_ratio_dash;
 #endif
-#ifdef OPT_MEMORY_IN_SPC
-  int memoryInSpc;
+#ifdef OPT_LOOK_AHEAD_MEMORY
+  int lookAheadMemory;
 #endif
 #ifdef OPT_AVOID_CHATTERING
   int avoidChattering;
@@ -406,8 +406,8 @@ int param_eeprom_load()
     off_timer_ratio_dot = param.off_timer_ratio_dot;
     off_timer_ratio_dash = param.off_timer_ratio_dash;
 #endif
-#ifdef OPT_MEMORY_IN_SPC
-    memoryInSpc = param.memoryInSpc;
+#ifdef OPT_LOOK_AHEAD_MEMORY
+    lookAheadMemory = param.lookAheadMemory;
 #endif
 #ifdef OPT_AVOID_CHATTERING
     avoidChattering = param.avoidChattering;
@@ -452,8 +452,8 @@ void param_eeprom_save()
   param.off_timer_ratio_dot = off_timer_ratio_dot;
   param.off_timer_ratio_dash = off_timer_ratio_dash;
 #endif
-#ifdef OPT_MEMORY_IN_SPC
-  param.memoryInSpc = memoryInSpc;
+#ifdef OPT_LOOK_AHEAD_MEMORY
+  param.lookAheadMemory = lookAheadMemory;
 #endif
 #ifdef OPT_AVOID_CHATTERING
   param.avoidChattering = avoidChattering;
@@ -892,8 +892,8 @@ void setup() {
   menuIndexOffDelayDot = menuIndex++;
   menuIndexOffDelayDash = menuIndex++;
 #endif
-#ifdef OPT_MEMORY_IN_SPC
-  menuIndexMemoryInSpc = menuIndex++;
+#ifdef OPT_LOOK_AHEAD_MEMORY
+  menuIndexLookAheadMemory = menuIndex++;
 #endif
 #ifdef OPT_AVOID_CHATTERING
   menuIndexAvoidChattering = menuIndex++;
@@ -1542,8 +1542,8 @@ void readPaddleValue() {
 	paddleR_released = 0;
 	memory = R;
       }
-#ifdef OPT_MEMORY_IN_SPC
-      else if (memory == -1 && memoryInSpc && (millis() - timeStart > durationDot / 2)) {
+#ifdef OPT_LOOK_AHEAD_MEMORY
+      else if (memory == -1 && lookAheadMemory && (millis() - timeStart > durationDot * 3 / 4)) {
         // memory paddle LR
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
@@ -1568,8 +1568,8 @@ void readPaddleValue() {
       } else if (paddleR == LOW && lastPaddle == L) {
         memory = R;
       }
-#ifdef OPT_MEMORY_IN_SPC
-      else if (memory == -1 && memoryInSpc && (millis() - timeStart > durationDot / 2)) {
+#ifdef OPT_LOOK_AHEAD_MEMORY
+      else if (memory == -1 && lookAheadMemory && (millis() - timeStart > durationDot * 3 / 4)) {
         // memory paddle LR
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
@@ -2405,9 +2405,9 @@ void editSetting() {
           lcd.print(F(" "));
         lcd.print(F(" "));
 #endif
-#ifdef OPT_MEMORY_IN_SPC
-      } else if (menuIndex == menuIndexMemoryInSpc) {
-        if (memoryInSpc)
+#ifdef OPT_LOOK_AHEAD_MEMORY
+      } else if (menuIndex == menuIndexLookAheadMemory) {
+        if (lookAheadMemory)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -2542,10 +2542,10 @@ void editSetting() {
           lcd.print(F(" "));
         lcd.print(F(" "));
 #endif
-#ifdef OPT_MEMORY_IN_SPC
-      } else if (menuIndex == menuIndexMemoryInSpc) {
-        memoryInSpc != memoryInSpc;
-        if (memoryInSpc)
+#ifdef OPT_LOOK_AHEAD_MEMORY
+      } else if (menuIndex == menuIndexLookAheadMemory) {
+        lookAheadMemory != lookAheadMemory;
+        if (lookAheadMemory)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -2688,10 +2688,10 @@ void editSetting() {
           lcd.print(F(" "));
         lcd.print(F(" "));
 #endif
-#ifdef OPT_MEMORY_IN_SPC
-      } else if (menuIndex == menuIndexMemoryInSpc) {
-        memoryInSpc != memoryInSpc;
-        if (memoryInSpc)
+#ifdef OPT_LOOK_AHEAD_MEMORY
+      } else if (menuIndex == menuIndexLookAheadMemory) {
+        lookAheadMemory != lookAheadMemory;
+        if (lookAheadMemory)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
