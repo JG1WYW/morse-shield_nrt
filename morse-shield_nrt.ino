@@ -1627,7 +1627,7 @@ void trainingMode(int pressedSw) {
 	if (presetMessage[k - 2] == 'K') { // omitting 8K
 	  presetMessage[k - 2] = 'J';
 	} else if (presetMessage[k - 2] == 'L') { // omitting 8L
-	  presetMessage[k - 2] = 'M';
+	  presetMessage[k - 2] = 'N';
 	}
       } else if (presetMessage[k - 2] == 'D') { // omitting JD{0|2-9}
 	presetMessage[k - 1] = '1';
