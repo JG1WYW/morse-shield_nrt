@@ -154,7 +154,7 @@ int beepFreq = 880 * 2; // beep frequency 880Hz
 int twoTone = 0; // experimental
 int toneTail = 0;
 int durationTail = 0;
-#define TONE_TAIL_RATIO 25
+#define TONE_TAIL_RATIO 33
 int menuIndexTwoTone;
 #endif
 
@@ -1560,7 +1560,6 @@ void readPaddleValue() {
 	    toneTail = 1;
 	  else
 	    toneTail = 0;
-	  toneTail = 0;
 	  //durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
 	  durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
 	  toneTail = 0;
