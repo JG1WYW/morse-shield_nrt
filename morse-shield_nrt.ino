@@ -78,7 +78,7 @@ int defToneFreq[] = {
 };
 //int toneFreq = 349; // side tone frequency F3
 int toneFreq = 392; // side tone frequency G3
-//int toneFreq = 440; // side tone frequency 440Hz
+//int toneFreq = 440; // side tone frequency 440Hz, A3
 //int toneFreq = 698; // side tone frequency F4
 //int toneFreq = 784; // side tone frequency G4
 int beepFreq = 880 * 2; // beep frequency 880Hz
@@ -1494,11 +1494,9 @@ void decode() {
 		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
-                  //tone(pinBz, 720, 100);
                   tone(pinBz, 698, 100); // F4
 		  delay(100);
-                  //tone(pinBz, 1440, 200); // F5
-                  tone(pinBz, 1397, 200);
+                  tone(pinBz, 1397, 200); // F5
 		  delay(1000);
 		  printascii(SPACE);
                   trainingMode(pinSw3);
@@ -1638,7 +1636,7 @@ void printascii(int asciinumber) {
 // update the upper line with the speed
 void updateinfolinelcd() {
 #if 1 /* JG1WYW */
-  static int oldWpm = INIT_DECODE_WPM; // to surpress lcd update at first
+  static int oldWpm = INIT_DECODE_WPM; // to surpress initial "wpm" (for initial "WPM" displayed, instead)
 #else
   static int oldWpm;
 #endif
