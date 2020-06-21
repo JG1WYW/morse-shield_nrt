@@ -701,7 +701,7 @@ void goertzel() {
         //hightimesavg = (highduration + 7 * hightimesavg) >> 3; // now we know avg dit time ( rolling 3 avg)
       }
       if (highduration > (2 * hightimesavg) && highduration < (4 * hightimesavg)) {
-        hightimesavg = (highduration / 3 + 3 * hightimesavg) >> 2; // now we know avg dit time ( rolling 3 avg)
+        hightimesavg = (highduration / wait + 3 * hightimesavg) >> 2; // now we know avg dit time ( rolling 3 avg)
       }
 #else
       if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
@@ -1524,14 +1524,14 @@ void decode() {
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
                   tone_hit();
-		  if (runner_miss == 0) {
-		    runner_accel++;
+		  if (runner_miss < 2) { // 0 or 1 miss
+		    runner_accel++; // becomes 5% faster
 		  } else {
 		    if (runner_accel > 0) {
 		      runner_accel--;
 		    }
-		    runner_miss = 0;
 		  }
+		  runner_miss = 0;
 		  durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
 		  delay(1000);
 		  printascii(SPACE);
