@@ -57,6 +57,8 @@ int runner = 0;
 int runner_miss = 0;
 int runner_accel = 0;
 int invader_beep = 0;
+#define INVADER_BEEP    1
+#define INVADER_ERRBEEP 2
 #endif
 
 #ifdef OPT_OFF_DELAY /* JG1WYW */
@@ -1177,9 +1179,14 @@ void readPaddleValue() {
   /*
    * to avoid conflict among tone()
    */
-  if (invader_beep && /*durationSpace == 0 &&*/ durationMark == 0) {
-    invader_beep = 0;
-    beep();
+  if (durationMark == 0) {
+    if (invader_beep == INVADER_BEEP) {
+      invader_beep = 0;
+      beep();
+    } else if (invader_beep == INVADER_ERRBEEP) {
+      invader_beep = 0;
+      errBeep();
+    }
   }
 #endif
 }
@@ -1567,10 +1574,10 @@ void decode() {
                 lcd.write(SPACE);
 #ifdef OPT_RUNNER
 		if (runner_mode) {
-		  invader_beep = 1;
+		  invader_beep = INVADER_BEEP;
 		}
 #endif
-		for (k = j; k > 1; k--) {
+                for (k = j; k > 1; k--) {
                   line1[k] = line1[k - 1];
                   lcd.setCursor(k, 1);
                   lcd.write(line1[k]);
@@ -1578,12 +1585,23 @@ void decode() {
                 break;
               }
             }
+#ifdef OPT_RUNNER
+            if (j == colums) {
+	      combo = 0; // wrong
+	      if (runner_mode)
+                invader_beep = INVADER_ERRBEEP;
+	    }
+#else
             if (j == colums) combo = 0; // wrong
+#endif
           }
           break;
         }
       }
 #ifdef OPT_RUNNER
+      if (restInvader >=0 && runner_mode && i == sizeof(CharAbc) / sizeof(unsigned char)) {
+        invader_beep = INVADER_ERRBEEP;
+      }
       if (runner == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
         tone_miss();
 	runner_ptr = 0;
