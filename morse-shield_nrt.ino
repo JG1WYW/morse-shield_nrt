@@ -21,7 +21,7 @@ String date = "19/12/20";
  * These options were added by JG1WYW
  */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
-#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
+//#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_INVADER_SOUND		/* invader sound */
