@@ -706,8 +706,8 @@ void goertzel() {
       if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
 #endif
         //hightimesavg = (highduration + hightimesavg + hightimesavg) / 3; // now we know avg dit time ( rolling 3 avg)
-        //hightimesavg = (highduration + hightimesavg + hightimesavg + hightimesavg) / 4; // now we know avg dit time ( rolling 3 avg)
-        hightimesavg = (highduration + 7 * hightimesavg) >> 3; // now we know avg dit time ( rolling 3 avg)
+        hightimesavg = (highduration + 3 * hightimesavg) >> 2; // now we know avg dit time ( rolling 3 avg)
+        //hightimesavg = (highduration + 7 * hightimesavg) >> 3; // now we know avg dit time ( rolling 3 avg)
       }
       if (highduration > (5 * hightimesavg) ) {
 #ifdef OPT_BETTER_DECODE
