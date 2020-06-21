@@ -738,7 +738,11 @@ void goertzel() {
         Serial.print(F("."));
 #endif
       }
+#ifdef OPT_BETTER_DECODE
       if (highduration >= (hightimesavg * 2) && highduration < (hightimesavg * 6)) {
+#else
+      if (highduration > (hightimesavg * 2) && highduration < (hightimesavg * 6)) {
+#endif
         code = code << 1;
         code += 1;
         //strcat(code, "-");
@@ -1547,7 +1551,7 @@ void decode() {
   int i, j, k;
 
 #if 1 /* JG1WYW */
-  if (code == 1) // no decoded characters
+  if (code == 1) // there is no decoded characters
     return;
 #endif
 
