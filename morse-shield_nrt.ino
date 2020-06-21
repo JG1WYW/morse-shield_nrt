@@ -16,7 +16,7 @@ String date = "19/12/20";
 #define SCROLL_ROW
 //#define SERIAL_PRINT_DIT_DAH
 
-#if 1
+#if 1 /* JG1WYW */
 /*
  * These options were added by JG1WYW
  */
@@ -31,10 +31,10 @@ String date = "19/12/20";
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 
-#define MOD_IAMBIC_A  /* XXX Is the original behavior of IambicA correct? */
+#define MOD_IAMBIC_A  /* XXX Is the originally written behavior of IambicA correct? */
 #define MOD_MISC      /* See comments for each modification */
 
-#endif
+#endif /* JG1WYW */
 
 // keyer setting
 #define MIN_WPM  5
@@ -81,7 +81,6 @@ int off_timer_ratio_dash = 120;  /* XXX extra percent (of dot) for dash */
 int menuIndexOffDelay;
 int menuIndexOffDelayDot;
 int menuIndexOffDelayDash;
-
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
@@ -119,11 +118,7 @@ int defToneFreq[] = {
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
-//int toneFreq = 349; // side tone frequency F3
-//int toneFreq = 392; // side tone frequency G3
 int toneFreq = 440; // side tone frequency 440Hz, A3
-//int toneFreq = 698; // side tone frequency F4
-//int toneFreq = 784; // side tone frequency G4
 int beepFreq = 880 * 2; // beep frequency 880Hz
 
 // keyer selection
@@ -417,7 +412,8 @@ void param_eeprom_save()
     ptr++;
   }
 }
-#endif
+
+#endif /* OPT_PARAM_EEPROM */
 
 // morse code
 // dit=0, dah=1, start flag=1, 1char=1byte, max7 dit/dah
@@ -976,7 +972,7 @@ void goertzel() {
     if (filteredstate == HIGH) { // we did end a LOW
 
 #ifdef OPT_BETTER_DECODE
-      float lacktime = 0.9;
+      float lacktime = 0.9; // a bit less pause when low speed under 25wpm
 #else
       float lacktime = 1;
 #endif
@@ -1142,12 +1138,10 @@ void tone_invader_clear()
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
-
- int paddleL_stable = HIGH;
+int paddleL_stable = HIGH;
 int paddleR_stable = HIGH;
 int paddleL_trans = 0;
 int paddleR_trans = 0;
-
 #endif
 
 #ifdef OPT_OFF_DELAY
