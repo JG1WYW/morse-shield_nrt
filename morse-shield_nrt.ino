@@ -21,6 +21,7 @@ String date = "19/12/20";
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
+#define OPT_INVADER_SOUND		/* invader sound */
 #define OPT_TOO_LONG                    /* '_' for too long chars */
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
@@ -56,6 +57,9 @@ int runner_mode = 0; // Runner mode instead of just callsigns
 int running = 0; // means Now running
 int runner_miss = 0;
 int runner_accel = 0;
+#endif
+
+#if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND) /* JG1WYW */
 int runner_beep = 0;
 #define RUNNER_HIT      1
 #define RUNNER_MISS     2
@@ -781,7 +785,7 @@ void goertzel() {
         decode();
         code = 1;
 #ifdef OPT_RUNNER /* JG1WYW */
-       if (!running) // to omit such word space during running
+       if (!running) // to omit word space during running
 #endif
         printascii(SPACE);
 #ifdef SERIAL_PRINT_DIT_DAH
@@ -897,7 +901,9 @@ void tone_miss()
   delay(100);
   tone(pinBz, 110, 200); // A1
 }
+#endif
 
+#ifdef OPT_INVADER_SOUND
 void tone_invader_start()
 {
   tone(pinBz, 880, 100); // A4
@@ -1231,7 +1237,7 @@ void readPaddleValue() {
       }
     }
   }
-#ifdef OPT_RUNNER
+#if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND)
   /*
    * to avoid conflict among tone()
    */
@@ -1412,9 +1418,8 @@ void fireLongFunction(int no) {
           break;
         } else if (digitalRead(pinSw4) == LOW) {
           pressedSw = pinSw4;
-#ifdef OPT_RUNNER
-          //if (runner_mode)
-            beep();
+#ifdef OPT_INVADER_SOUND
+          beep();
 #endif
           invaderAnimation();
           break;
@@ -1628,9 +1633,8 @@ void decode() {
                 gamePts += (1 + combo);
                 if (combo < 4) combo++;
                 lcd.write(SPACE);
-#ifdef OPT_RUNNER
-		//if (runner_mode)
-		  runner_beep = INVADER_BEEP;
+#ifdef OPT_INVADER_SOUND
+		runner_beep = INVADER_BEEP;
 #endif
                 for (k = j; k > 1; k--) {
                   line1[k] = line1[k - 1];
@@ -1640,11 +1644,10 @@ void decode() {
                 break;
               }
             }
-#ifdef OPT_RUNNER
+#ifdef OPT_INVADER_SOUND
             if (j == colums) {
 	      combo = 0; // wrong
-	      //if (runner_mode)
-                runner_beep = INVADER_ERRBEEP;
+              runner_beep = INVADER_ERRBEEP;
 	    }
 #else
             if (j == colums) combo = 0; // wrong
@@ -1653,10 +1656,12 @@ void decode() {
           break;
         }
       }
-#ifdef OPT_RUNNER
-      if (restInvader >=0 /*&& runner_mode*/ && i == sizeof(CharAbc) / sizeof(unsigned char)) {
+#ifdef OPT_INVADER_SOUND
+      if (restInvader >=0 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
         runner_beep = INVADER_ERRBEEP;
       }
+#endif
+#ifdef OPT_RUNNER
       if (running == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
         //tone_miss();
 	runner_beep = RUNNER_MISS;
@@ -2217,9 +2222,8 @@ void invaderAnimation() {
   lcd.write(SPACE);
   lcd.write(2); // invader
   delay(500);
-#ifdef OPT_RUNNER
-  //if (runner_mode)
-    beep();
+#ifdef OPT_INVADER_SOUND
+  beep();
 #endif
   lcd.setCursor(7, 0);
   lcd.print(F("2"));
@@ -2240,9 +2244,8 @@ void invaderAnimation() {
   lcd.write(1); // invader
   lcd.write(SPACE);
   delay(500);
-#ifdef OPT_RUNNER
-  //if (runner_mode)
-    beep();
+#ifdef OPT_INVADER_SOUND
+  beep();
 #endif
   lcd.setCursor(7, 0);
   lcd.print(F("1"));
@@ -2267,11 +2270,9 @@ void invaderAnimation() {
   lcd.write(2); // invader
   lcd.write(3); // invader
   delay(500);
-#ifdef OPT_RUNNER
-  //if (runner_mode) {
-    tone_invader_start();
-    delay(500);
-  //}
+#ifdef OPT_INVADER_SOUND
+  tone_invader_start();
+  delay(500);
 #endif
   lcd.setCursor(0, 0);
   lcd.print(F("        "));
@@ -2350,9 +2351,8 @@ void morseInvader() {
   } else if (SPACE == (line1[1] | line1[2] | line1[3] | line1[4] | line1[5] | line1[6] | line1[7])) {
     lcd.setCursor(2, 1);
     lcd.print(F("Clear!"));
-#ifdef OPT_RUNNER
-    //if (runner_mode)
-      tone_invader_clear();
+#ifdef OPT_INVADER_SOUND
+    tone_invader_clear();
 #endif
     restInvader = -1;
     lastInvaderTime = 0;
