@@ -82,7 +82,7 @@ int menuIndexCharSpace;
 int offDelay = 0; // off delay disabled by default (Experimental)
 
 int off_timer_ratio_dot = 30;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 30;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dash = 90;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -168,7 +168,7 @@ int pinBtn[4] = {pinSw1, pinSw2, pinSw3, pinSw4};
 int lang = langAbc;
 
 #ifdef MOD_IAMBIC_A
-int paddleR_released = 1;
+int paddleR_released = 1; // to check if re-pressed once after press detected
 int paddleL_released = 1;
 #endif
 int lastPaddle = L; // memory key param
@@ -208,6 +208,7 @@ int realstatebefore = LOW;
 int filteredstate = LOW;
 int filteredstatebefore = LOW;
 
+#if 0 /* not used */
 // The sampling frq will be 8928 on a 16 mhz
 // without any prescaler etc
 // because we need the tone in the center of the bins
@@ -234,6 +235,7 @@ int testData[48];
 
 // Noise Blanker time which shall be computed so this is initial
 int nbtime = 6;  // ms noise blanker
+#endif
 
 long starttimehigh;
 long highduration;
@@ -757,6 +759,7 @@ byte we[8] = {
 };
 
 void setup() {
+#if 0 /* not used */
   // The basic goertzel calculation
   int  k;
   float omega;
@@ -765,6 +768,7 @@ void setup() {
   sine = sin(omega);
   cosine = cos(omega);
   coeff = 2.0 * cosine;
+#endif
 
   Serial.begin(115200);
   Serial.println(F("morse-shield for Arduino UNO"));
@@ -879,6 +883,7 @@ void loop() {
   goertzel();
 }
 
+#if 0 /* not used */
 void getMorseTone() {
   // The basic where we get the tone
   for (char index = 0; index < n; index++) {
@@ -925,6 +930,7 @@ void getMorseTone() {
     }
   }
 }
+#endif
 
 void goertzel() {
   //getMorseTone();
