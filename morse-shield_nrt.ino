@@ -1404,10 +1404,12 @@ void readPaddleValue() {
         serial_timing("_R20");
       }
 #endif
+#ifdef OPT_BETTER_IAMBIC_A
       if (paddleR_highStart != 0) {
         // XXX off delay aborted, but actually released
         paddleR_released = 1;
       }
+#endif
       paddleR_prev = LOW;
       paddleR_highStart = 0;
     } else if (/*paddleR == HIGH &&*/ paddleR_prev == LOW) {
@@ -1452,10 +1454,12 @@ void readPaddleValue() {
         serial_timing("_L60");
       }
 #endif
+#ifdef OPT_BETTER_IAMBIC_A
       if (paddleL_highStart != 0) {
         // XXX off delay aborted, but actually released
         paddleL_released = 1;
       }
+#endif
       paddleL_prev = LOW;
       paddleL_highStart = 0;
     } else if (/*paddleL == HIGH &&*/ paddleL_prev == LOW) {
