@@ -99,9 +99,11 @@ int menuIndexAvoidChatteringCount;
 
 #ifdef OPT_AUTO_KEYERTYPE
 int autoKeyerType = 1; // auto keyer type enabled
+int autoKeyerTypeElekey = 2; // XXX keyStraight, auto keyer type when elekey changed from straight key
 int count_straight_or_paddle = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
 int menuIndexAutoKeyertype;
+int menuIndexAutoKeyertypeElekey;
 #endif
 
 #ifdef OPT_BETTER_SRAND
@@ -288,7 +290,8 @@ char *setMenu[] {
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   ,
-  "AtoKyChg"  // auto keyer type change
+  "AtoKyChg",  // auto keyer type change
+  "AtoKyEle"   // auto keyer type when elekey
 #endif
 };
 
@@ -320,6 +323,7 @@ typedef struct PARAM_EEPROM {
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   int autoKeyerType;
+  int autoKeyerTypeElekey;
 #endif
 } param_eeprom_t;
 
@@ -363,6 +367,7 @@ int param_eeprom_load()
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
     autoKeyerType = param.autoKeyerType;
+    autoKeyerTypeElekey = param.autoKeyerTypeElekey;
 #endif
 
     return 0; // success
@@ -398,6 +403,7 @@ void param_eeprom_save()
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   param.autoKeyerType = autoKeyerType;
+  param.autoKeyerTypeElekey = autoKeyerTypeElekey;
 #endif
 
   ptr = (byte *)&param;
@@ -806,6 +812,7 @@ void setup() {
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   menuIndexAutoKeyertype = menuIndex++;
+  menuIndexAutoKeyertypeElekey = menuIndex++;
 #endif
 #endif /* 1 */
 
@@ -1175,7 +1182,7 @@ void readPaddleValue() {
     /*
      * automatic change between keyStraight and keySuper
      */
-    if (keyerType == keySuper) {
+    if (keyerType != keyStraight) {
       if (paddleL == HIGH && paddleR == LOW) {
 	if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
 	  keyerType = keyStraight;
@@ -1188,7 +1195,7 @@ void readPaddleValue() {
     if (keyerType == keyStraight) {
       if (paddleL == HIGH && paddleR == HIGH) {
 	if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
-	  keyerType = keySuper;
+	  keyerType = autoKeyerTypeElekey;
 	  count_straight_or_paddle = 0;
 	}
       } else {
@@ -2162,6 +2169,8 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAutoKeyertypeElekey) {
+        lcd.print(keyName[autoKeyerTypeElekey]);
 #endif
       }
     }
@@ -2267,6 +2276,11 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAutoKeyertypeElekey) {
+        if (autoKeyerTypeElekey > 0) {
+	  autoKeyerTypeElekey--;
+	}
+        lcd.print(keyName[autoKeyerTypeElekey]);
 #endif
       }
     }
@@ -2374,6 +2388,11 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAutoKeyertypeElekey) {
+	if (autoKeyerTypeElekey < (sizeof(keyName)/sizeof(char *)-2)) { // except for the last index (straight key)
+	  autoKeyerTypeElekey++;
+	}
+        lcd.print(keyName[autoKeyerTypeElekey]);
 #endif
       }
     }
