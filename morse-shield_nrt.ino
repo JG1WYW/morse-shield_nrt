@@ -1555,8 +1555,9 @@ void readPaddleValue() {
       if (lastPaddle != L) {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
 #ifdef OPT_TWO_TONE
-	if (twoTone)
+	if (twoTone) {
 	  durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+	}
 #endif
         lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
@@ -1565,8 +1566,9 @@ void readPaddleValue() {
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
 #ifdef OPT_TWO_TONE
-	if (twoTone)
+	if (twoTone) {
 	  durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+	}
 #endif
         lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
@@ -1597,8 +1599,9 @@ void readPaddleValue() {
       } else {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
 #ifdef OPT_TWO_TONE
-	if (twoTone)
+	if (twoTone) {
 	  durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+	}
 #endif
       }
       lastPaddle = L;
@@ -1626,8 +1629,9 @@ void readPaddleValue() {
 #endif
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
 #ifdef OPT_TWO_TONE
-      if (twoTone)
+      if (twoTone) {
 	durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+      }
 #endif
       lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
@@ -1745,8 +1749,9 @@ void readPaddleValue() {
         if (memory == L) {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
 #ifdef OPT_TWO_TONE
-	  if (twoTone)
+	  if (twoTone) {
 	    durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+	  }
 #endif
           lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
@@ -1755,8 +1760,9 @@ void readPaddleValue() {
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
 #ifdef OPT_TWO_TONE
-	  if (twoTone)
+	  if (twoTone) {
 	    durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+	  }
 #endif
           lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
