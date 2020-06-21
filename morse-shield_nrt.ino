@@ -18,7 +18,7 @@ String date = "19/12/20";
 
 //#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
-#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
+//#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_INVADER_SOUND		/* invader sound */
@@ -937,8 +937,8 @@ int paddleR_prev = HIGH;
 unsigned long paddleL_highStart = 0;
 unsigned long paddleR_highStart = 0;
 
-#define OFF_TIMER_RATIO_DASH 50 /* extra percent (of dot) for dash */
-#define OFF_TIMER_RATIO_DOT  50 /* extra percent (of dot) for dot */
+#define OFF_TIMER_RATIO_DASH 150 /* extra percent (of dot) for dash */
+#define OFF_TIMER_RATIO_DOT  50  /* extra percent (of dot) for dot */
 
 int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
