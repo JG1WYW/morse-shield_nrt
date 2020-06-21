@@ -70,10 +70,10 @@ int runner_beep = 0;
 #endif
 
 #ifdef OPT_OFF_DELAY
-int offDelay = 1; // off delay enabled
+int offDelay = 1; // off delay enabled (Experimental)
 
-int off_timer_ratio_dash = 80;  /* extra percent (of dot) for dash */
-int off_timer_ratio_dot = 20;   /* extra percent (of dot) for dot */
+int off_timer_ratio_dot = 40;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 120;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -94,7 +94,7 @@ int menuIndexAvoidChatteringCount;
 
 #ifdef OPT_AUTO_KEYERTYPE
 int autoKeyerType = 1; // auto keyer type enabled
-int autoKeyerTypeElekey = 2; // XXX keyStraight, auto keyer type when elekey changed from straight key
+int autoKeyerTypeElekey = 2; // XXX Supr, auto keyer type when elekey changed from straight key
 int count_straight_or_paddle = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
 int menuIndexAutoKeyertype;
