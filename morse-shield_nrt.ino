@@ -22,7 +22,7 @@ String date = "19/12/20";
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_INVADER_SOUND		/* invader sound */
-#define OPT_TOO_LONG                    /* '_' for too long chars */
+#define OPT_DECODE_TOO_LONG             /* '_' for too long chars when runner */
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
@@ -243,7 +243,7 @@ char *setMenu[] {
 #endif
 #ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
   ,
-  "AutoKeyr"  // auto keyer type
+  "AtoKyChg"  // auto keyer type change
 #endif
 };
 
@@ -846,7 +846,7 @@ void goertzel() {
   // we think that hightimeavg = 1 bit
   if (filteredstate != filteredstatebefore) {
     stop = LOW;
-#ifdef OPT_TOO_LONG /* JG1WYW */
+#ifdef OPT_DECODE_TOO_LONG /* JG1WYW */
     if (filteredstate == LOW && code < 0b01000000) { // we did end a HIGH
 #else
     if (filteredstate == LOW && code < 0b10000000) { // we did end a HIGH
@@ -871,7 +871,7 @@ void goertzel() {
         wpm = (wpm + (1200 / ((highduration) / 3))) / 2; // the most precise we can do ;o)
       }
     }
-#ifdef OPT_TOO_LONG /* JG1WYW */
+#ifdef OPT_DECODE_TOO_LONG /* JG1WYW */
     else if (filteredstate == LOW) { // invoke decode expecting '_' during running to notify invalid keying (typically connecting more than two characters) immediately
       decode();
       code = 1;
