@@ -16,7 +16,7 @@ String date = "19/12/20";
 #define SCROLL_ROW
 //#define SERIAL_PRINT_DIT_DAH
 
-#if 1 /* JG1WYW */
+#if 1
 /*
  * These options were added by JG1WYW
  */
@@ -32,7 +32,8 @@ String date = "19/12/20";
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 
-#define CORRECT_IAMBIC_A /* XXX Is the original behavior of IambicA correct? */
+#define MOD_IAMBIC_A  /* XXX Is the original behavior of IambicA correct? */
+#define MOD_MISC      /* See comments for each modification */
 
 #endif
 
@@ -163,7 +164,7 @@ int pinBtn[4] = {pinSw1, pinSw2, pinSw3, pinSw4};
 #define langWabun 1
 int lang = langAbc;
 
-#ifdef CORRECT_IAMBIC_A
+#ifdef MOD_IAMBIC_A
 int prev_lastPaddle = -1;
 #endif
 int lastPaddle = L; // memory key param
@@ -233,7 +234,7 @@ int nbtime = 6;  // ms noise blanker
 long starttimehigh;
 long highduration;
 long lasthighduration;
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
 long hightimesavg = 60; /* to begin with moderate highduration */
 #else
 long hightimesavg;
@@ -245,7 +246,7 @@ long laststarttime = 0;
 
 char code = 1;//[20]; estimated code
 int stop = LOW;
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
 #define INIT_DECODE_WPM 20
 int wpm = INIT_DECODE_WPM; // initial wpm value of decoding
 #else
@@ -786,7 +787,7 @@ void setup() {
     line2[i] = SPACE;
   }
 
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
   /*
    * set menuIndex dynamically
    */
@@ -1036,7 +1037,7 @@ void goertzel() {
 
 // Read Potentiometer value and set new WPM
 void readPotValue() {
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
   static int potValueOld = -11; // to update the first Wpm value read from potentio meter
 #else
   static int potValueOld = 0;
@@ -1311,7 +1312,7 @@ void readPaddleValue() {
   } /* (offDelay && keyerType != keyStraight) */
 #endif
 
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
   if (paddleR == LOW && keyerType == keyStraight) {
     /* ignore R when straight key */
     paddleR = HIGH;
@@ -1367,7 +1368,7 @@ void readPaddleValue() {
   }
 
   if (durationSpace != 0) {
-#ifdef CORRECT_IAMBIC_A
+#ifdef MOD_IAMBIC_A
     if (paddleL == LOW && paddleR == LOW) {
       if (keyerType == keyIambicB || keyerType == keySuper || (keyerType == keyIambicA && prev_lastPaddle == -1)) {
 	if (lastPaddle != L) {
@@ -1399,13 +1400,13 @@ void readPaddleValue() {
       if (memory != -1) {
         if (memory == L) {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
-#ifdef CORRECT_IAMBIC_A
+#ifdef MOD_IAMBIC_A
 	  prev_lastPaddle = lastPaddle;
 #endif
           lastPaddle = L;
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
-#ifdef CORRECT_IAMBIC_A
+#ifdef MOD_IAMBIC_A
 	  prev_lastPaddle = lastPaddle;
 #endif
           lastPaddle = R;
@@ -1416,7 +1417,7 @@ void readPaddleValue() {
         timeStart = millis();
         if (sidetone) tone(pinBz, toneFreq); // side tone
       }
-#ifdef CORRECT_IAMBIC_A
+#ifdef MOD_IAMBIC_A
       else {
 	prev_lastPaddle = -1;
       }
@@ -1425,7 +1426,7 @@ void readPaddleValue() {
   }
   if (durationMark != 0) {
     // memory paddle LR
-#ifdef CORRECT_IAMBIC_A
+#ifdef MOD_IAMBIC_A
     if (paddleL == LOW && paddleR == LOW) {
       if (keyerType == keyIambicB || (keyerType == keySuper && (millis() - timeStart > durationDot)) || (keyerType == keyIambicA && prev_lastPaddle == -1)) {
 	if (lastPaddle != L) {
@@ -1460,7 +1461,7 @@ void readPaddleValue() {
     }
     // key up straight key
     if (keyerType == keyStraight) {
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
       if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > durationDot)) { /* pos_read condition prevents from all-dots message output */
 #else
       if (paddleL == HIGH && (millis() - timeStart > durationDot)) {
@@ -1738,7 +1739,7 @@ void trainingMode(int pressedSw) {
     // 10 random callsigns JA
     lang = langAbc;
     for (i = 0; i < 10; i++) {
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
      if (rand() / (RAND_MAX / 4) == 0) { /* begin with 7/8 */
       presetMessage[k] = '7' + rand() / (RAND_MAX / 2 + 1); /* 7-8 */
       k++;
@@ -1753,7 +1754,7 @@ void trainingMode(int pressedSw) {
         presetMessage[k] += 16;
       }
       k++;
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
      } /* end of if 7/8 or J */
 #endif
 #ifndef OPT_RUNNER /* !OPT_RUNNDER */
@@ -1824,7 +1825,7 @@ void trainingMode(int pressedSw) {
 void decode() {
   int i, j, k;
 
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
   if (code == 1) // there is no decoded characters
     return;
 #endif
@@ -2055,7 +2056,7 @@ void printascii(int asciinumber) {
 
 // update the upper line with the speed
 void updateinfolinelcd() {
-#if 1 /* JG1WYW */
+#ifdef MOD_MISC
   static int oldWpm = INIT_DECODE_WPM; // to surpress initial "wpm" (for initial "WPM" displayed, instead)
 #else
   static int oldWpm;
