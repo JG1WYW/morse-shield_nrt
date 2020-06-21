@@ -52,10 +52,11 @@ int paddleRvs = 0; // paddle reverse
 #endif
 
 #ifdef OPT_RUNNER /* JG1WYW */
-int runnerMode = 0; // Runner mode instead of just callsigns
+int runner_mode = 0; // Runner mode instead of just callsigns
 int runner = 0;
 int runner_miss = 0;
 int runner_accel = 0;
+int invader_beep = 0;
 #endif
 
 #ifdef OPT_OFF_DELAY /* JG1WYW */
@@ -1172,6 +1173,15 @@ void readPaddleValue() {
       }
     }
   }
+#ifdef OPT_RUNNER
+  /*
+   * to avoid conflict among tone()
+   */
+  if (invader_beep && /*durationSpace == 0 &&*/ durationMark == 0) {
+    invader_beep = 0;
+    beep();
+  }
+#endif
 }
 
 void readButtonValue() {
@@ -1203,11 +1213,11 @@ void readButtonValue() {
       //digitalWrite(pinLed, LOW);
       beep();
 #ifdef OPT_RUNNER
-      runnerMode = 0;
+      runner_mode = 0;
     } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) {
       //digitalWrite(pinLed, LOW);
       tone_hit();
-      runnerMode = 1;
+      runner_mode = 1;
 #endif
     }
   }
@@ -1282,7 +1292,7 @@ void fireLongFunction(int no) {
       lcd.print(F("A "));
       lcd.write(0b10110001);
 #ifdef OPT_RUNNER
-      if (runnerMode) {
+      if (runner_mode) {
         lcd.print(F(" r "));
       } else {
         lcd.print(F(" c "));
@@ -1320,7 +1330,7 @@ void fireLongFunction(int no) {
           lcd.setCursor(0, 0);
 #ifdef OPT_RUNNER
           lcdIndex = 0;
-          if (runnerMode) {
+          if (runner_mode) {
             lcd.print(F("Runner  "));
 	  } else {
             lcd.print(F("10x CALL"));
@@ -1425,7 +1435,7 @@ void trainingMode(int pressedSw) {
         k++;
       }
 #ifdef OPT_RUNNER /* !OPT_RUNNDER */
-      if (runnerMode) { /* runner */
+      if (runner_mode) { /* runner */
         int idx;
 
 	runner = 1;
@@ -1555,7 +1565,12 @@ void decode() {
                 gamePts += (1 + combo);
                 if (combo < 4) combo++;
                 lcd.write(SPACE);
-                for (k = j; k > 1; k--) {
+#ifdef OPT_RUNNER
+		if (runner_mode) {
+		  invader_beep = 1;
+		}
+#endif
+		for (k = j; k > 1; k--) {
                   line1[k] = line1[k - 1];
                   lcd.setCursor(k, 1);
                   lcd.write(line1[k]);
@@ -1567,8 +1582,7 @@ void decode() {
           }
           break;
         }
-
-}
+      }
 #ifdef OPT_RUNNER
       if (runner == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
         tone_miss();
