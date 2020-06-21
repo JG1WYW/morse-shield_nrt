@@ -699,7 +699,7 @@ void goertzel() {
       if (highduration < (2 * hightimesavg) && hightimesavg < (2 * highduration)) {
         hightimesavg = (highduration + 3 * hightimesavg) / 4; // now we know avg dit time ( rolling 3 avg)
       }
-      if (highduration > (2 * hightimesavg) && highduration < (4 * hightimesavg)) {
+      if (highduration >= (2 * hightimesavg) && highduration < (4 * hightimesavg)) {
         hightimesavg = (highduration / wait + 3 * hightimesavg) / 4; // now we know avg dit time ( rolling 3 avg)
       }
 #else
@@ -733,7 +733,7 @@ void goertzel() {
         Serial.print(F("."));
 #endif
       }
-      if (highduration > (hightimesavg * 2) && highduration < (hightimesavg * 6)) {
+      if (highduration >= (hightimesavg * 2) && highduration < (hightimesavg * 6)) {
         code = code << 1;
         code += 1;
         //strcat(code, "-");
@@ -1514,7 +1514,7 @@ void decode() {
 		  presetMessage[idx] = runner_call[idx];
 		}
 		if (runner_accel > 0) {
-		   runner_accel--;
+		   runner_accel--; // repeat (?) becomes 5% slower
 		   runner_miss = 0;
 		   durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
 		}
@@ -1523,11 +1523,11 @@ void decode() {
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
                   tone_hit();
-		  if (runner_miss < 2) { // 0 or 1 miss
-		    runner_accel++; // becomes 5% faster
+		  if (runner_miss == 0) {
+		    runner_accel++; // no miss becomes 5% faster
 		  } else {
 		    if (runner_accel > 0) {
-		      runner_accel--;
+		      runner_accel--; // miss(es) becomes 5% slower
 		    }
 		  }
 		  runner_miss = 0;
