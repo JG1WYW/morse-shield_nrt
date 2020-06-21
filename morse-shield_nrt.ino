@@ -1040,7 +1040,8 @@ void goertzel() {
 // Read Potentiometer value and set new WPM
 void readPotValue() {
 #ifdef MOD_MISC
-  static int potValueOld = -11; // to update the first Wpm value read from potentio meter
+#define INIT_POT_VAL -11 // to update the first Wpm value read from potentio meter
+  static int potValueOld = INIT_POT_VAL;
 #else
   static int potValueOld = 0;
 #endif
@@ -1049,8 +1050,12 @@ void readPotValue() {
 
   if (potValue - potValueOld > potStep || potValue - potValueOld < -potStep) {
     int wpm = map(potValue, 0, 1023 - potStep, MIN_WPM, MAX_WPM);
+#ifdef MOD_MISC
+    if (wpm != Wpm || potValueOld == INIT_POT_VAL) setNewWpm(wpm);
+#else
     if (wpm != Wpm) setNewWpm(wpm);
-
+#endif
+    
 #ifdef DEBUG
     Serial.print(F("pot(0-1023)="));
     Serial.println(potValue);
