@@ -1121,7 +1121,7 @@ void readPaddleValue() {
     // key up straight key
     if (keyerType == keyStraight) {
 #if 1 /* NRT */
-      if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > (durationDot >> 1))) { /* pos_read condition prevents from all dots message output */
+      if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > durationDot)) { /* pos_read condition prevents from all dots message output */
 #else
       if (paddleL == HIGH && (millis() - timeStart > durationDot)) {
 #endif
@@ -1267,7 +1267,15 @@ void fireLongFunction(int no) {
         } else if (digitalRead(pinSw3) == LOW) {
           pressedSw = pinSw3;
           lcd.setCursor(0, 0);
+#ifdef RUNNER
+          if (runnerMode) {
+            lcd.print(F("Runner  "));
+	  } else {
+            lcd.print(F("10x CALL"));
+	  }
+#else
           lcd.print(F("10x CALL"));
+#endif
           break;
         } else if (digitalRead(pinSw4) == LOW) {
           pressedSw = pinSw4;
