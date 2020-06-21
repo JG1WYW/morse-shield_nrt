@@ -21,7 +21,7 @@ String date = "19/12/20";
  * These options were added by JG1WYW
  * So far, off delay & look ahead memory is checked with improved IambicA.
  */
-#define OPT_OFF_DELAY			/* off delay timer for super keyer */
+#define OPT_OFF_DELAY			/* off delay timer */
 #define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
@@ -87,11 +87,11 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 65;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 165;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 60;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 160;  /* XXX extra percent (of dot) for dash */
 
-#define MAX_DASH_RATIO 200
-#define MAX_DOT_RATIO  100
+#define MAX_DASH_RATIO 100
+#define MAX_DOT_RATIO  200
 
 int menuIndexOffDelay;
 int menuIndexOffDelayDot;
@@ -100,14 +100,14 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 15;   /* XXX percent (of dot) for look ahead memory */
+int look_ahead_memory_ratio = 10;   /* XXX percent (of dot) for look ahead memory */
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
 int avoidChattering = 0; // avoid chattering disabled by default (Experimental)
-int avoidChatteringCount = 10; // Stable count
+int avoidChatteringCount = 5; // Stable count
 
 #define MAX_CHATTERING_COUNT 100
 
@@ -506,7 +506,7 @@ void tone_eeprom()
 void serial_timing(char *s)
 {
   Serial.print(millis());
-  Serial.print(F(":"));
+  Serial.print(F(","));
   Serial.print(s);
   Serial.println();
 }
@@ -1401,10 +1401,10 @@ void readPaddleValue() {
       /* immediately active, clear off delay timer */
 #ifdef OPT_TIMING_DEBUG
       if (paddleR_highStart != 0) {
-        serial_timing("~R:10");
+        serial_timing("~R,10");
       }
       if (paddleR_prev == HIGH) {
-        serial_timing("_R:20");
+        serial_timing("_R,20");
       }
 #endif
 #ifdef OPT_BETTER_IAMBIC_A
@@ -1429,7 +1429,7 @@ void readPaddleValue() {
       paddleR_prev = HIGH;
       paddleR_highStart = millis();
 #ifdef OPT_TIMING_DEBUG
-      serial_timing("^r:30");
+      serial_timing("^r,30");
 #endif
       if (paddleRvs) {
         /* reversed to DOT */
@@ -1448,7 +1448,7 @@ void readPaddleValue() {
         /* off delay expired */
         paddleR_highStart = 0;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("^R:40");
+        serial_timing("^R,40");
 #endif
       }
     }
@@ -1460,10 +1460,10 @@ void readPaddleValue() {
       /* immediately active, clear off delay timer */
 #ifdef OPT_TIMING_DEBUG
       if (paddleL_highStart != 0) {
-        serial_timing("~L:50");
+        serial_timing("~L,50");
       }
       if (paddleL_prev == HIGH) {
-        serial_timing("_L:60");
+        serial_timing("_L,60");
       }
 #endif
 #ifdef OPT_BETTER_IAMBIC_A
@@ -1488,7 +1488,7 @@ void readPaddleValue() {
       paddleL_prev = HIGH;
       paddleL_highStart = millis();
 #ifdef OPT_TIMING_DEBUG
-      serial_timing("^l:70");
+      serial_timing("^l,70");
 #endif
       if (paddleRvs) {
         /* reversed to DASH */
@@ -1507,7 +1507,7 @@ void readPaddleValue() {
         /* off delay expired */
         paddleL_highStart = 0;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("^L:80");
+        serial_timing("^L,80");
 #endif
       }
     }
@@ -1548,13 +1548,13 @@ void readPaddleValue() {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
         lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("bL:90");
+        serial_timing("bL,90");
 #endif
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
         lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("bR:100");
+        serial_timing("bR,100");
 #endif
       }
       digitalWrite(pinLed, HIGH);
@@ -1575,7 +1575,7 @@ void readPaddleValue() {
       }
       lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
-      serial_timing("L:110");
+      serial_timing("L,110");
 #endif
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1591,7 +1591,7 @@ void readPaddleValue() {
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
       lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
-      serial_timing("R:120");
+      serial_timing("R,120");
 #endif
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1607,13 +1607,13 @@ void readPaddleValue() {
 	paddleL_released = 0;
 	memory = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("ml:130");
+        serial_timing("ml,130");
 #endif
       } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
 	paddleR_released = 0;
 	memory = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("mr:140");
+        serial_timing("mr,140");
 #endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
@@ -1623,23 +1623,23 @@ void readPaddleValue() {
           if (lastPaddle == R) {
             memory = L;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("lbl:150");
+            serial_timing("lbl,150");
 #endif
           } else {
             memory = R;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("lbr:160");
+            serial_timing("lbr,160");
 #endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("ll:170");
+            serial_timing("ll,170");
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("lr:180");
+          serial_timing("lr,180");
 #endif
 	}
       }
@@ -1652,12 +1652,12 @@ void readPaddleValue() {
       if (paddleL == LOW && lastPaddle == R) {
         memory = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("ml:190");
+        serial_timing("ml,190");
 #endif
       } else if (paddleR == LOW && lastPaddle == L) {
         memory = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("mr:200");
+        serial_timing("mr,200");
 #endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
@@ -1667,23 +1667,23 @@ void readPaddleValue() {
           if (lastPaddle == R) {
             memory = L;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("lbl:210");
+            serial_timing("lbl,210");
 #endif
           } else {
             memory = R;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("lbr:220");
+            serial_timing("lbr,220");
 #endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("ll:230");
+          serial_timing("ll,230");
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("lr:240");
+          serial_timing("lr,240");
 #endif
 	}
       }
@@ -1698,13 +1698,13 @@ void readPaddleValue() {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
           lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("ML:250");
+          serial_timing("ML,250");
 #endif
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
           lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("MR:260");
+          serial_timing("MR,260");
 #endif
         }
         memory = -1;
@@ -1723,13 +1723,13 @@ void readPaddleValue() {
 	paddleL_released = 0;
 	memory = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("ml:270");
+        serial_timing("ml,270");
 #endif
       } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
 	paddleR_released = 0;
 	memory = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("mr:280");
+        serial_timing("mr,280");
 #endif
       }
     } else
@@ -1738,12 +1738,12 @@ void readPaddleValue() {
       if (paddleL == LOW && lastPaddle == R) {
         memory = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("ml:290");
+        serial_timing("ml,290");
 #endif
       } else if (paddleR == LOW && lastPaddle == L) {
         memory = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("mr:300");
+        serial_timing("mr,300");
 #endif
       }
     }
@@ -2689,8 +2689,8 @@ void editSetting() {
         else
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexAvoidChatteringCount) {
-	if (avoidChatteringCount > 10)
-	  avoidChatteringCount -= 10;
+	if (avoidChatteringCount > 5)
+	  avoidChatteringCount -= 5;
         lcd.print(avoidChatteringCount);
 	if (avoidChatteringCount < 10)
 	  lcd.print(F(" "));
@@ -2846,7 +2846,7 @@ void editSetting() {
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexAvoidChatteringCount) {
 	if (avoidChatteringCount < MAX_CHATTERING_COUNT)
-	  avoidChatteringCount += 10;
+	  avoidChatteringCount += 5;
         lcd.print(avoidChatteringCount);
 	if (avoidChatteringCount < 10)
 	  lcd.print(F(" "));
