@@ -71,13 +71,13 @@ int runner_beep = 0;
 int offDelay = 1; // off delay enabled
 #endif
 
-#ifdef OPT_AUTO_SWITCH_KEYERTYPE
+#ifdef OPT_AUTO_SWITCH_KEYERTYPE /* JG1WYW */
 int count_straight_or_paddle = 0;
 int changed_to_straight = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
 #endif
 
-#ifdef OPT_BETTER_SRAND
+#ifdef OPT_BETTER_SRAND /* JG1WYW */
 int first_srand = 1;
 #endif
 
@@ -701,7 +701,7 @@ void goertzel() {
     if (filteredstate == LOW) { /* key released */
       startttimelow = millis();
       highduration = (millis() - starttimehigh);
-#ifdef OPT_BETTER_DECODE
+#ifdef OPT_BETTER_DECODE /* JG1WYW */
       if ((highduration * 2) <= hightimesavg) {
         hightimesavg = highduration;  // if speed increased fast ..
       }
@@ -717,7 +717,7 @@ void goertzel() {
       }
 #endif
       if (highduration > (5 * hightimesavg) ) {
-#ifdef OPT_BETTER_DECODE
+#ifdef OPT_BETTER_DECODE /* JG1WYW */
         hightimesavg = highduration;  // if speed decreased fast ..
 #else
         hightimesavg = highduration + hightimesavg;   // if speed decrease fast ..
@@ -742,7 +742,7 @@ void goertzel() {
         Serial.print(F("."));
 #endif
       }
-#ifdef OPT_BETTER_DECODE
+#ifdef OPT_BETTER_DECODE /* JG1WYW */
       if (highduration >= (hightimesavg * 2) && highduration < (hightimesavg * 6)) {
 #else
       if (highduration > (hightimesavg * 2) && highduration < (hightimesavg * 6)) {
@@ -765,7 +765,7 @@ void goertzel() {
 
     if (filteredstate == HIGH) { // we did end a LOW
 
-#ifdef OPT_BETTER_DECODE
+#ifdef OPT_BETTER_DECODE /* JG1WYW */
       float lacktime = 0.9;
 #else
       float lacktime = 1;
@@ -796,7 +796,7 @@ void goertzel() {
   }
 
   // write if no more letters
-#ifdef OPT_BETTER_DECODE
+#ifdef OPT_BETTER_DECODE /* JG1WYW */
   if ((millis() - startttimelow) > (hightimesavg * 6) && stop == LOW) {
 #else
   if ((millis() - startttimelow) > (highduration * 6) && stop == LOW) {
@@ -848,7 +848,7 @@ void readPotValue() {
 void setNewWpm(int wpm) {
   Wpm = wpm;
   durationDot = (60.0 * 1000) / (Wpm * 50);
-#ifdef OPT_RUNNER
+#ifdef OPT_RUNNER /* JG1WYW */
   runner_accel = 0; // reset acceleration when Wpm is modified manually
 #endif
 
@@ -880,7 +880,7 @@ void errBeep() {
   tone(pinBz, 220, 20);
 }
 
-#ifdef OPT_RUNNER
+#ifdef OPT_RUNNER /* JG1WYW */
 void tone_runner_mode()
 {
   tone(pinBz, 349, 100); // F3
@@ -903,7 +903,7 @@ void tone_miss()
 }
 #endif
 
-#ifdef OPT_INVADER_SOUND
+#ifdef OPT_INVADER_SOUND /* JG1WYW */
 void tone_invader_start()
 {
   tone(pinBz, 880, 100); // A4
@@ -928,7 +928,6 @@ int paddleR_stable = HIGH;
 int paddleL_trans = 0;
 int paddleR_trans = 0;
 
-//#define STABLE_COUNT 3
 #define STABLE_COUNT 5
 #endif
 
@@ -938,25 +937,8 @@ int paddleR_prev = HIGH;
 unsigned long paddleL_highStart = 0;
 unsigned long paddleR_highStart = 0;
 
-#define OFF_TIMER_RATIO_DASH 150 /* percent of dash () */
-//#define OFF_TIMER_RATIO_DASH 125 /* percent of dash () */
-//#define OFF_TIMER_RATIO_DASH 120 /* percent of dash (not sufficient) */
-//#define OFF_TIMER_RATIO_DASH 90 /* percent of dash (too short) */
-
-//#define OFF_TIMER_RATIO_DOT  150 /* percent of dot (too over repeat) */
-//#define OFF_TIMER_RATIO_DOT  120 /* percent of dot (too over repeat) */
-//#define OFF_TIMER_RATIO_DOT  110 /* percent of dot (over repeat) */
-//#define OFF_TIMER_RATIO_DOT  100 /* percent of dot (over) */
-//#define OFF_TIMER_RATIO_DOT  90 /* percent of dot (??) */
-//#define OFF_TIMER_RATIO_DOT  80 /* percent of dot () */
-//#define OFF_TIMER_RATIO_DOT  75 /* percent of dot () */
-#define OFF_TIMER_RATIO_DOT  50 /* percent of dot (a bit insufficient??) */
-//#define OFF_TIMER_RATIO_DOT  40 /* percent of dot (over repeat?) */
-//#define OFF_TIMER_RATIO_DOT  30 /* percent of dot (still a bit over) */
-//#define OFF_TIMER_RATIO_DOT  25 /* percent of dot */
-//#define OFF_TIMER_RATIO_DOT  20 /* percent of dot */
-//#define OFF_TIMER_RATIO_DOT  15 /* percent of dot (not sufficient) */
-//#define OFF_TIMER_RATIO_DOT  10 /* percent of dot */
+#define OFF_TIMER_RATIO_DASH 150 /* percent of dash */
+#define OFF_TIMER_RATIO_DOT  50 /* percent of dot */
 
 int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
@@ -1237,24 +1219,28 @@ void readPaddleValue() {
       }
     }
   }
-#if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND)
+#if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND) /* JG1WYW */
   /*
    * to avoid conflict among tone()
    */
   if (runner_beep != 0 && durationMark == 0) {
     switch (runner_beep) {
+#ifdef OPT_RUNNER
     case RUNNER_HIT:
       tone_hit();
       break;
     case RUNNER_MISS:
       tone_miss();
       break;
+#endif
+#ifdef OPT_INVADER_SOUND
     case INVADER_BEEP:
       beep();
       break;
     case INVADER_ERRBEEP:
       errBeep();
       break;
+#endif
     }
     runner_beep = 0;
   }
@@ -1289,9 +1275,9 @@ void readButtonValue() {
     } else if (millis() - timeStartSw[i] > durationLongPress && millis() - timeStartSw[i] < durationLongPress + 10) {
       //digitalWrite(pinLed, LOW);
       beep();
-#ifdef OPT_RUNNER
+#ifdef OPT_RUNNER /* JG1WYW */
       runner_mode = 0;
-    } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) {
+    } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) { /* much longer press */
       //digitalWrite(pinLed, LOW);
       tone_runner_mode();
       runner_mode = 1;
@@ -1368,7 +1354,7 @@ void fireLongFunction(int no) {
       lcd.setCursor(0, 1);
       lcd.print(F("A "));
       lcd.write(0b10110001);
-#ifdef OPT_RUNNER
+#ifdef OPT_RUNNER /* JG1WYW */
       if (runner_mode) {
         lcd.print(F(" r "));
       } else {
@@ -1405,7 +1391,7 @@ void fireLongFunction(int no) {
         } else if (digitalRead(pinSw3) == LOW) {
           pressedSw = pinSw3;
           lcd.setCursor(0, 0);
-#ifdef OPT_RUNNER
+#ifdef OPT_RUNNER /* JG1WYW */
           lcdIndex = 0;
           if (runner_mode) {
             lcd.print(F("Runner  "));
@@ -1418,7 +1404,7 @@ void fireLongFunction(int no) {
           break;
         } else if (digitalRead(pinSw4) == LOW) {
           pressedSw = pinSw4;
-#ifdef OPT_INVADER_SOUND
+#ifdef OPT_INVADER_SOUND /* JG1WYW */
           beep();
 #endif
           invaderAnimation();
@@ -1483,12 +1469,12 @@ void trainingMode(int pressedSw) {
     lang = langAbc;
     for (i = 0; i < 10; i++) {
 #if 1 /* JG1WYW */
-     if (rand() / (RAND_MAX / 4) == 0) {
+     if (rand() / (RAND_MAX / 4) == 0) { /* begin with 7/8 */
       presetMessage[k] = '7' + rand() / (RAND_MAX / 2 + 1); /* 7-8 */
       k++;
       presetMessage[k] = 'J' + rand() / (RAND_MAX / 5 + 1); /* J-N */
       k++;
-     } else {
+     } else { /* begin with J */
 #endif
       presetMessage[k] = 'J';
       k++;
@@ -1498,9 +1484,9 @@ void trainingMode(int pressedSw) {
       }
       k++;
 #if 1 /* JG1WYW */
-     }
+     } /* end of if 7/8 or J */
 #endif
-#ifndef OPT_RUNNER /* !OPT_RUNNDER */
+#ifndef OPT_RUNNER /* !OPT_RUNNDER allows any for training purpose */
       if (presetMessage[k - 1] == 'S') {
         presetMessage[k] = '6';
       } else if (presetMessage[k - 1] == 'D') {
@@ -1516,7 +1502,7 @@ void trainingMode(int pressedSw) {
         presetMessage[k] = 'A' + rand() / (RAND_MAX / 26 + 1) ;
         k++;
       }
-#ifdef OPT_RUNNER /* !OPT_RUNNDER */
+#ifdef OPT_RUNNER /* JG1WYW */
       if (runner_mode) { /* runner */
         int idx;
 
