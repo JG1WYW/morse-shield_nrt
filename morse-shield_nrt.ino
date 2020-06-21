@@ -21,7 +21,7 @@ String date = "19/12/20";
  * These options were added by JG1WYW
  */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
-//#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
+#define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_INVADER_SOUND		/* invader sound */
@@ -33,8 +33,8 @@ String date = "19/12/20";
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
 #define OPT_BETTER_IAMBIC_A             /* Improved behavior of IambicA */
-#define OPT_TIMING_DEBUG                /* Debug flag */
-#define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
+//#define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
+//#define OPT_TIMING_DEBUG                /* Debug flag */
 
 #define MOD_MISC      /* See comments for each modification */
 
@@ -75,11 +75,6 @@ int runner_beep = 0;
 
 #endif
 
-#ifdef OPT_INVADER_SOUND
-int invaderSound = 1;
-int menuIndexInvaderSound;
-#endif
-
 #ifdef OPT_WORD_SPACE
 int wordSpace = 7;
 int charSpace = 3;
@@ -103,7 +98,23 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
+int look_ahead_memory_ratio = 25;   /* XXX percent (of dot) for look ahead memory */
 int menuIndexLookAheadMemory;
+int menuIndexLookAheadMemoryRatio;
+#endif
+
+#ifdef OPT_AUTO_KEYERTYPE
+int autoKeyerType = 0; // auto keyer type disabled by default (Experimental)
+int autoKeyerTypeElekey = 2; // XXX Supr, auto keyer type when elekey changed from straight key
+int count_straight_or_paddle = 0;
+#define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
+int menuIndexAutoKeyertype;
+int menuIndexAutoKeyertypeElekey;
+#endif
+
+#ifdef OPT_INVADER_SOUND
+int invaderSound = 1;
+int menuIndexInvaderSound;
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
@@ -114,15 +125,6 @@ int avoidChatteringCount = 10; // Stable count
 
 int menuIndexAvoidChattering;
 int menuIndexAvoidChatteringCount;
-#endif
-
-#ifdef OPT_AUTO_KEYERTYPE
-int autoKeyerType = 0; // auto keyer type disabled by default (Experimental)
-int autoKeyerTypeElekey = 2; // XXX Supr, auto keyer type when elekey changed from straight key
-int count_straight_or_paddle = 0;
-#define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
-int menuIndexAutoKeyertype;
-int menuIndexAutoKeyertypeElekey;
 #endif
 
 #ifdef OPT_BETTER_SRAND
@@ -308,21 +310,22 @@ char *setMenu[] {
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   ,
-  "LkAhdMem"   // look ahead memory
-#endif
-#ifdef OPT_AVOID_CHATTERING
-  ,
-  "AvodChtr",  // to avoid chattering
-  "StbleCnt"   // stable count
+  "LAMemory",  // look ahead memory
+  "LAMratio"   // look ahead memory ratio
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   ,
   "AtoKyChg",  // auto keyer type change
   "AtoKyEle"   // auto keyer type when elekey
+#endif
 #ifdef OPT_INVADER_SOUND
   ,
   "InvdrSnd"   // enable invader sound
 #endif
+#ifdef OPT_AVOID_CHATTERING
+  ,
+  "AvodChtr",  // to avoid chattering
+  "StbleCnt"   // stable count
 #endif
 };
 
@@ -354,10 +357,7 @@ typedef struct PARAM_EEPROM {
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   int lookAheadMemory;
-#endif
-#ifdef OPT_AVOID_CHATTERING
-  int avoidChattering;
-  int avoidChatteringCount;
+  int look_ahead_memory_ratio;
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   int autoKeyerType;
@@ -365,6 +365,10 @@ typedef struct PARAM_EEPROM {
 #endif
 #ifdef OPT_INVADER_SOUND
   int invaderSound;
+#endif
+#ifdef OPT_AVOID_CHATTERING
+  int avoidChattering;
+  int avoidChatteringCount;
 #endif
 } param_eeprom_t;
 
@@ -408,10 +412,7 @@ int param_eeprom_load()
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
     lookAheadMemory = param.lookAheadMemory;
-#endif
-#ifdef OPT_AVOID_CHATTERING
-    avoidChattering = param.avoidChattering;
-    avoidChatteringCount = param.avoidChatteringCount;
+    look_ahead_memory_ratio = param.look_ahead_memory_ratio;
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
     autoKeyerType = param.autoKeyerType;
@@ -419,6 +420,10 @@ int param_eeprom_load()
 #endif
 #ifdef OPT_INVADER_SOUND
     invaderSound = param.invaderSound;
+#endif
+#ifdef OPT_AVOID_CHATTERING
+    avoidChattering = param.avoidChattering;
+    avoidChatteringCount = param.avoidChatteringCount;
 #endif
 
     return 0; // success
@@ -454,10 +459,7 @@ void param_eeprom_save()
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   param.lookAheadMemory = lookAheadMemory;
-#endif
-#ifdef OPT_AVOID_CHATTERING
-  param.avoidChattering = avoidChattering;
-  param.avoidChatteringCount = avoidChatteringCount;
+  param.look_ahead_memory_ratio = look_ahead_memory_ratio;
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   param.autoKeyerType = autoKeyerType;
@@ -465,6 +467,10 @@ void param_eeprom_save()
 #endif
 #ifdef OPT_INVADER_SOUND
   param.invaderSound = invaderSound;
+#endif
+#ifdef OPT_AVOID_CHATTERING
+  param.avoidChattering = avoidChattering;
+  param.avoidChatteringCount = avoidChatteringCount;
 #endif
 
   ptr = (byte *)&param;
@@ -894,10 +900,7 @@ void setup() {
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   menuIndexLookAheadMemory = menuIndex++;
-#endif
-#ifdef OPT_AVOID_CHATTERING
-  menuIndexAvoidChattering = menuIndex++;
-  menuIndexAvoidChatteringCount = menuIndex++;
+  menuIndexLookAheadMemoryRatio = menuIndex++;
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   menuIndexAutoKeyertype = menuIndex++;
@@ -905,6 +908,10 @@ void setup() {
 #endif
 #ifdef OPT_INVADER_SOUND
   menuIndexInvaderSound = menuIndex++;
+#endif
+#ifdef OPT_AVOID_CHATTERING
+  menuIndexAvoidChattering = menuIndex++;
+  menuIndexAvoidChatteringCount = menuIndex++;
 #endif
 #endif /* 1 */
 
@@ -1248,13 +1255,6 @@ void tone_invader_clear()
 }
 #endif
 
-#ifdef OPT_AVOID_CHATTERING
-int paddleL_stable = HIGH;
-int paddleR_stable = HIGH;
-int paddleL_trans = 0;
-int paddleR_trans = 0;
-#endif
-
 #ifdef OPT_OFF_DELAY
 int paddleL_prev = HIGH;
 int paddleR_prev = HIGH;
@@ -1263,6 +1263,13 @@ unsigned long paddleR_highStart = 0;
 
 int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
+#endif
+
+#ifdef OPT_AVOID_CHATTERING
+int paddleL_stable = HIGH;
+int paddleR_stable = HIGH;
+int paddleL_trans = 0;
+int paddleR_trans = 0;
 #endif
 
 #ifdef OPT_RUNNER
@@ -1538,23 +1545,41 @@ void readPaddleValue() {
       if (paddleL == LOW && lastPaddle == R && paddleL_released) {
 	paddleL_released = 0;
 	memory = L;
+#ifdef OPT_TIMING_DEBUG
+        serial_timing("ml");
+#endif
       } else if (paddleR == LOW && lastPaddle == L && paddleR_released) {
 	paddleR_released = 0;
 	memory = R;
+#ifdef OPT_TIMING_DEBUG
+        serial_timing("mr");
+#endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
-      else if (memory == -1 && lookAheadMemory && (millis() - timeStart > durationDot * 3 / 4)) {
+      else if (lookAheadMemory && memory == -1 && (millis() - timeStart > durationDot * (100 - look_ahead_memory_ratio) / 100)) {
         // memory paddle LR
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
+#ifdef OPT_TIMING_DEBUG
+            serial_timing("lbl");
+#endif
           } else {
             memory = R;
+#ifdef OPT_TIMING_DEBUG
+            serial_timing("lbr");
+#endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
+#ifdef OPT_TIMING_DEBUG
+            serial_timing("ll");
+#endif
 	} else if (paddleR == LOW) {
           memory = R;
+#ifdef OPT_TIMING_DEBUG
+          serial_timing("lr");
+#endif
 	}
       }
 #endif
@@ -1565,22 +1590,40 @@ void readPaddleValue() {
       // memory paddle LR
       if (paddleL == LOW && lastPaddle == R) {
         memory = L;
+#ifdef OPT_TIMING_DEBUG
+        serial_timing("ml");
+#endif
       } else if (paddleR == LOW && lastPaddle == L) {
         memory = R;
+#ifdef OPT_TIMING_DEBUG
+        serial_timing("mr");
+#endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
-      else if (memory == -1 && lookAheadMemory && (millis() - timeStart > durationDot * 3 / 4)) {
+      else if (lookAheadMemory && memory == -1 && (millis() - timeStart > durationDot * (100 - look_ahead_memory_ratio) / 100)) {
         // memory paddle LR
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
+#ifdef OPT_TIMING_DEBUG
+            serial_timing("lbl");
+#endif
           } else {
             memory = R;
+#ifdef OPT_TIMING_DEBUG
+            serial_timing("lbr");
+#endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
+#ifdef OPT_TIMING_DEBUG
+          serial_timing("ll");
+#endif
 	} else if (paddleR == LOW) {
           memory = R;
+#ifdef OPT_TIMING_DEBUG
+          serial_timing("lr");
+#endif
 	}
       }
 #endif
@@ -1594,13 +1637,13 @@ void readPaddleValue() {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
           lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("mL");
+          serial_timing("ML");
 #endif
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
           lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("mR");
+          serial_timing("MR");
 #endif
         }
         memory = -1;
@@ -1633,8 +1676,14 @@ void readPaddleValue() {
     if (keyerType == keyIambicB || ((keyerType == keySuper) && (millis() - timeStart > durationDot))) {
       if (paddleL == LOW && lastPaddle == R) {
         memory = L;
+#ifdef OPT_TIMING_DEBUG
+        serial_timing("ml");
+#endif
       } else if (paddleR == LOW && lastPaddle == L) {
         memory = R;
+#ifdef OPT_TIMING_DEBUG
+        serial_timing("mr");
+#endif
       }
     }
     // ending of mark
@@ -1922,11 +1971,15 @@ void trainingMode(int pressedSw) {
     for (i = 0; i < 10; i++) {
       for (j = 0; j < 5; j++) {
         presetMessage[k] = CharWabun[rand() / (RAND_MAX / 48 + 1)] ;
+#if 0 /* XXX debug (made wabun same to abc) */
         Serial.print(presetMessage[k]);
         Serial.print(F(","));
+#endif
         k++;
       }
+#if 0 /* XXX debug (made wabun same to abc) */
       Serial.println();
+#endif
       presetMessage[k] = ' ';
       k++;
     }
@@ -2411,20 +2464,13 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
-#endif
-#ifdef OPT_AVOID_CHATTERING
-      } else if (menuIndex == menuIndexAvoidChattering) {
-        if (avoidChattering)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
-      } else if (menuIndex == menuIndexAvoidChatteringCount) {
-        lcd.print(avoidChatteringCount);
-	if (avoidChatteringCount < 10)
-	  lcd.print(F(" "));
-	if (avoidChatteringCount < 100)
-	  lcd.print(F(" "));
-	lcd.print(F(" "));
+      } else if (menuIndex == menuIndexLookAheadMemoryRatio) {
+        lcd.print(look_ahead_memory_ratio);
+	if (look_ahead_memory_ratio < 10)
+          lcd.print(F(" "));
+	if (look_ahead_memory_ratio < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
@@ -2441,6 +2487,20 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+#endif
+#ifdef OPT_AVOID_CHATTERING
+      } else if (menuIndex == menuIndexAvoidChattering) {
+        if (avoidChattering)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAvoidChatteringCount) {
+        lcd.print(avoidChatteringCount);
+	if (avoidChatteringCount < 10)
+	  lcd.print(F(" "));
+	if (avoidChatteringCount < 100)
+	  lcd.print(F(" "));
+	lcd.print(F(" "));
 #endif
       }
     }
@@ -2544,28 +2604,20 @@ void editSetting() {
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
       } else if (menuIndex == menuIndexLookAheadMemory) {
-        lookAheadMemory != lookAheadMemory;
+        lookAheadMemory = !lookAheadMemory;
         if (lookAheadMemory)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
-#endif
-#ifdef OPT_AVOID_CHATTERING
-      } else if (menuIndex == menuIndexAvoidChattering) {
-	avoidChattering = !avoidChattering;
-        if (avoidChattering)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
-      } else if (menuIndex == menuIndexAvoidChatteringCount) {
-	if (avoidChatteringCount > 10)
-	  avoidChatteringCount -= 10;
-        lcd.print(avoidChatteringCount);
-	if (avoidChatteringCount < 10)
-	  lcd.print(F(" "));
-	if (avoidChatteringCount < 100)
-	  lcd.print(F(" "));
-	lcd.print(F(" "));
+      } else if (menuIndex == menuIndexLookAheadMemoryRatio) {
+	if (look_ahead_memory_ratio > 0)
+	  look_ahead_memory_ratio -= 5;
+        lcd.print(look_ahead_memory_ratio);
+	if (look_ahead_memory_ratio < 10)
+          lcd.print(F(" "));
+	if (look_ahead_memory_ratio < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
@@ -2587,6 +2639,23 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+#endif
+#ifdef OPT_AVOID_CHATTERING
+      } else if (menuIndex == menuIndexAvoidChattering) {
+	avoidChattering = !avoidChattering;
+        if (avoidChattering)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAvoidChatteringCount) {
+	if (avoidChatteringCount > 10)
+	  avoidChatteringCount -= 10;
+        lcd.print(avoidChatteringCount);
+	if (avoidChatteringCount < 10)
+	  lcd.print(F(" "));
+	if (avoidChatteringCount < 100)
+	  lcd.print(F(" "));
+	lcd.print(F(" "));
 #endif
       }
     }
@@ -2690,28 +2759,20 @@ void editSetting() {
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
       } else if (menuIndex == menuIndexLookAheadMemory) {
-        lookAheadMemory != lookAheadMemory;
+        lookAheadMemory = !lookAheadMemory;
         if (lookAheadMemory)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
-#endif
-#ifdef OPT_AVOID_CHATTERING
-      } else if (menuIndex == menuIndexAvoidChattering) {
-	avoidChattering = !avoidChattering;
-        if (avoidChattering)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
-      } else if (menuIndex == menuIndexAvoidChatteringCount) {
-	if (avoidChatteringCount < MAX_CHATTERING_COUNT)
-	  avoidChatteringCount += 10;
-        lcd.print(avoidChatteringCount);
-	if (avoidChatteringCount < 10)
-	  lcd.print(F(" "));
-	if (avoidChatteringCount < 100)
-	  lcd.print(F(" "));
-	lcd.print(F(" "));
+      } else if (menuIndex == menuIndexLookAheadMemoryRatio) {
+	if (look_ahead_memory_ratio < MAX_DOT_RATIO)
+	  look_ahead_memory_ratio += 5;
+        lcd.print(look_ahead_memory_ratio);
+	if (look_ahead_memory_ratio < 10)
+          lcd.print(F(" "));
+	if (look_ahead_memory_ratio < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
@@ -2733,6 +2794,23 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+#endif
+#ifdef OPT_AVOID_CHATTERING
+      } else if (menuIndex == menuIndexAvoidChattering) {
+	avoidChattering = !avoidChattering;
+        if (avoidChattering)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAvoidChatteringCount) {
+	if (avoidChatteringCount < MAX_CHATTERING_COUNT)
+	  avoidChatteringCount += 10;
+        lcd.print(avoidChatteringCount);
+	if (avoidChatteringCount < 10)
+	  lcd.print(F(" "));
+	if (avoidChatteringCount < 100)
+	  lcd.print(F(" "));
+	lcd.print(F(" "));
 #endif
       }
     }
