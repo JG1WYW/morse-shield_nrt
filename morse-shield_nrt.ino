@@ -87,8 +87,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 40;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 140;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 45;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 145;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -100,7 +100,7 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 40;   /* XXX percent (of dot) for look ahead memory */
+int look_ahead_memory_ratio = 45;   /* XXX percent (of dot) for look ahead memory */
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
