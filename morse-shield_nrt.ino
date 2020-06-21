@@ -1606,7 +1606,7 @@ void trainingMode(int pressedSw) {
 #if 1 /* JG1WYW */
      } /* end of if 7/8 or J */
 #endif
-#ifndef OPT_RUNNER /* !OPT_RUNNDER allows any for training purpose */
+#ifndef OPT_RUNNER /* !OPT_RUNNDER */
       if (presetMessage[k - 1] == 'S') {
         presetMessage[k] = '6';
       } else if (presetMessage[k - 1] == 'D') {
@@ -1618,6 +1618,21 @@ void trainingMode(int pressedSw) {
       }
 #endif
       k++;
+#ifdef OPT_RUNNER
+      if (presetMessage[k - 3] == '7') {
+	if (presetMessage[k - 2] >= 'K' && presetMessage[k - 2] <= 'N') { // omitting 7{K-N}{0|5-9}
+	  presetMessage[k - 1] = '1' + rand() / (RAND_MAX / 4 + 1) ; /* 1-4 */
+	}
+      } else if (presetMessage[k - 3] == '8') {
+	if (presetMessage[k - 2] == 'K') { // omitting 8K
+	  presetMessage[k - 2] = 'J';
+	} else if (presetMessage[k - 2] == 'L') { // omitting 8L
+	  presetMessage[k - 2] = 'M';
+	}
+      } else if (presetMessage[k - 2] == 'D') { // omitting JD{0|2-9}
+	presetMessage[k - 1] = '1';
+      }
+#endif
       for (j = 0; j < 3; j++) {
         presetMessage[k] = 'A' + rand() / (RAND_MAX / 26 + 1) ;
         k++;
