@@ -30,7 +30,7 @@ String date = "19/12/20";
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
-#define OPT_LAST_MENUINDEX              /* memory the last menuIndex (Experimental) */
+#define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 
 #define MOD_IAMBIC_A  /* XXX Is the originally written behavior of IambicA correct? */
 #define MOD_MISC      /* See comments for each modification */
@@ -86,9 +86,9 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_AVOID_CHATTERING
 int avoidChattering = 0; // avoid chattering disabled by default (Experimental)
-int avoidChatteringCount = 5; // Stable count
+int avoidChatteringCount = 10; // Stable count
 
-#define MAX_CHATTERING_COUNT 10
+#define MAX_CHATTERING_COUNT 100
 
 int menuIndexAvoidChattering;
 int menuIndexAvoidChatteringCount;
@@ -2196,7 +2196,11 @@ void editSetting() {
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexAvoidChatteringCount) {
         lcd.print(avoidChatteringCount);
-        lcd.print(F("   "));
+	if (avoidChatteringCount < 10)
+	  lcd.print(F(" "));
+	if (avoidChatteringCount < 100)
+	  lcd.print(F(" "));
+	lcd.print(F(" "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
@@ -2299,10 +2303,14 @@ void editSetting() {
         else
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexAvoidChatteringCount) {
-	if (avoidChatteringCount > 1)
-	  avoidChatteringCount--;
+	if (avoidChatteringCount > 10)
+	  avoidChatteringCount -= 10;
         lcd.print(avoidChatteringCount);
-        lcd.print(F("   "));
+	if (avoidChatteringCount < 10)
+	  lcd.print(F(" "));
+	if (avoidChatteringCount < 100)
+	  lcd.print(F(" "));
+	lcd.print(F(" "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
@@ -2410,11 +2418,13 @@ void editSetting() {
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexAvoidChatteringCount) {
 	if (avoidChatteringCount < MAX_CHATTERING_COUNT)
-	  avoidChatteringCount++;
+	  avoidChatteringCount += 10;
         lcd.print(avoidChatteringCount);
 	if (avoidChatteringCount < 10)
 	  lcd.print(F(" "));
-        lcd.print(F("  "));
+	if (avoidChatteringCount < 100)
+	  lcd.print(F(" "));
+	lcd.print(F(" "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
