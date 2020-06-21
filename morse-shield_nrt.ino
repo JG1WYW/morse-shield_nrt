@@ -20,7 +20,6 @@ String date = "19/12/20";
 #define OFF_DELAY			/* off delay timer for super keyer */
 #define AVOID_CHATTERING		/* indend to avoid chattering */
 #define AUTO_SWITCH_KEYERTYPE		/* adapt to paddle/straight change */
-#define RESERVED_TRAINING		/* call sign training twice */
 #define SIDETONE_600			/* 600Hz side tone */
 #define RUNNER				/* morse runner training */
 
@@ -48,6 +47,10 @@ int paddleRvs = 0; // paddle reverse
 
 #ifdef OFF_DELAY /* NRT */
 int offDelay = 1; // off delay enabled
+#endif
+
+#ifdef RUNNER /* NRT */
+int runnerMode = 1; // Runner mode instead of just callsigns
 #endif
 
 #ifdef AUTO_SWITCH_KEYERTYPE
@@ -139,7 +142,11 @@ int magnitudelimit_low = 100;
 int realstate = LOW;
 int realstatebefore = LOW;
 int filteredstate = LOW;
+//#if 1 /* NRT */
+//int filteredstatebefore = HIGH;
+//#else
 int filteredstatebefore = LOW;
+//#endif
 
 // The sampling frq will be 8928 on a 16 mhz
 // without any prescaler etc
@@ -171,7 +178,11 @@ int nbtime = 6;  // ms noise blanker
 long starttimehigh;
 long highduration;
 long lasthighduration;
+#if 1 /* NRT */
+long hightimesavg = 60;
+#else
 long hightimesavg;
+#endif
 long lowtimesavg;
 long startttimelow;
 long lowduration;
@@ -179,7 +190,11 @@ long laststarttime = 0;
 
 char code = 1;//[20]; estimated code
 int stop = LOW;
+#if 1 /* NRT */
+int wpm = 20;
+#else
 int wpm;
+#endif
 
 // game setting
 #define maxInvader 64
@@ -191,7 +206,9 @@ int gameStarted = 0;
 
 // setting menu
 // ToDo: save param on EEPROM
-#ifdef OFF_DELAY /* NRT */
+#if defined(RUNNER) /* NRT */
+#define MaxMenu 9
+#elif defined(OFF_DELAY) /* NRT */
 #define MaxMenu 8
 #else
 #define MaxMenu 7
@@ -207,6 +224,10 @@ char *setMenu[] {
 #ifdef OFF_DELAY /* NRT */
   ,
   "Offdelay"  // off delay
+#endif
+#ifdef RUNNER /* NRT */
+  ,
+  "Runner  "  // Runner mode
 #endif
 };
 
@@ -842,10 +863,6 @@ int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
 #endif
 
-#ifdef RESERVED_TRAINING /* NRT */
-int reserved_training = 0;
-#endif
-
 #ifdef RUNNER /* NRT */
 int runner = 0;
 unsigned int runner_call[8];
@@ -1104,7 +1121,7 @@ void readPaddleValue() {
     // key up straight key
     if (keyerType == keyStraight) {
 #if 1 /* NRT */
-      if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > durationDot)) {
+      if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > (durationDot >> 1))) { /* pos_read condition prevents from all dots message output */
 #else
       if (paddleL == HIGH && (millis() - timeStart > durationDot)) {
 #endif
@@ -1213,7 +1230,15 @@ void fireLongFunction(int no) {
       lcd.setCursor(0, 1);
       lcd.print(F("A "));
       lcd.write(0b10110001);
+#ifdef RUNNER
+      if (runnerMode) {
+        lcd.print(F(" r "));
+      } else {
+        lcd.print(F(" c "));
+      }
+#else
       lcd.print(F(" c "));
+#endif
       lcd.write(0); // invader
       lcd.write(1); // invader
       // wait for the selection
@@ -1257,10 +1282,6 @@ void fireLongFunction(int no) {
       for (;;) {
         if (digitalRead(pressedSw) == HIGH) break;
       }
-#ifdef RESERVED_TRAINING /* NRT */
-      if (pressedSw == pinSw3)
-        reserved_training = 1;
-#endif
       trainingMode(pressedSw);
       break;
     case 2: // record messages
@@ -1291,7 +1312,6 @@ void trainingMode(int pressedSw) {
       presetMessage[k] = ' ';
       k++;
     }
-#ifndef RUNNER /* !RUNNER NRT */
   } else if (pressedSw == pinSw2) {
     // 5x10 random letters KANA
     lang = langWabun;
@@ -1306,12 +1326,7 @@ void trainingMode(int pressedSw) {
       presetMessage[k] = ' ';
       k++;
     }
-#endif /* NRT */
-#ifdef RUNNER /* NRT */
-  } else if (pressedSw == pinSw3 || pressedSw == pinSw2) {
-#else
   } else if (pressedSw == pinSw3) {
-#endif
     // 10 random callsigns JA
     lang = langAbc;
     for (i = 0; i < 10; i++) {
@@ -1349,8 +1364,8 @@ void trainingMode(int pressedSw) {
         presetMessage[k] = 'A' + rand() / (RAND_MAX / 26 + 1) ;
         k++;
       }
-#ifdef RUNNER /* NRT */
-      if (pressedSw == pinSw2) { /* runner */
+#ifdef RUNNER /* !RUNNDER */
+      if (runnerMode) { /* runner */
         int idx;
 
 	runner = 1;
@@ -1424,7 +1439,7 @@ void decode() {
 		  delay(100);
                   tone(pinBz, 1440, 200);
 		  delay(1000);
-                  trainingMode(pinSw2);
+                  trainingMode(pinSw3);
 		}
 	      } else {
 	        tone(pinBz, 220, 100);
@@ -1616,6 +1631,13 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
+#ifdef RUNNER /* NRT */
+      } else if (menuIndex == 8) {
+        if (runnerMode)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
       }
     }
     if (digitalRead(pinSw2) == LOW) {
@@ -1672,6 +1694,14 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
+#ifdef RUNNER /* NRT */
+      } else if (menuIndex == 8) {
+        runnerMode = !runnerMode;
+        if (runnerMode)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
       }
     }
     if (digitalRead(pinSw3) == LOW) {
@@ -1724,6 +1754,14 @@ void editSetting() {
       } else if (menuIndex == 7) {
         offDelay = !offDelay;
         if (offDelay)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef RUNNER /* NRT */
+      } else if (menuIndex == 8) {
+        runnerMode = !runnerMode;
+        if (runnerMode)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -1835,16 +1873,7 @@ void setNextChar() {
     // Preset message has not been prepared
     if (readChar == 0) {
       readChar = -1;
-#ifdef RESERVED_TRAINING /* NRT */
-     if (reserved_training > 0) {
       clearPresetMessage();
-      trainingMode(pinSw3);
-     } else {
-      clearPresetMessage();
-     }
-#else
-      clearPresetMessage();
-#endif
       //Serial.println(F("no preset messages"));
 
       // set next beacon message
@@ -1970,9 +1999,6 @@ void clearPresetMessage() {
   }
   nextCode = 0x01;
   pos_read = 0;
-#ifdef RESERVED_TRAINING /* NRT */
-  reserved_training = 0;
-#endif
 }
 
 void clearBeacon() {
