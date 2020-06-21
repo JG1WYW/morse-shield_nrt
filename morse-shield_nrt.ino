@@ -82,7 +82,7 @@ int menuIndexCharSpace;
 int offDelay = 0; // off delay disabled by default (Experimental)
 
 int off_timer_ratio_dot = 30;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 90;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dash = 30;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -168,7 +168,8 @@ int pinBtn[4] = {pinSw1, pinSw2, pinSw3, pinSw4};
 int lang = langAbc;
 
 #ifdef MOD_IAMBIC_A
-int prev_lastPaddle = -1;
+int paddleR_released = 1;
+int paddleL_released = 1;
 #endif
 int lastPaddle = L; // memory key param
 int endingChar = 0; // space after letter(1) or dit/dah(0)
@@ -1359,9 +1360,20 @@ void readPaddleValue() {
     return;
   }
 
+#ifdef MOD_IAMBIC_A
+  if (paddleR == HIGH)
+    paddleR_released = 1;
+  if (paddleL == HIGH)
+    paddleL_released = 1;
+#endif
+
   // pressing both paddles
   if (paddleL == LOW && paddleR == LOW && durationSpace == 0) {
     if (durationMark == 0 && keyerType != keyStraight) {
+#ifdef MOD_IAMBIC_A
+      paddleR_released = 0;
+      paddleL_released = 0;
+#endif
       if (lastPaddle != L) {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
         lastPaddle = L;
@@ -1377,6 +1389,9 @@ void readPaddleValue() {
     // pressing the L paddle
   } else if (paddleL == LOW && durationSpace == 0) {
     if (durationMark == 0) {
+#ifdef MOD_IAMBIC_A
+      paddleL_released = 0;
+#endif
       if (keyerType == keyStraight) {
         durationMark = 10000; // key down straight key
       } else {
@@ -1391,6 +1406,9 @@ void readPaddleValue() {
     // pressing the R paddle
   } else if (paddleR == LOW && durationSpace == 0) {
     if (durationMark == 0 && keyerType != keyStraight) {
+#ifdef MOD_IAMBIC_A
+      paddleR_released = 0;
+#endif
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
       lastPaddle = R;
       digitalWrite(pinLed, HIGH);
@@ -1402,18 +1420,21 @@ void readPaddleValue() {
 
   if (durationSpace != 0) {
 #ifdef MOD_IAMBIC_A
-    if (paddleL == LOW && paddleR == LOW) {
-      if (keyerType == keyIambicB || keyerType == keySuper || (keyerType == keyIambicA && prev_lastPaddle == -1)) {
-	if (lastPaddle != L) {
-	  memory = L;
-	} else {
-	  memory = R;
-	}
+    if (keyerType == keyIambicA) {
+      if (paddleL == LOW && lastPaddle == R && paddleL_released) {
+	paddleL_released = 0;
+	memory = L;
+      } else if (paddleR == LOW && lastPaddle == L && paddleR_released) {
+	paddleR_released = 0;
+	memory = R;
       }
-    } else if (paddleL == LOW && lastPaddle == R) {
-      memory = L;
-    } else if (paddleR == LOW && lastPaddle == L) {
-      memory = R;
+    } else
+    if (keyerType == keyIambicB || keyerType == keySuper) {
+      if (paddleL == LOW && lastPaddle == R) {
+	memory = L;
+      } else if (paddleR == LOW && lastPaddle == L) {
+	memory = R;
+      }
     }
 #else
     if (keyerType == keyIambicB || keyerType == keySuper) {
@@ -1433,15 +1454,9 @@ void readPaddleValue() {
       if (memory != -1) {
         if (memory == L) {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
-#ifdef MOD_IAMBIC_A
-	  prev_lastPaddle = lastPaddle;
-#endif
           lastPaddle = L;
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
-#ifdef MOD_IAMBIC_A
-	  prev_lastPaddle = lastPaddle;
-#endif
           lastPaddle = R;
         }
         memory = -1;
@@ -1450,28 +1465,26 @@ void readPaddleValue() {
         timeStart = millis();
         if (sidetone) tone(pinBz, toneFreq); // side tone
       }
-#ifdef MOD_IAMBIC_A
-      else {
-	prev_lastPaddle = -1;
-      }
-#endif
     }
   }
   if (durationMark != 0) {
     // memory paddle LR
 #ifdef MOD_IAMBIC_A
-    if (paddleL == LOW && paddleR == LOW) {
-      if (keyerType == keyIambicB || (keyerType == keySuper && (millis() - timeStart > durationDot)) || (keyerType == keyIambicA && prev_lastPaddle == -1)) {
-	if (lastPaddle != L) {
-	  memory = L;
-	} else {
-	  memory = R;
-	}
+    if (keyerType == keyIambicA) {
+      if (paddleL == LOW && lastPaddle == R && paddleL_released) {
+	paddleL_released = 0;
+	memory = L;
+      } else if (paddleR == LOW && lastPaddle == L && paddleR_released) {
+	paddleR_released = 0;
+	memory = R;
       }
-    } else if (paddleL == LOW && lastPaddle == R) {
-      memory = L;
-    } else if (paddleR == LOW && lastPaddle == L) {
-      memory = R;
+    } else
+      if (keyerType == keyIambicB || (keyerType == keySuper && (millis() - timeStart > durationDot))) {
+      if (paddleL == LOW && lastPaddle == R) {
+	memory = L;
+      } else if (paddleR == LOW && lastPaddle == L) {
+	memory = R;
+      }
     }
 #else
     if (keyerType == keyIambicB || ((keyerType == keySuper) && (millis() - timeStart > durationDot))) {
