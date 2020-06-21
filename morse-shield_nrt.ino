@@ -65,10 +65,25 @@ int runner_accel = 0;
 
 #if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND)
 int runner_beep = 0;
+
 #define RUNNER_HIT      1
 #define RUNNER_MISS     2
 #define INVADER_BEEP    3
 #define INVADER_ERRBEEP 4
+
+#endif
+
+#ifdef OPT_INVADER_SOUND
+
+int invaderSound = 1;
+unsigned long invaderBeepStart = 0;
+unsigned long invaderErrBeepStart = 0;
+
+#define INVADER_BEEP_MS     20
+#define INVADER_ERR_BEEP_MS 20
+
+int menuIndexInvaderSound;
+
 #endif
 
 #ifdef OPT_WORD_SPACE
@@ -81,8 +96,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 20;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 60;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 30;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 90;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -301,6 +316,10 @@ char *setMenu[] {
   ,
   "AtoKyChg",  // auto keyer type change
   "AtoKyEle"   // auto keyer type when elekey
+#ifdef OPT_INVADER_SOUND
+  ,
+  "InvdrSnd"   // enable invader sound
+#endif
 #endif
 };
 
@@ -337,6 +356,9 @@ typedef struct PARAM_EEPROM {
 #ifdef OPT_AUTO_KEYERTYPE
   int autoKeyerType;
   int autoKeyerTypeElekey;
+#endif
+#ifdef OPT_INVADER_SOUND
+  int invaderSound;
 #endif
 } param_eeprom_t;
 
@@ -386,6 +408,9 @@ int param_eeprom_load()
     autoKeyerType = param.autoKeyerType;
     autoKeyerTypeElekey = param.autoKeyerTypeElekey;
 #endif
+#ifdef OPT_INVADER_SOUND
+    invaderSound = param.invaderSound;
+#endif
 
     return 0; // success
   }
@@ -425,6 +450,9 @@ void param_eeprom_save()
 #ifdef OPT_AUTO_KEYERTYPE
   param.autoKeyerType = autoKeyerType;
   param.autoKeyerTypeElekey = autoKeyerTypeElekey;
+#endif
+#ifdef OPT_INVADER_SOUND
+  param.invaderSound = invaderSound;
 #endif
 
   ptr = (byte *)&param;
@@ -841,6 +869,9 @@ void setup() {
 #ifdef OPT_AUTO_KEYERTYPE
   menuIndexAutoKeyertype = menuIndex++;
   menuIndexAutoKeyertypeElekey = menuIndex++;
+#endif
+#ifdef OPT_INVADER_SOUND
+  menuIndexInvaderSound = menuIndex++;
 #endif
 #endif /* 1 */
 
@@ -1390,6 +1421,12 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_INVADER_SOUND
+      if (invaderSound) {
+	invaderBeepStart = 0;
+	invaderErrBeepStart = 0;
+      }
+#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
     }
     // pressing the L paddle
@@ -1407,6 +1444,12 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_INVADER_SOUND
+      if (invaderSound) {
+	invaderBeepStart = 0;
+	invaderErrBeepStart = 0;
+      }
+#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
     }
     // pressing the R paddle
@@ -1420,6 +1463,12 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_INVADER_SOUND
+      if (invaderSound) {
+	invaderBeepStart = 0;
+	invaderErrBeepStart = 0;
+      }
+#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
     }
   }
@@ -1461,6 +1510,12 @@ void readPaddleValue() {
         digitalWrite(pinLed, HIGH);
         key = DOWN;
         timeStart = millis();
+#ifdef OPT_INVADER_SOUND
+      if (invaderSound) {
+	invaderBeepStart = 0;
+	invaderErrBeepStart = 0;
+      }
+#endif
         if (sidetone) tone(pinBz, toneFreq); // side tone
       }
     }
@@ -1531,16 +1586,38 @@ void readPaddleValue() {
 #endif
 #ifdef OPT_INVADER_SOUND
     case INVADER_BEEP:
-      beep();
+      //beep();
+      if (invaderBeepStart == 0) {
+	invaderBeepStart = millis();
+	tone(pinBz, beepFreq); // same freq to beep()
+      }
       break;
     case INVADER_ERRBEEP:
-      errBeep();
+      //errBeep();
+      if (invaderErrBeepStart == 0) {
+	invaderErrBeepStart = millis();
+	tone(pinBz, 220); // same freq to errBeep()
+      }
       break;
 #endif
     }
     runner_beep = 0;
   }
+
+#ifdef OPT_INVADER_SOUND
+  if (invaderSound) {
+    if (invaderBeepStart != 0 && (millis() - invaderBeepStart) > INVADER_BEEP_MS) {
+      noTone(pinBz);
+      invaderBeepStart = 0;
+    }
+    if (invaderErrBeepStart != 0 && (millis() - invaderErrBeepStart) > INVADER_ERR_BEEP_MS) {
+      noTone(pinBz);
+      invaderErrBeepStart = 0;
+    }
+  }
 #endif
+
+#endif /* defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND) */
 }
 
 void readButtonValue() {
@@ -1707,7 +1784,9 @@ void fireLongFunction(int no) {
         } else if (digitalRead(pinSw4) == LOW) {
           pressedSw = pinSw4;
 #ifdef OPT_INVADER_SOUND
-          beep();
+          if (invaderSound) {
+            beep();
+	  }
 #endif
           invaderAnimation();
           break;
@@ -1945,7 +2024,9 @@ void decode() {
                 if (combo < 4) combo++;
                 lcd.write(SPACE);
 #ifdef OPT_INVADER_SOUND
-		runner_beep = INVADER_BEEP;
+                if (invaderSound) {
+		  runner_beep = INVADER_BEEP;
+		}
 #endif
                 for (k = j; k > 1; k--) {
                   line1[k] = line1[k - 1];
@@ -1958,7 +2039,9 @@ void decode() {
 #ifdef OPT_INVADER_SOUND
             if (j == colums) {
 	      combo = 0; // wrong
-              runner_beep = INVADER_ERRBEEP;
+	      if (invaderSound) {
+                runner_beep = INVADER_ERRBEEP;
+	      }
 	    }
 #else
             if (j == colums) combo = 0; // wrong
@@ -1969,7 +2052,9 @@ void decode() {
       }
 #ifdef OPT_INVADER_SOUND
       if (restInvader >=0 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
-        runner_beep = INVADER_ERRBEEP;
+        if (invaderSound) {
+          runner_beep = INVADER_ERRBEEP;
+	}
       }
 #endif
 #ifdef OPT_RUNNER
@@ -2011,7 +2096,9 @@ void decode() {
                 if (combo < 4) combo++;
                 lcd.write(SPACE);
 #ifdef OPT_INVADER_SOUND
-		runner_beep = INVADER_BEEP;
+                if (invaderSound) {
+		  runner_beep = INVADER_BEEP;
+		}
 #endif
                 for (k = j; k > 1; k--) {
                   line1[k] = line1[k - 1];
@@ -2024,7 +2111,9 @@ void decode() {
 #ifdef OPT_INVADER_SOUND /* made wabun same to abc */
             if (j == colums) {
 	      combo = 0; // wrong
-              runner_beep = INVADER_ERRBEEP;
+              if (invaderSound) {
+                runner_beep = INVADER_ERRBEEP;
+	      }
 	    }
 #else
             if (j == colums) combo = 0; // wrong
@@ -2035,7 +2124,9 @@ void decode() {
       }
 #ifdef OPT_INVADER_SOUND
       if (restInvader >=0 && i == sizeof(CharWabun) / sizeof(unsigned char)) {
-        runner_beep = INVADER_ERRBEEP;
+        if (invaderSound) {
+          runner_beep = INVADER_ERRBEEP;
+	}
       }
 #endif
     }
@@ -2258,6 +2349,13 @@ void editSetting() {
       } else if (menuIndex == menuIndexAutoKeyertypeElekey) {
         lcd.print(keyName[autoKeyerTypeElekey]);
 #endif
+#ifdef OPT_INVADER_SOUND
+      } else if (menuIndex == menuIndexInvaderSound) {
+        if (invaderSound)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
       }
     }
     if (digitalRead(pinSw2) == LOW) {
@@ -2388,6 +2486,14 @@ void editSetting() {
 	}
         lcd.print(keyName[autoKeyerTypeElekey]);
 #endif
+#ifdef OPT_INVADER_SOUND
+      } else if (menuIndex == menuIndexInvaderSound) {
+        invaderSound = !invaderSound;
+        if (invaderSound)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
       }
     }
     if (digitalRead(pinSw3) == LOW) {
@@ -2517,6 +2623,14 @@ void editSetting() {
 	  autoKeyerTypeElekey++;
 	}
         lcd.print(keyName[autoKeyerTypeElekey]);
+#endif
+#ifdef OPT_INVADER_SOUND
+      } else if (menuIndex == menuIndexInvaderSound) {
+        invaderSound = !invaderSound;
+        if (invaderSound)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
 #endif
       }
     }
@@ -2801,7 +2915,9 @@ void invaderAnimation() {
   lcd.write(2); // invader
   delay(500);
 #ifdef OPT_INVADER_SOUND
-  beep();
+  if (invaderSound) {
+    beep();
+  }
 #endif
   lcd.setCursor(7, 0);
   lcd.print(F("2"));
@@ -2823,7 +2939,9 @@ void invaderAnimation() {
   lcd.write(SPACE);
   delay(500);
 #ifdef OPT_INVADER_SOUND
-  beep();
+  if (invaderSound) {
+    beep();
+  }
 #endif
   lcd.setCursor(7, 0);
   lcd.print(F("1"));
@@ -2849,8 +2967,10 @@ void invaderAnimation() {
   lcd.write(3); // invader
   delay(500);
 #ifdef OPT_INVADER_SOUND
-  tone_invader_start();
-  delay(500);
+  if (invaderSound) {
+    tone_invader_start();
+    delay(500);
+  }
 #endif
   lcd.setCursor(0, 0);
   lcd.print(F("        "));
@@ -2930,7 +3050,9 @@ void morseInvader() {
     lcd.setCursor(2, 1);
     lcd.print(F("Clear!"));
 #ifdef OPT_INVADER_SOUND
-    tone_invader_clear();
+    if (invaderSound) {
+      tone_invader_clear();
+    }
 #endif
     restInvader = -1;
     lastInvaderTime = 0;
