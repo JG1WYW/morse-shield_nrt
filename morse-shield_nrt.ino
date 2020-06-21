@@ -32,8 +32,8 @@ String date = "19/12/20";
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
+#define OPT_BETTER_IAMBIC_A             /* Improved behavior of IambicA */
 
-#define MOD_IAMBIC_A  /* Improved behavior of IambicA */
 #define MOD_MISC      /* See comments for each modification */
 
 #endif /* JG1WYW */
@@ -167,7 +167,7 @@ int pinBtn[4] = {pinSw1, pinSw2, pinSw3, pinSw4};
 #define langWabun 1
 int lang = langAbc;
 
-#ifdef MOD_IAMBIC_A
+#ifdef OPT_BETTER_IAMBIC_A
 int paddleR_released = 1; // to check if re-pressed once after press detected
 int paddleL_released = 1;
 #endif
@@ -1366,7 +1366,7 @@ void readPaddleValue() {
     return;
   }
 
-#ifdef MOD_IAMBIC_A
+#ifdef OPT_BETTER_IAMBIC_A
   if (paddleR == HIGH)
     paddleR_released = 1;
   if (paddleL == HIGH)
@@ -1376,7 +1376,7 @@ void readPaddleValue() {
   // pressing both paddles
   if (paddleL == LOW && paddleR == LOW && durationSpace == 0) {
     if (durationMark == 0 && keyerType != keyStraight) {
-#ifdef MOD_IAMBIC_A
+#ifdef OPT_BETTER_IAMBIC_A
       paddleR_released = 0;
       paddleL_released = 0;
 #endif
@@ -1395,7 +1395,7 @@ void readPaddleValue() {
     // pressing the L paddle
   } else if (paddleL == LOW && durationSpace == 0) {
     if (durationMark == 0) {
-#ifdef MOD_IAMBIC_A
+#ifdef OPT_BETTER_IAMBIC_A
       paddleL_released = 0;
 #endif
       if (keyerType == keyStraight) {
@@ -1412,7 +1412,7 @@ void readPaddleValue() {
     // pressing the R paddle
   } else if (paddleR == LOW && durationSpace == 0) {
     if (durationMark == 0 && keyerType != keyStraight) {
-#ifdef MOD_IAMBIC_A
+#ifdef OPT_BETTER_IAMBIC_A
       paddleR_released = 0;
 #endif
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
@@ -1425,7 +1425,7 @@ void readPaddleValue() {
   }
 
   if (durationSpace != 0) {
-#ifdef MOD_IAMBIC_A
+#ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
       if (paddleL == LOW && lastPaddle == R && paddleL_released) {
 	paddleL_released = 0;
@@ -1467,7 +1467,7 @@ void readPaddleValue() {
   }
   if (durationMark != 0) {
     // memory paddle LR
-#ifdef MOD_IAMBIC_A
+#ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
       if (paddleL == LOW && lastPaddle == R && paddleL_released) {
 	paddleL_released = 0;
