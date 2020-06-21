@@ -35,7 +35,11 @@ String date = "19/12/20";
 int key = UP;
 
 // default keyer value
+#if 1 /* JG1WYW */
+int Wpm = 0; // to update the first Wpm value read from potentio meter
+#else
 int Wpm = 20;
+#endif
 float wait = 3.0;
 int durationDot = 60;
 int durationMark = 0;
@@ -73,8 +77,8 @@ int defToneFreq[] = {
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
 //int toneFreq = 349; // side tone frequency F3
-//int toneFreq = 392; // side tone frequency G3
-int toneFreq = 440; // side tone frequency 440Hz
+int toneFreq = 392; // side tone frequency G3
+//int toneFreq = 440; // side tone frequency 440Hz
 //int toneFreq = 698; // side tone frequency F4
 //int toneFreq = 784; // side tone frequency G4
 int beepFreq = 880 * 2; // beep frequency 880Hz
@@ -194,7 +198,8 @@ long laststarttime = 0;
 char code = 1;//[20]; estimated code
 int stop = LOW;
 #if 1 /* JG1WYW */
-int wpm = 20;
+#define INIT_DECODE_WPM 20
+int wpm = INIT_DECODE_WPM; // initial wpm value of decoding
 #else
 int wpm;
 #endif
@@ -694,16 +699,20 @@ void goertzel() {
 #ifdef OPT_BETTER_DECODE
       if ((highduration * 2) <= hightimesavg) {
         hightimesavg = highduration;  // if speed increased fast ..
+        //hightimesavg = (highduration + hightimesavg) >> 2;  // if speed increased fast ..
       }
       if (highduration < (2 * hightimesavg) && hightimesavg < (2 * highduration)) {
 #else
       if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
 #endif
-        hightimesavg = (highduration + hightimesavg + hightimesavg) / 3; // now we know avg dit time ( rolling 3 avg)
+        //hightimesavg = (highduration + hightimesavg + hightimesavg) / 3; // now we know avg dit time ( rolling 3 avg)
+        //hightimesavg = (highduration + hightimesavg + hightimesavg + hightimesavg) / 4; // now we know avg dit time ( rolling 3 avg)
+        hightimesavg = (highduration + 7 * hightimesavg) >> 3; // now we know avg dit time ( rolling 3 avg)
       }
       if (highduration > (5 * hightimesavg) ) {
 #ifdef OPT_BETTER_DECODE
         hightimesavg = highduration;  // if speed decreased fast ..
+        //hightimesavg = (highduration + hightimesavg) >> 1;  // if speed decreased fast ..
 #else
         hightimesavg = highduration + hightimesavg;   // if speed decrease fast ..
 #endif
@@ -1485,17 +1494,19 @@ void decode() {
 		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
-                  tone(pinBz, 720, 100);
+                  //tone(pinBz, 720, 100);
+                  tone(pinBz, 698, 100); // F4
 		  delay(100);
-                  tone(pinBz, 1440, 200);
+                  //tone(pinBz, 1440, 200); // F5
+                  tone(pinBz, 1397, 200);
 		  delay(1000);
 		  printascii(SPACE);
                   trainingMode(pinSw3);
 		}
 	      } else {
-	        tone(pinBz, 220, 100);
+	        tone(pinBz, 220, 100); // A2
 		delay(100);
-	        tone(pinBz, 110, 200);
+	        tone(pinBz, 110, 200); // A1
 		runner_ptr = 0;
 		printascii(SPACE);
 	      }
@@ -1626,7 +1637,11 @@ void printascii(int asciinumber) {
 
 // update the upper line with the speed
 void updateinfolinelcd() {
+#if 1 /* JG1WYW */
+  static int oldWpm = INIT_DECODE_WPM; // to surpress lcd update at first
+#else
   static int oldWpm;
+#endif
   if (oldWpm == wpm) return;
   lcd.home();
   if (wpm < 10) lcd.print(F("0"));
