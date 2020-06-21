@@ -1389,6 +1389,40 @@ void readPaddleValue() {
     return;
   }
 
+#if 1 /* DEBUG */
+  {
+    static int paddleL_last = HIGH;
+    static int paddleR_last = HIGH;
+
+    if (paddleR_last != paddleR) {
+      paddleR_last = paddleR;
+      Serial.print(F("R="));
+      if (paddleR == LOW) {
+        Serial.print("_");
+      } else {
+        Serial.print(" ");
+      }
+      Serial.print(F("("));
+      Serial.print(millis());
+      Serial.print(F(")"));
+      Serial.println();
+    }
+    if (paddleL_last != paddleL) {
+      paddleL_last = paddleL;
+      Serial.print(F("L="));
+      if (paddleL == LOW) {
+        Serial.print(".");
+      } else {
+        Serial.print(" ");
+      }
+      Serial.print(F("("));
+      Serial.print(millis());
+      Serial.print(F(")"));
+      Serial.println();
+    }
+  }
+#endif
+
 #ifdef OPT_BETTER_IAMBIC_A
   if (paddleR == HIGH)
     paddleR_released = 1;
@@ -1406,9 +1440,23 @@ void readPaddleValue() {
       if (lastPaddle != L) {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
         lastPaddle = L;
+#if 1
+	Serial.print("O");
+	Serial.print(F("("));
+	Serial.print(millis());
+	Serial.print(F(")"));
+	Serial.println();
+#endif
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
         lastPaddle = R;
+#if 1
+	Serial.print("o");
+	Serial.print(F("("));
+	Serial.print(millis());
+	Serial.print(F(")"));
+	Serial.println();
+#endif
       }
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1427,6 +1475,13 @@ void readPaddleValue() {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
       }
       lastPaddle = L;
+#if 1
+	Serial.print("x");
+	Serial.print(F("("));
+	Serial.print(millis());
+	Serial.print(F(")"));
+	Serial.println();
+#endif
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
@@ -1440,6 +1495,13 @@ void readPaddleValue() {
 #endif
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
       lastPaddle = R;
+#if 1
+	Serial.print("X");
+	Serial.print(F("("));
+	Serial.print(millis());
+	Serial.print(F(")"));
+	Serial.println();
+#endif
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
@@ -1740,9 +1802,13 @@ void fireLongFunction(int no) {
       }
       lcd.setCursor(0, 1);
       lcd.print(F("        "));
-#ifndef OPT_RUNNER /* !OPT_RUNNER */
+#ifdef OPT_INVADER_SOUND
+     if (!invaderSound) {
+#endif
       beep();
       delay(200);
+#ifdef OPT_INVADER_SOUND
+     }
 #endif
       for (;;) {
         if (digitalRead(pressedSw) == HIGH) break;
