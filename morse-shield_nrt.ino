@@ -1507,7 +1507,7 @@ void decode() {
             printascii(CharAbc[i]);
 #ifdef OPT_RUNNER /* JG1WYW */
             if (runner == 1) {
-              if (code == 0b01001100) { /* ? */
+              if (code == 0b01001100) { /* '?' */
 	        int idx;
 		clearPresetMessage();
 		for (idx = 0 ; idx < runner_call_len ; idx++) {
@@ -1519,6 +1519,7 @@ void decode() {
 		   durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
 		}
 		runner_ptr = 0;
+		delay(100);
 		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
