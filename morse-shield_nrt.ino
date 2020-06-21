@@ -1116,7 +1116,7 @@ unsigned long paddleL_highStart = 0;
 unsigned long paddleR_highStart = 0;
 
 #define OFF_TIMER_RATIO_DASH 100 /* extra percent (of dot) for dash */
-#define OFF_TIMER_RATIO_DOT  0   /* extra percent (of dot) for dot */
+#define OFF_TIMER_RATIO_DOT  20  /* extra percent (of dot) for dot */
 
 int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
