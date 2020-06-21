@@ -25,7 +25,6 @@ String date = "19/12/20";
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_INVADER_SOUND		/* invader sound */
-#define OPT_DECODE_INVALID              /* '_' for invalid chars when runner */
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
@@ -33,6 +32,8 @@ String date = "19/12/20";
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
 #define OPT_BETTER_IAMBIC_A             /* Improved behavior of IambicA */
+//#define OPT_DECODE_INVALID              /* '_' for invalid chars when runner */
+//#define OPT_DECODE_DEBUG
 //#define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 //#define OPT_TIMING_DEBUG                /* Debug flag */
 
@@ -85,8 +86,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 40;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 120;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 60;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 180;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -98,7 +99,7 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 25;   /* XXX percent (of dot) for look ahead memory */
+int look_ahead_memory_ratio = 40;   /* XXX percent (of dot) for look ahead memory */
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
@@ -1082,8 +1083,14 @@ void goertzel() {
     }
 #ifdef OPT_DECODE_INVALID
     else if (filteredstate == LOW) { // invoke decode expecting '_' during running to notify invalid keying (typically connecting more than two characters) immediately
+#ifdef OPT_DECODE_DEBUG
+      Serial.print(F("(1)"));
+#endif
       decode();
       code = 1;
+#ifdef OPT_BETTER_DECODE
+      stop = HIGH;
+#endif
     }
 #endif
 
@@ -1099,15 +1106,27 @@ void goertzel() {
       if (wpm > 35)lacktime = 1.5;
 
       if (lowduration > (hightimesavg * (2 * lacktime)) && lowduration < hightimesavg * (5 * lacktime)) { // letter space
+#ifdef OPT_DECODE_DEBUG
+        Serial.print(F("(2)"));
+#endif
         decode();
         code = 1;
+#ifdef OPT_BETTER_DECODE
+        stop = HIGH;
+#endif
 #ifdef SERIAL_PRINT_DIT_DAH
         Serial.print(F("/"));
 #endif
       }
       if (lowduration >= hightimesavg * (5 * lacktime)) { // word space
+#ifdef OPT_DECODE_DEBUG
+        Serial.print(F("(3)"));
+#endif
         decode();
         code = 1;
+#ifdef OPT_BETTER_DECODE
+        stop = HIGH;
+#endif
 #ifdef OPT_RUNNER
        if (!running) // to omit word space during running
 #endif
@@ -1124,6 +1143,9 @@ void goertzel() {
   if ((millis() - startttimelow) > (hightimesavg * 6) && stop == LOW) {
 #else
   if ((millis() - startttimelow) > (highduration * 6) && stop == LOW) {
+#endif
+#ifdef OPT_DECODE_DEBUG
+    Serial.print(F("(4)"));
 #endif
     decode();
     code = 1; //code[0] = '\0';
