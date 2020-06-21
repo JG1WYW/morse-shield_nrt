@@ -1241,6 +1241,7 @@ void tone_runner_mode()
   tone(pinBz, 349, 100); // F3
   delay(100);
   tone(pinBz, 698, 100); // F4
+  delay(100);
 }
 
 void tone_hit()
@@ -1248,6 +1249,7 @@ void tone_hit()
   tone(pinBz, 698, 100); // F4
   delay(100);
   tone(pinBz, 1397, 200); // F5
+  delay(100);
 }
 
 void tone_miss()
@@ -1255,6 +1257,7 @@ void tone_miss()
   tone(pinBz, 220, 100); // A2
   delay(100);
   tone(pinBz, 110, 200); // A1
+  delay(100);
 }
 #endif
 
@@ -1264,6 +1267,7 @@ void tone_invader_start()
   tone(pinBz, 880, 100); // A4
   delay(100);
   tone(pinBz, 1760, 100); // A5
+  delay(100);
 }
 
 void tone_invader_clear()
@@ -2596,6 +2600,7 @@ void editSetting() {
 	  toneFreqIndex--;
 	toneFreq = defToneFreq[toneFreqIndex];
 	tone(pinBz, toneFreq, 100);
+	delay(100);
         lcd.print(toneFreq);
 	if (toneFreq < 1000)
           lcd.print(F(" "));
@@ -2751,6 +2756,7 @@ void editSetting() {
 	  toneFreqIndex++;
 	toneFreq = defToneFreq[toneFreqIndex];
 	tone(pinBz, toneFreq, 100);
+	delay(100);
         lcd.print(toneFreq);
 	if (toneFreq < 1000)
           lcd.print(F(" "));
