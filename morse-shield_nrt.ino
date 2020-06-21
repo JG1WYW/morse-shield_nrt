@@ -16,6 +16,10 @@ String date = "19/12/20";
 #define SCROLL_ROW
 //#define SERIAL_PRINT_DIT_DAH
 
+#if 1
+/*
+ * These options were written by JG1WYW
+ */
 //#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
 //#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
@@ -26,6 +30,8 @@ String date = "19/12/20";
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
+#define OPT_TONE_FREQ                   /* selectable tone frequency */
+#endif
 
 // keyer setting
 #define MIN_WPM  5
@@ -47,20 +53,20 @@ int durationDot = 60;
 int durationMark = 0;
 int durationSpace = 0;
 int durationLongPress = 1000;
-#ifdef OPT_PADDLE_REVERSE /* JG1WYW */
+#ifdef OPT_PADDLE_REVERSE
 int paddleRvs = 1; // paddle reverse (paddle on left hand side)
 #else
 int paddleRvs = 0; // paddle reverse
 #endif
 
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
 int runner_mode = 0; // Runner mode instead of just callsigns
 int running = 0; // means Now running
 int runner_miss = 0;
 int runner_accel = 0;
 #endif
 
-#if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND) /* JG1WYW */
+#if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND)
 int runner_beep = 0;
 #define RUNNER_HIT      1
 #define RUNNER_MISS     2
@@ -68,26 +74,33 @@ int runner_beep = 0;
 #define INVADER_ERRBEEP 4
 #endif
 
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_OFF_DELAY
 int offDelay = 1; // off delay enabled
 int menuIndexOffDelay;
 #endif
 
-
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
 int autoKeyerType = 1; // auto keyer type enabled
 int count_straight_or_paddle = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
 int menuIndexAutoKeyertype;
 #endif
 
-#ifdef OPT_BETTER_SRAND /* JG1WYW */
+#ifdef OPT_BETTER_SRAND
 int first_srand = 1;
+#endif
+
+#ifdef OPT_TONE_FREQ
+int toneFreqIndex = 5; // 440Hz
+int menuIndexToneFreq;
 #endif
 
 // side tone
 int sidetone = 1; // 0: disable, 1: enable
 int defToneFreq[] = {
+#ifdef OPT_TONE_FREQ
+  330, 349, 370, 392, 415,
+#endif
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
@@ -237,11 +250,15 @@ char *setMenu[] {
   "SideTone", // sidetone on, off / tone[Hz]
   "CQint:ms", // beacon interval
   "CQ times"  // beacon times
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_TONE_FREQ
+  ,
+  "ToneFreq"  // sidetone frequency
+#endif
+#ifdef OPT_OFF_DELAY
   ,
   "Offdelay"  // off delay
 #endif
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
   ,
   "AtoKyChg"  // auto keyer type change
 #endif
@@ -261,15 +278,18 @@ typedef struct PARAM_EEPROM {
   int sidetone;
   unsigned int defCqInterval;
   unsigned int defCqTimes;
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_TONE_FREQ
+  int toneFreqIndex;
+#endif
+#ifdef OPT_OFF_DELAY
   int offDelay;
 #endif
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
   int autoKeyerType;
 #endif
 } param_eeprom_t;
 
-#define PARAM_EEPROM_BASE (EEPROM.length() - sizeof(param_eeprom_t))
+ #define PARAM_EEPROM_BASE (EEPROM.length() - sizeof(param_eeprom_t))
 
 int param_eeprom_load()
 {
@@ -280,8 +300,10 @@ int param_eeprom_load()
   ptr = (byte *)&param;
   for (int i = 0 ; i < sizeof(param_eeprom_t) ; i++) {
     *ptr = EEPROM.read(PARAM_EEPROM_BASE + i);
-    if (i >= sizeof(int)) // excluding the first cksum
+    if (i >= sizeof(int)) { // excluding the first cksum
       cksum ^= *ptr;
+      cksum <<= 1;
+    }
     ptr++;
   }
 
@@ -293,10 +315,14 @@ int param_eeprom_load()
     sidetone = param.sidetone;
     defCqInterval = param.defCqInterval;
     defCqTimes = param.defCqTimes;
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_TONE_FREQ
+    toneFreqIndex = param.toneFreqIndex;
+    toneFreq = defToneFreq[toneFreqIndex];
+#endif
+#ifdef OPT_OFF_DELAY
     offDelay = param.offDelay;
 #endif
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
     autoKeyerType = param.autoKeyerType;
 #endif
 
@@ -319,17 +345,22 @@ void param_eeprom_save()
   param.sidetone = sidetone;
   param.defCqInterval = defCqInterval;
   param.defCqTimes = defCqTimes;
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_TONE_FREQ
+  param.toneFreqIndex = toneFreqIndex;
+#endif
+#ifdef OPT_OFF_DELAY
   param.offDelay = offDelay;
 #endif
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
   param.autoKeyerType = autoKeyerType;
 #endif
 
   ptr = (byte *)&param;
   for (int i = 0 ; i < sizeof(param_eeprom_t) ; i++) {
-    if (i >= sizeof(int)) // excluding the first cksum
+    if (i >= sizeof(int)) { // excluding the first cksum
       cksum ^= *ptr;
+      cksum <<= 1;
+    }
     ptr++;
   }
   param.cksum = cksum;
@@ -716,10 +747,13 @@ void setup() {
    * set menuIndex dynamically
    */
   int menuIndex = MENU_INDEX_EXTRA;
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_TONE_FREQ
+  menuIndexToneFreq = menuIndex++;
+#endif
+#ifdef OPT_OFF_DELAY
   menuIndexOffDelay = menuIndex++;
 #endif
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
   menuIndexAutoKeyertype = menuIndex++;
 #endif
 #endif /* 1 */
@@ -816,7 +850,7 @@ void goertzel() {
     if (filteredstate == LOW) { /* key released */
       startttimelow = millis();
       highduration = (millis() - starttimehigh);
-#ifdef OPT_BETTER_DECODE /* JG1WYW */
+#ifdef OPT_BETTER_DECODE
       if ((highduration * 2) <= hightimesavg) {
         hightimesavg = highduration;  // if speed increased fast ..
       }
@@ -832,7 +866,7 @@ void goertzel() {
       }
 #endif
       if (highduration > (5 * hightimesavg) ) {
-#ifdef OPT_BETTER_DECODE /* JG1WYW */
+#ifdef OPT_BETTER_DECODE
         hightimesavg = highduration;  // if speed decreased fast ..
 #else
         hightimesavg = highduration + hightimesavg;   // if speed decrease fast ..
@@ -846,7 +880,7 @@ void goertzel() {
   // we think that hightimeavg = 1 bit
   if (filteredstate != filteredstatebefore) {
     stop = LOW;
-#ifdef OPT_DECODE_TOO_LONG /* JG1WYW */
+#ifdef OPT_DECODE_TOO_LONG
     if (filteredstate == LOW && code < 0b01000000) { // we did end a HIGH
 #else
     if (filteredstate == LOW && code < 0b10000000) { // we did end a HIGH
@@ -857,7 +891,7 @@ void goertzel() {
         Serial.print(F("."));
 #endif
       }
-#ifdef OPT_BETTER_DECODE /* JG1WYW */
+#ifdef OPT_BETTER_DECODE
       if (highduration >= (hightimesavg * 2) && highduration < (hightimesavg * 6)) {
 #else
       if (highduration > (hightimesavg * 2) && highduration < (hightimesavg * 6)) {
@@ -871,7 +905,7 @@ void goertzel() {
         wpm = (wpm + (1200 / ((highduration) / 3))) / 2; // the most precise we can do ;o)
       }
     }
-#ifdef OPT_DECODE_TOO_LONG /* JG1WYW */
+#ifdef OPT_DECODE_TOO_LONG
     else if (filteredstate == LOW) { // invoke decode expecting '_' during running to notify invalid keying (typically connecting more than two characters) immediately
       decode();
       code = 1;
@@ -880,7 +914,7 @@ void goertzel() {
 
     if (filteredstate == HIGH) { // we did end a LOW
 
-#ifdef OPT_BETTER_DECODE /* JG1WYW */
+#ifdef OPT_BETTER_DECODE
       float lacktime = 0.9;
 #else
       float lacktime = 1;
@@ -899,7 +933,7 @@ void goertzel() {
       if (lowduration >= hightimesavg * (5 * lacktime)) { // word space
         decode();
         code = 1;
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
        if (!running) // to omit word space during running
 #endif
         printascii(SPACE);
@@ -911,7 +945,7 @@ void goertzel() {
   }
 
   // write if no more letters
-#ifdef OPT_BETTER_DECODE /* JG1WYW */
+#ifdef OPT_BETTER_DECODE
   if ((millis() - startttimelow) > (hightimesavg * 6) && stop == LOW) {
 #else
   if ((millis() - startttimelow) > (highduration * 6) && stop == LOW) {
@@ -933,7 +967,7 @@ void goertzel() {
     }
   */
   // the end of main loop clean up//
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
  if (!running) // to keep lcd space as much as possible during running for verification purpose
 #endif
   updateinfolinelcd();
@@ -963,7 +997,7 @@ void readPotValue() {
 void setNewWpm(int wpm) {
   Wpm = wpm;
   durationDot = (60.0 * 1000) / (Wpm * 50);
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
   runner_accel = 0; // reset acceleration when Wpm is modified manually
 #endif
 
@@ -995,7 +1029,7 @@ void errBeep() {
   tone(pinBz, 220, 20);
 }
 
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
 void tone_runner_mode()
 {
   tone(pinBz, 349, 100); // F3
@@ -1018,7 +1052,7 @@ void tone_miss()
 }
 #endif
 
-#ifdef OPT_INVADER_SOUND /* JG1WYW */
+#ifdef OPT_INVADER_SOUND
 void tone_invader_start()
 {
   tone(pinBz, 880, 100); // A4
@@ -1037,7 +1071,7 @@ void tone_invader_clear()
 }
 #endif
 
-#ifdef OPT_AVOID_CHATTERING /* JG1WYW */
+#ifdef OPT_AVOID_CHATTERING
 int paddleL_stable = HIGH;
 int paddleR_stable = HIGH;
 int paddleL_trans = 0;
@@ -1046,7 +1080,7 @@ int paddleR_trans = 0;
 #define STABLE_COUNT 5
 #endif
 
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_OFF_DELAY
 int paddleL_prev = HIGH;
 int paddleR_prev = HIGH;
 unsigned long paddleL_highStart = 0;
@@ -1059,7 +1093,7 @@ int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
 #endif
 
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
 unsigned int runner_call[8];
 int runner_call_len = 0;
 int runner_ptr = 0;
@@ -1075,7 +1109,7 @@ void readPaddleValue() {
   int paddleL = digitalRead(pinPaddleL);
   int paddleR = digitalRead(pinPaddleR);
 
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
   if (autoKeyerType) {
     /*
      * automatic change between keyStraight and keySuper
@@ -1101,9 +1135,9 @@ void readPaddleValue() {
       }
     }
   }
-#endif /* JG1WYW */
+#endif
 
-#ifdef OPT_AVOID_CHATTERING /* JG1WYW */
+#ifdef OPT_AVOID_CHATTERING
   /*
    * avoid chattering, paddle R
    */
@@ -1147,7 +1181,7 @@ void readPaddleValue() {
   }
 #endif /* OPT_AVOID_CHATTERING */
 
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_OFF_DELAY
   /*
    * off delay is only for electric keyer. (i.e., not incl. straight key)
    */
@@ -1212,7 +1246,7 @@ void readPaddleValue() {
       }
     }
   } /* (offDelay && keyerType != keyStraight) */
-#endif /* JG1WYW */
+#endif
 
 #if 1 /* JG1WYW */
   if (paddleR == LOW && keyerType == keyStraight) {
@@ -1334,7 +1368,7 @@ void readPaddleValue() {
       }
     }
   }
-#if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND) /* JG1WYW */
+#if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND)
   /*
    * to avoid conflict among tone()
    */
@@ -1369,7 +1403,7 @@ void readButtonValue() {
     sw[i] = digitalRead(pinBtn[i]);
     // button was pressed
     if (sw[i] == LOW && timeStartSw[i] == 0) {
-#ifdef OPT_BETTER_SRAND /* JG1WYW */
+#ifdef OPT_BETTER_SRAND
       if (first_srand) {
         first_srand = 0;
         srand(millis()); /* seed for rand() */
@@ -1390,7 +1424,7 @@ void readButtonValue() {
     } else if (millis() - timeStartSw[i] > durationLongPress && millis() - timeStartSw[i] < durationLongPress + 10) {
       //digitalWrite(pinLed, LOW);
       beep();
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
       runner_mode = 0;
     } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) { /* much longer press */
       //digitalWrite(pinLed, LOW);
@@ -1406,7 +1440,7 @@ void fireFunction(int no) {
   Serial.print(F("Press="));
   Serial.println(no + 1);
 
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
   runner_stop(); /* pushing button to disable runner */
 #endif
   // clear preset messages
@@ -1436,7 +1470,7 @@ void fireLongFunction(int no) {
   Serial.print(F("LongPress="));
   Serial.println(no + 1);
 
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
   runner_stop(); /* pushing button to disable runner */
 #endif
   // clear preset messages
@@ -1469,7 +1503,7 @@ void fireLongFunction(int no) {
       lcd.setCursor(0, 1);
       lcd.print(F("A "));
       lcd.write(0b10110001);
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
       if (runner_mode) {
         lcd.print(F(" r "));
       } else {
@@ -1506,7 +1540,7 @@ void fireLongFunction(int no) {
         } else if (digitalRead(pinSw3) == LOW) {
           pressedSw = pinSw3;
           lcd.setCursor(0, 0);
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
           lcdIndex = 0;
           if (runner_mode) {
             lcd.print(F("Runner  "));
@@ -1519,7 +1553,7 @@ void fireLongFunction(int no) {
           break;
         } else if (digitalRead(pinSw4) == LOW) {
           pressedSw = pinSw4;
-#ifdef OPT_INVADER_SOUND /* JG1WYW */
+#ifdef OPT_INVADER_SOUND
           beep();
 #endif
           invaderAnimation();
@@ -1637,7 +1671,7 @@ void trainingMode(int pressedSw) {
         presetMessage[k] = 'A' + rand() / (RAND_MAX / 26 + 1) ;
         k++;
       }
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
       if (runner_mode) { /* runner */
         int idx;
 
@@ -1702,7 +1736,7 @@ void decode() {
         if (code == BinAbc[i]) {
           if (restInvader < 0) {
             printascii(CharAbc[i]);
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_RUNNER
             if (running == 1) {
               if (code == 0b01001100) { /* '?' */
 	        int idx;
@@ -1963,14 +1997,20 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_TONE_FREQ
+      } else if (menuIndex == menuIndexToneFreq) {
+        lcd.print(toneFreq);
+	if (toneFreq < 1000)
+          lcd.print(F(" "));
+#endif
+#ifdef OPT_OFF_DELAY
       } else if (menuIndex == menuIndexOffDelay) {
         if (offDelay)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
         if (autoKeyerType)
           lcd.print(F(" on "));
@@ -2025,7 +2065,17 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_TONE_FREQ
+      } else if (menuIndex == menuIndexToneFreq) {
+	if (toneFreqIndex > 0)
+	  toneFreqIndex--;
+	toneFreq = defToneFreq[toneFreqIndex];
+	tone(pinBz, toneFreq, 20);
+        lcd.print(toneFreq);
+	if (toneFreq < 1000)
+          lcd.print(F(" "));
+#endif
+#ifdef OPT_OFF_DELAY
       } else if (menuIndex == menuIndexOffDelay) {
         offDelay = !offDelay;
         if (offDelay)
@@ -2033,7 +2083,7 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
 	autoKeyerType = !autoKeyerType;
         if (autoKeyerType)
@@ -2089,7 +2139,17 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_TONE_FREQ
+      } else if (menuIndex == menuIndexToneFreq) {
+	if (toneFreqIndex < (sizeof(defToneFreq) / sizeof(int)) - 1)
+	  toneFreqIndex++;
+	toneFreq = defToneFreq[toneFreqIndex];
+	tone(pinBz, toneFreq, 20);
+        lcd.print(toneFreq);
+	if (toneFreq < 1000)
+          lcd.print(F(" "));
+#endif
+#ifdef OPT_OFF_DELAY
       } else if (menuIndex == menuIndexOffDelay) {
         offDelay = !offDelay;
         if (offDelay)
@@ -2097,7 +2157,7 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
 	autoKeyerType = !autoKeyerType;
         if (autoKeyerType)
