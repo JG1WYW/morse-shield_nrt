@@ -22,7 +22,7 @@ String date = "19/12/20";
  * So far, off delay is checked with improved Iambic A.
  */
 #define OPT_OFF_DELAY			/* off delay timer */
-//#define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
+#define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
@@ -102,7 +102,7 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 5; // XXX percent (of dot) for look ahead memory
+int look_ahead_memory_ratio = 25; // XXX percent (of dot) for look ahead memory
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
