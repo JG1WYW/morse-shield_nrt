@@ -19,12 +19,13 @@ String date = "19/12/20";
 //#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
 //#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
-#define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
+#define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_INVADER_SOUND		/* invader sound */
 #define OPT_TOO_LONG                    /* '_' for too long chars */
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
+#define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
 
 // keyer setting
 #define MIN_WPM  5
@@ -69,12 +70,16 @@ int runner_beep = 0;
 
 #ifdef OPT_OFF_DELAY /* JG1WYW */
 int offDelay = 1; // off delay enabled
+int menuIndexOffDelay;
 #endif
 
-#ifdef OPT_AUTO_SWITCH_KEYERTYPE /* JG1WYW */
+
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+int autoKeyerType = 1; // auto keyer type enabled
 int count_straight_or_paddle = 0;
 int changed_to_straight = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
+int menuIndexAutoKeyertype;
 #endif
 
 #ifdef OPT_BETTER_SRAND /* JG1WYW */
@@ -225,11 +230,6 @@ int gameStarted = 0;
 
 // setting menu
 // ToDo: save param on EEPROM
-#if defined(OPT_OFF_DELAY) /* JG1WYW */
-#define MaxMenu 8
-#else
-#define MaxMenu 7
-#endif
 char *setMenu[] {
   "Lang A/", // ABC or Wabun
   "Pdl Rev.", // paddle reverse
@@ -242,7 +242,106 @@ char *setMenu[] {
   ,
   "Offdelay"  // off delay
 #endif
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+  ,
+  "AutoKeyr"  // auto keyer type
+#endif
 };
+
+#define MENU_INDEX_EXTRA 7 // XXX the beginning of extra menu
+#define MaxMenu (sizeof(setMenu) / sizeof(char *))
+
+#ifdef OPT_PARAM_EEPROM
+
+typedef struct PARAM_EEPROM {
+  int cksum;
+  int lang;
+  int paddleRvs;
+  int keyerType;
+  float wait;
+  int sidetone;
+  unsigned int defCqInterval;
+  unsigned int defCqTimes;
+#ifdef OPT_OFF_DELAY /* JG1WYW */
+  int offDelay;
+#endif
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+  int autoKeyerType;
+#endif
+} param_eeprom_t;
+
+#define PARAM_EEPROM_BASE (EEPROM.length() - sizeof(param_eeprom_t))
+
+int param_eeprom_load()
+{
+  param_eeprom_t param;
+  byte *ptr;
+  int cksum = 0;
+
+  ptr = (byte *)&param;
+  for (int i = 0 ; i < sizeof(param_eeprom_t) ; i++) {
+    *ptr = EEPROM.read(PARAM_EEPROM_BASE + i);
+    if (i >= sizeof(int)) // excluding the first cksum
+      cksum ^= *ptr;
+    ptr++;
+  }
+
+  if (cksum == param.cksum) {
+    lang = param.lang;
+    paddleRvs = param.paddleRvs;
+    keyerType = param.keyerType;
+    wait = param.wait;
+    sidetone = param.sidetone;
+    defCqInterval = param.defCqInterval;
+    defCqTimes = param.defCqTimes;
+#ifdef OPT_OFF_DELAY /* JG1WYW */
+    offDelay = param.offDelay;
+#endif
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+    autoKeyerType = param.autoKeyerType;
+#endif
+
+    return 0; // success
+  }
+
+  return -1; // fail
+}
+
+void param_eeprom_save()
+{
+  param_eeprom_t param;
+  byte *ptr;
+  int cksum = 0;
+
+  param.lang = lang;
+  param.paddleRvs = paddleRvs;
+  param.keyerType = keyerType;
+  param.wait = wait;
+  param.sidetone = sidetone;
+  param.defCqInterval = defCqInterval;
+  param.defCqTimes = defCqTimes;
+#ifdef OPT_OFF_DELAY /* JG1WYW */
+  param.offDelay = offDelay;
+#endif
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+  param.autoKeyerType = autoKeyerType;
+#endif
+
+  ptr = (byte *)&param;
+  for (int i = 0 ; i < sizeof(param_eeprom_t) ; i++) {
+    if (i >= sizeof(int)) // excluding the first cksum
+      cksum ^= *ptr;
+    ptr++;
+  }
+  param.cksum = cksum;
+
+  ptr = (byte *)&param;
+  for (int i = 0 ; i < sizeof(param_eeprom_t) ; i++) {
+    EEPROM.write(PARAM_EEPROM_BASE + i, *ptr);
+    ptr++;
+  }
+}
+#endif
 
 // morse code
 // dit=0, dah=1, start flag=1, 1char=1byte, max7 dit/dah
@@ -612,6 +711,23 @@ void setup() {
     line1[i] = SPACE;
     line2[i] = SPACE;
   }
+
+#if 1 /* JG1WYW */
+  /*
+   * set menuIndex dynamically
+   */
+  int menuIndex = MENU_INDEX_EXTRA;
+#ifdef OPT_OFF_DELAY /* JG1WYW */
+  menuIndexOffDelay = menuIndex++;
+#endif
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+  menuIndexAutoKeyertype = menuIndex++;
+#endif
+#endif /* 1 */
+
+#ifdef OPT_PARAM_EEPROM
+  param_eeprom_load();
+#endif
 }
 
 void loop() {
@@ -960,7 +1076,7 @@ void readPaddleValue() {
   int paddleL = digitalRead(pinPaddleL);
   int paddleR = digitalRead(pinPaddleR);
 
-#ifdef OPT_AUTO_SWITCH_KEYERTYPE /* JG1WYW */
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
   /*
    * automatic change between keyStraight and keySuper
    */
@@ -1425,6 +1541,11 @@ void fireLongFunction(int no) {
     case 2: // record messages
       //ToDo: save original messages on EEPROM
       Serial.println(F("recording mode..."));
+#ifdef OPT_PARAM_EEPROM
+      param_eeprom_save();
+      lcd.setCursor(0, 0);
+      lcd.print(F("Saved   "));
+#endif
       break;
     case 3: // setting
       Serial.println(F("setting mode..."));
@@ -1813,8 +1934,15 @@ void editSetting() {
         lcd.print(defCqTimes);
         lcd.print(F(" "));
 #ifdef OPT_OFF_DELAY /* JG1WYW */
-      } else if (menuIndex == 7) {
+      } else if (menuIndex == menuIndexOffDelay) {
         if (offDelay)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+      } else if (menuIndex == menuIndexAutoKeyertype) {
+        if (autoKeyerType)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -1868,9 +1996,17 @@ void editSetting() {
         lcd.print(defCqTimes);
         lcd.print(F(" "));
 #ifdef OPT_OFF_DELAY /* JG1WYW */
-      } else if (menuIndex == 7) {
+      } else if (menuIndex == menuIndexOffDelay) {
         offDelay = !offDelay;
         if (offDelay)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+      } else if (menuIndex == menuIndexAutoKeyertype) {
+	autoKeyerType = !autoKeyerType;
+        if (autoKeyerType)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -1924,9 +2060,17 @@ void editSetting() {
         lcd.print(defCqTimes);
         lcd.print(F(" "));
 #ifdef OPT_OFF_DELAY /* JG1WYW */
-      } else if (menuIndex == 7) {
+      } else if (menuIndex == menuIndexOffDelay) {
         offDelay = !offDelay;
         if (offDelay)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
+      } else if (menuIndex == menuIndexAutoKeyertype) {
+	autoKeyerType = !autoKeyerType;
+        if (autoKeyerType)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
