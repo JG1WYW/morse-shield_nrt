@@ -20,7 +20,7 @@ String date = "19/12/20";
 /*
  * These options were added by JG1WYW
  */
-//#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
+#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
@@ -32,7 +32,7 @@ String date = "19/12/20";
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 
-#define CORRECT_IAMBICA /* XXX Is the original behavior of IambicA correct? */
+#define CORRECT_IAMBIC_A /* XXX Is the original behavior of IambicA correct? */
 
 #endif
 
@@ -46,11 +46,7 @@ String date = "19/12/20";
 int key = UP;
 
 // default keyer value
-#if 1 /* JG1WYW */
-int Wpm = 0; // to update the first Wpm value read from potentio meter
-#else
 int Wpm = 20;
-#endif
 float wait = 3.0;
 int durationDot = 60;
 int durationMark = 0;
@@ -167,12 +163,10 @@ int pinBtn[4] = {pinSw1, pinSw2, pinSw3, pinSw4};
 #define langWabun 1
 int lang = langAbc;
 
-#ifdef CORRECT_IAMBICA
-int lastPaddle = -1; // memory key param
+#ifdef CORRECT_IAMBIC_A
 int prev_lastPaddle = -1;
-#else
-int lastPaddle = L; // memory key param
 #endif
+int lastPaddle = L; // memory key param
 int endingChar = 0; // space after letter(1) or dit/dah(0)
 
 static int pos_read = 0;
@@ -1042,7 +1036,11 @@ void goertzel() {
 
 // Read Potentiometer value and set new WPM
 void readPotValue() {
+#if 1 /* JG1WYW */
+  static int potValueOld = -11; // to update the first Wpm value read from potentio meter
+#else
   static int potValueOld = 0;
+#endif
   int potStep = 10;
   int potValue = analogRead(pinVol);
 
@@ -1162,7 +1160,8 @@ int runner_ptr = 0;
 void runner_stop()
 {
   running = 0; // stop running
-  durationDot = (60.0 * 1000) / (Wpm * 50); // reset in case accelerated
+  if (Wpm != 0)
+    durationDot = (60.0 * 1000) / (Wpm * 50); // reset in case accelerated
 }
 #endif
 
@@ -1331,15 +1330,9 @@ void readPaddleValue() {
     if (durationMark == 0 && keyerType != keyStraight) {
       if (lastPaddle != L) {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
-#ifdef CORRECT_IAMBICA
-	prev_lastPaddle = -1;
-#endif
         lastPaddle = L;
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
-#ifdef CORRECT_IAMBICA
-	prev_lastPaddle = -1;
-#endif
         lastPaddle = R;
       }
       digitalWrite(pinLed, HIGH);
@@ -1355,9 +1348,6 @@ void readPaddleValue() {
       } else {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
       }
-#ifdef CORRECT_IAMBICA
-      prev_lastPaddle = lastPaddle;
-#endif
       lastPaddle = L;
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1368,9 +1358,6 @@ void readPaddleValue() {
   } else if (paddleR == LOW && durationSpace == 0) {
     if (durationMark == 0 && keyerType != keyStraight) {
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
-#ifdef CORRECT_IAMBICA
-      prev_lastPaddle = lastPaddle;
-#endif
       lastPaddle = R;
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1380,7 +1367,7 @@ void readPaddleValue() {
   }
 
   if (durationSpace != 0) {
-#ifdef CORRECT_IAMBICA
+#ifdef CORRECT_IAMBIC_A
     if (paddleL == LOW && paddleR == LOW) {
       if (keyerType == keyIambicB || keyerType == keySuper || (keyerType == keyIambicA && prev_lastPaddle == -1)) {
 	if (lastPaddle != L) {
@@ -1412,12 +1399,15 @@ void readPaddleValue() {
       if (memory != -1) {
         if (memory == L) {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
-#ifdef CORRECT_IAMBICA
+#ifdef CORRECT_IAMBIC_A
 	  prev_lastPaddle = lastPaddle;
 #endif
           lastPaddle = L;
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
+#ifdef CORRECT_IAMBIC_A
+	  prev_lastPaddle = lastPaddle;
+#endif
           lastPaddle = R;
         }
         memory = -1;
@@ -1426,11 +1416,16 @@ void readPaddleValue() {
         timeStart = millis();
         if (sidetone) tone(pinBz, toneFreq); // side tone
       }
+#ifdef CORRECT_IAMBIC_A
+      else {
+	prev_lastPaddle = -1;
+      }
+#endif
     }
   }
   if (durationMark != 0) {
     // memory paddle LR
-#ifdef CORRECT_IAMBICA
+#ifdef CORRECT_IAMBIC_A
     if (paddleL == LOW && paddleR == LOW) {
       if (keyerType == keyIambicB || (keyerType == keySuper && (millis() - timeStart > durationDot)) || (keyerType == keyIambicA && prev_lastPaddle == -1)) {
 	if (lastPaddle != L) {
@@ -2533,12 +2528,12 @@ void setNextChar() {
           printascii(SPACE);
           break;
       }
- #ifdef OPT_RUNNER
+#ifdef OPT_RUNNER
       if (running && presetMessage[pos_read] == 0) {
         // space after callsign
         printascii(SPACE);
       }
- #endif
+#endif
     } else if (lang == langWabun) {
       for (i = 0; i < sizeof(CharWabun) / sizeof(unsigned char); i++) {
         if (readChar == CharWabun[i]) {
