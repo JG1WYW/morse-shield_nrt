@@ -928,6 +928,12 @@ int paddleL_off_delay; /* off delay ms */
 unsigned int runner_call[8];
 int runner_call_len = 0;
 int runner_ptr = 0;
+
+void runner_stop()
+{
+  runner = 0; // stop running
+  durationDot = (60.0 * 1000) / (Wpm * 50); // in case accelerated
+}
 #endif
 
 void readPaddleValue() {
@@ -1262,7 +1268,7 @@ void fireFunction(int no) {
   Serial.println(no + 1);
 
 #ifdef OPT_RUNNER /* JG1WYW */
-  runner = 0; /* pushing button to disable runner */
+  runner_stop(); /* pushing button to disable runner */
 #endif
   // clear preset messages
   if (pos_read > 0) {
@@ -1292,7 +1298,7 @@ void fireLongFunction(int no) {
   Serial.println(no + 1);
 
 #ifdef OPT_RUNNER /* JG1WYW */
-  runner = 0; /* pushing button to disable runner */
+  runner_stop(); /* pushing button to disable runner */
 #endif
   // clear preset messages
   if (pos_read > 0) {
