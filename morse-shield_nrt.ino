@@ -1810,7 +1810,7 @@ void decode() {
             lcd.setCursor(0, 1);
             lcd.write(CharWabun[i]);
             lcd.noCursor();
-            for (j = 1; j < colums - 1; j++) {
+            for (j = 1; j < colums /*- 1*/; j++) {
               if (line1[j] == CharWabun[i]) {
                 gamePts += (1 + combo);
                 if (combo < 4) combo++;
@@ -1827,9 +1827,12 @@ void decode() {
               }
             }
 #ifdef OPT_INVADER_SOUND
-            if (j == colums - 1) {
+            if (j == colums) {
+	      combo = 0; // wrong
               runner_beep = INVADER_ERRBEEP;
 	    }
+#else
+            if (j == colums) combo = 0; // wrong
 #endif
           }
           break;
