@@ -900,6 +900,16 @@ void tone_invader_start()
   delay(100);
   tone(pinBz, 1760, 100); // A5
 }
+
+void tone_invader_clear()
+{
+  tone(pinBz, 784, 100); // G4
+  delay(100);
+  tone(pinBz, 1047, 100); // C5
+  delay(100);
+  tone(pinBz, 1568, 100); // G5
+  delay(100);
+}
 #endif
 
 #ifdef OPT_AVOID_CHATTERING /* JG1WYW */
@@ -1217,28 +1227,6 @@ void readPaddleValue() {
       }
     }
   }
-#ifdef OPT_RUNNER
-  /*
-   * to avoid conflict among tone()
-   */
-  if (runner_beep != 0 && durationMark == 0) {
-    switch (runner_beep) {
-    case RUNNER_HIT:
-      tone_hit();
-      break;
-    case RUNNER_MISS:
-      tone_miss();
-      break;
-    case INVADER_BEEP:
-      beep();
-      break;
-    case INVADER_ERRBEEP:
-      errBeep();
-      break;
-    }
-    runner_beep = 0;
-  }
-#endif
 }
 
 void readButtonValue() {
@@ -2299,6 +2287,29 @@ void morseInvader() {
   // other functoin is running
   if (restInvader == -1) return;
 
+#ifdef OPT_RUNNER
+  /*
+   * to avoid conflict among tone()
+   */
+  if (runner_beep != 0 && durationMark == 0) {
+    switch (runner_beep) {
+    case RUNNER_HIT:
+      tone_hit();
+      break;
+    case RUNNER_MISS:
+      tone_miss();
+      break;
+    case INVADER_BEEP:
+      beep();
+      break;
+    case INVADER_ERRBEEP:
+      errBeep();
+      break;
+    }
+    runner_beep = 0;
+  }
+#endif
+
   // this is refresh interval
   static long lastInvaderTime;
   if ((millis() - lastInvaderTime) <= (1500 / maxInvader * restInvader + 500)) {
@@ -2350,8 +2361,9 @@ void morseInvader() {
     lcd.setCursor(2, 1);
     lcd.print(F("Clear!"));
 #ifdef OPT_RUNNER
-    if (runner_mode)
-      tone_hit();
+    if (runner_mode) {
+      tone_invader_clear();
+    }
 #endif
     restInvader = -1;
     lastInvaderTime = 0;
