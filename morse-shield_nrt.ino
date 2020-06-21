@@ -700,7 +700,8 @@ void goertzel() {
       }
       if (highduration > (5 * hightimesavg) ) {
 #ifdef OPT_BETTER_DECODE
-        hightimesavg = (hightimesavg + highduration) >> 1;  // if speed decreased fast ..
+        hightimesavg = highduration;  // if speed decreased fast ..
+        //hightimesavg = (hightimesavg + highduration) >> 1;  // if speed decreased fast ..
 #else
         hightimesavg = highduration + hightimesavg;   // if speed decrease fast ..
 #endif
