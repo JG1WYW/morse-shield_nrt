@@ -95,7 +95,7 @@ int menuIndexAvoidChatteringCount;
 #endif
 
 #ifdef OPT_AUTO_KEYERTYPE
-int autoKeyerType = 1; // auto keyer type enabled
+int autoKeyerType = 0; // auto keyer type disabled by default (Experimental)
 int autoKeyerTypeElekey = 2; // XXX Supr, auto keyer type when elekey changed from straight key
 int count_straight_or_paddle = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
