@@ -1035,7 +1035,7 @@ void goertzel() {
         hightimesavg = (highduration + 3 * hightimesavg) / 4; // now we know avg dit time (rolling 4 avg)
       }
       if (highduration >= (2 * hightimesavg) && highduration < (4 * hightimesavg)) {
-        hightimesavg = ((int)(highduration / wait) + 3 * hightimesavg) / 4; // now we know avg dit time (rolling 4 avg)
+        hightimesavg = (highduration / wait + 3 * hightimesavg) / 4; // now we know avg dit time (rolling 4 avg)
       }
 #else
       if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
