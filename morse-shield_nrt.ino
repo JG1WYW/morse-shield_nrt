@@ -90,8 +90,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 40;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 120;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 0;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 140;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -102,7 +102,7 @@ int menuIndexOffDelayDash;
 #endif
 
 #ifdef OPT_MEMORY_IN_SPC
-int memoryInSpc = 1;
+int memoryInSpc = 0; // memoryInSpc is disabled by default (Experimental)
 int menuIndexMemoryInSpc;
 #endif
 
@@ -307,7 +307,8 @@ char *setMenu[] {
   "OfDlyDsh"   // off delay dash ratio
 #endif
 #ifdef OPT_MEMORY_IN_SPC
-  "MemInSpc",  // memory in half space
+  ,
+  "MemInSpc"   // memory in half space
 #endif
 #ifdef OPT_AVOID_CHATTERING
   ,
