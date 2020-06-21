@@ -91,7 +91,10 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_AVOID_CHATTERING
 int avoidChattering = 1;
+int avoidChatteringCount = 5; // Stable count
+
 int menuIndexAvoidChattering;
+int menuIndexAvoidChatteringCount;
 #endif
 
 #ifdef OPT_AUTO_KEYERTYPE
@@ -277,7 +280,8 @@ char *setMenu[] {
 #endif
 #ifdef OPT_AVOID_CHATTERING
   ,
-  "AvodChtr"  // to avoid chattering
+  "AvodChtr",  // to avoid chattering
+  "StbleCnt"   // stable count
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   ,
@@ -309,6 +313,7 @@ typedef struct PARAM_EEPROM {
 #endif
 #ifdef OPT_AVOID_CHATTERING
   int avoidChattering;
+  int avoidChatteringCount;
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   int autoKeyerType;
@@ -351,6 +356,7 @@ int param_eeprom_load()
 #endif
 #ifdef OPT_AVOID_CHATTERING
     avoidChattering = param.avoidChattering;
+    avoidChatteringCount = param.avoidChatteringCount;
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
     autoKeyerType = param.autoKeyerType;
@@ -385,6 +391,7 @@ void param_eeprom_save()
 #endif
 #ifdef OPT_AVOID_CHATTERING
   param.avoidChattering = avoidChattering;
+  param.avoidChatteringCount = avoidChatteringCount;
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   param.autoKeyerType = autoKeyerType;
@@ -792,6 +799,7 @@ void setup() {
 #endif
 #ifdef OPT_AVOID_CHATTERING
   menuIndexAvoidChattering = menuIndex++;
+  menuIndexAvoidChatteringCount = menuIndex++;
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   menuIndexAutoKeyertype = menuIndex++;
@@ -1126,7 +1134,6 @@ int paddleR_stable = HIGH;
 int paddleL_trans = 0;
 int paddleR_trans = 0;
 
-#define STABLE_COUNT 5
 #endif
 
 #ifdef OPT_OFF_DELAY
@@ -1189,7 +1196,7 @@ void readPaddleValue() {
      * avoid chattering, paddle R
      */
     if (paddleR == LOW && paddleR_stable == HIGH) {
-      if (++paddleR_trans >= STABLE_COUNT) {
+      if (++paddleR_trans >= avoidChatteringCount) {
 	paddleR_stable = LOW;
 	paddleR_trans = 0;
       } else {
@@ -1197,7 +1204,7 @@ void readPaddleValue() {
 	paddleR = HIGH;
       }
     } else if (paddleR == HIGH && paddleR_stable == LOW) {
-      if (--paddleR_trans <= -STABLE_COUNT) {
+      if (--paddleR_trans <= -avoidChatteringCount) {
 	paddleR_stable = HIGH;
 	paddleR_trans = 0;
       } else {
@@ -1210,7 +1217,7 @@ void readPaddleValue() {
      * avoid chattering, paddle L
      */
     if (paddleL == LOW && paddleL_stable == HIGH) {
-      if (++paddleL_trans >= STABLE_COUNT) {
+      if (++paddleL_trans >= avoidChatteringCount) {
 	paddleL_stable = LOW;
 	paddleL_trans = 0;
       } else {
@@ -1218,7 +1225,7 @@ void readPaddleValue() {
 	paddleL = HIGH;
       }
     } else if (paddleL == HIGH && paddleL_stable == LOW) {
-      if (--paddleL_trans <= -STABLE_COUNT) {
+      if (--paddleL_trans <= -avoidChatteringCount) {
 	paddleL_stable = HIGH;
 	paddleL_trans = 0;
       } else {
@@ -2088,6 +2095,9 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAvoidChatteringCount) {
+        lcd.print(avoidChatteringCount);
+        lcd.print(F("   "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
@@ -2187,6 +2197,11 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAvoidChatteringCount) {
+	if (avoidChatteringCount > 1)
+	  avoidChatteringCount--;
+        lcd.print(avoidChatteringCount);
+        lcd.print(F("   "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
@@ -2287,6 +2302,13 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexAvoidChatteringCount) {
+	if (avoidChatteringCount < 10)
+	  avoidChatteringCount++;
+        lcd.print(avoidChatteringCount);
+	if (avoidChatteringCount < 10)
+	  lcd.print(F(" "));
+        lcd.print(F("  "));
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
       } else if (menuIndex == menuIndexAutoKeyertype) {
