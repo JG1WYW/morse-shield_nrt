@@ -19,7 +19,7 @@ String date = "19/12/20";
 #if 1 /* JG1WYW */
 /*
  * These options were added by JG1WYW
- * So far, off delay is checked with improved Iambic A.
+ * So far, off delay and look ahead memory is tested with improved Iambic A.
  */
 #define OPT_OFF_DELAY			/* off delay timer */
 #define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
@@ -27,7 +27,7 @@ String date = "19/12/20";
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
-#define OPT_RUNNER			/* morse runner training */
+#define OPT_RUNNER			/* runner training of callsigns */
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
@@ -35,7 +35,7 @@ String date = "19/12/20";
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
 #define OPT_BETTER_IAMBIC_A             /* Improved behavior of IambicA */
-#define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when runner */
+#define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when running */
 //#define OPT_DECODE_DEBUG
 //#define OPT_TIMING_DEBUG                /* Debug flag */
 
@@ -90,7 +90,7 @@ int menuIndexCharSpace;
 int offDelay = 0; // off delay disabled by default (Experimental)
 
 int off_timer_ratio_dot = 20;    /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 60;   /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dash = 40;   /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
 #define MAX_DASH_RATIO 200
