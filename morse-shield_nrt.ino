@@ -16,7 +16,7 @@ String date = "19/12/20";
 #define SCROLL_ROW
 //#define SERIAL_PRINT_DIT_DAH
 
-#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
+//#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
@@ -1413,7 +1413,7 @@ void fireLongFunction(int no) {
         } else if (digitalRead(pinSw4) == LOW) {
           pressedSw = pinSw4;
 #ifdef OPT_RUNNER
-          if (runner_mode)
+          //if (runner_mode)
             beep();
 #endif
           invaderAnimation();
@@ -1423,10 +1423,8 @@ void fireLongFunction(int no) {
       lcd.setCursor(0, 1);
       lcd.print(F("        "));
 #ifndef OPT_RUNNER /* !OPT_RUNNER */
-      if (runner_mode) {
-        beep();
-        delay(200);
-      }
+      beep();
+      delay(200);
 #endif
       for (;;) {
         if (digitalRead(pressedSw) == HIGH) break;
@@ -1631,9 +1629,8 @@ void decode() {
                 if (combo < 4) combo++;
                 lcd.write(SPACE);
 #ifdef OPT_RUNNER
-		if (runner_mode) {
+		//if (runner_mode)
 		  runner_beep = INVADER_BEEP;
-		}
 #endif
                 for (k = j; k > 1; k--) {
                   line1[k] = line1[k - 1];
@@ -1646,7 +1643,7 @@ void decode() {
 #ifdef OPT_RUNNER
             if (j == colums) {
 	      combo = 0; // wrong
-	      if (runner_mode)
+	      //if (runner_mode)
                 runner_beep = INVADER_ERRBEEP;
 	    }
 #else
@@ -1657,7 +1654,7 @@ void decode() {
         }
       }
 #ifdef OPT_RUNNER
-      if (restInvader >=0 && runner_mode && i == sizeof(CharAbc) / sizeof(unsigned char)) {
+      if (restInvader >=0 /*&& runner_mode*/ && i == sizeof(CharAbc) / sizeof(unsigned char)) {
         runner_beep = INVADER_ERRBEEP;
       }
       if (running == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
@@ -2212,10 +2209,6 @@ void invaderAnimation() {
   lcd.write(1); // invader
   lcd.write(SPACE);
   delay(500);
-#ifdef OPT_RUNNER
-  //if (runner_mode)
-    //beep();
-#endif
   lcd.setCursor(7, 0);
   lcd.print(F("3"));
   lcd.setCursor(4, 1);
@@ -2225,7 +2218,7 @@ void invaderAnimation() {
   lcd.write(2); // invader
   delay(500);
 #ifdef OPT_RUNNER
-  if (runner_mode)
+  //if (runner_mode)
     beep();
 #endif
   lcd.setCursor(7, 0);
@@ -2237,10 +2230,6 @@ void invaderAnimation() {
   lcd.write(2); // invader
   lcd.write(1); // invader
   delay(500);
-#ifdef OPT_RUNNER
-  //if (runner_mode)
-    //beep();
-#endif
   lcd.setCursor(7, 0);
   lcd.print(F("2"));
   lcd.setCursor(2, 1);
@@ -2252,7 +2241,7 @@ void invaderAnimation() {
   lcd.write(SPACE);
   delay(500);
 #ifdef OPT_RUNNER
-  if (runner_mode)
+  //if (runner_mode)
     beep();
 #endif
   lcd.setCursor(7, 0);
@@ -2266,10 +2255,6 @@ void invaderAnimation() {
   lcd.write(SPACE);
   lcd.write(2); // invader
   delay(500);
-#ifdef OPT_RUNNER
-  //if (runner_mode)
-    //beep();
-#endif
   lcd.setCursor(7, 0);
   lcd.print(F("1"));
   lcd.setCursor(0, 1);
@@ -2283,10 +2268,10 @@ void invaderAnimation() {
   lcd.write(3); // invader
   delay(500);
 #ifdef OPT_RUNNER
-  if (runner_mode) {
+  //if (runner_mode) {
     tone_invader_start();
     delay(500);
-  }
+  //}
 #endif
   lcd.setCursor(0, 0);
   lcd.print(F("        "));
@@ -2366,9 +2351,8 @@ void morseInvader() {
     lcd.setCursor(2, 1);
     lcd.print(F("Clear!"));
 #ifdef OPT_RUNNER
-    if (runner_mode) {
+    //if (runner_mode)
       tone_invader_clear();
-    }
 #endif
     restInvader = -1;
     lastInvaderTime = 0;
