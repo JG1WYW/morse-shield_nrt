@@ -21,7 +21,7 @@ String date = "19/12/20";
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
-#define OPT_TOOLONG                     /* '_' for too long chars */
+#define OPT_TOO_LONG                    /* '_' for too long chars */
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 
@@ -727,7 +727,7 @@ void goertzel() {
   // we think that hightimeavg = 1 bit
   if (filteredstate != filteredstatebefore) {
     stop = LOW;
-#ifdef OPT_TOOLONG /* JG1WYW */
+#ifdef OPT_TOO_LONG /* JG1WYW */
     if (filteredstate == LOW && code < 0b01000000) { // we did end a HIGH
 #else
     if (filteredstate == LOW && code < 0b10000000) { // we did end a HIGH
@@ -748,7 +748,7 @@ void goertzel() {
         wpm = (wpm + (1200 / ((highduration) / 3))) / 2; // the most precise we can do ;o)
       }
     }
-#ifdef OPT_TOOLONG /* JG1WYW */
+#ifdef OPT_TOO_LONG /* JG1WYW */
     else if (filteredstate == LOW) {
       decode();
       code = 1;
@@ -1208,7 +1208,7 @@ void readButtonValue() {
       runnerMode = 0;
     } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) {
       //digitalWrite(pinLed, LOW);
-      tone_ok();
+      tone_hit();
       runnerMode = 1;
 #endif
     }
@@ -1460,14 +1460,14 @@ void trainingMode(int pressedSw) {
 }
 
 #ifdef OPT_RUNNER
-void tone_ok()
+void tone_hit()
 {
   tone(pinBz, 698, 100); // F4
   delay(100);
   tone(pinBz, 1397, 200); // F5
 }
 
-void tone_ng()
+void tone_miss()
 {
   tone(pinBz, 220, 100); // A2
   delay(100);
@@ -1519,13 +1519,13 @@ void decode() {
 		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
-                  tone_ok();
+                  tone_hit();
 		  delay(1000);
 		  printascii(SPACE);
                   trainingMode(pinSw3);
 		}
 	      } else {
-	        tone_ng();
+	        tone_miss();
 		runner_ptr = 0;
 		printascii(SPACE);
 	      }
@@ -1553,10 +1553,11 @@ void decode() {
           }
           break;
         }
-      }
+
+}
 #ifdef OPT_RUNNER
       if (runner == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
-        tone_ok();
+        tone_miss();
 	runner_ptr = 0;
 	printascii('_');
       }
