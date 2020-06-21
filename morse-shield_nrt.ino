@@ -757,7 +757,11 @@ void goertzel() {
 
     if (filteredstate == HIGH) { // we did end a LOW
 
+#ifdef OPT_BETTER_DECODE
+      float lacktime = 0.9;
+#else
       float lacktime = 1;
+#endif
       if (wpm > 25)lacktime = 1.0; ///  when high speeds we have to have a little more pause before new letter or new word
       if (wpm > 30)lacktime = 1.2;
       if (wpm > 35)lacktime = 1.5;
@@ -932,7 +936,7 @@ int runner_ptr = 0;
 void runner_stop()
 {
   runner = 0; // stop running
-  durationDot = (60.0 * 1000) / (Wpm * 50); // in case accelerated
+  durationDot = (60.0 * 1000) / (Wpm * 50); // reset in case accelerated
 }
 #endif
 
@@ -2299,6 +2303,10 @@ void morseInvader() {
   } else if (SPACE == (line1[1] | line1[2] | line1[3] | line1[4] | line1[5] | line1[6] | line1[7])) {
     lcd.setCursor(2, 1);
     lcd.print(F("Clear!"));
+#ifdef OPT_RUNNER
+    if (runner_mode)
+      tone_hit();
+#endif
     restInvader = -1;
     lastInvaderTime = 0;
     // still invaders are waiting
