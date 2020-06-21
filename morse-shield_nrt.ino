@@ -89,8 +89,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 50;    /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 100;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 60;    /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 120;   /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
 #define MAX_DASH_RATIO 200
@@ -1045,13 +1045,11 @@ void goertzel() {
 #ifdef OPT_BETTER_DECODE
       if ((highduration * 2) <= hightimesavg) {
         hightimesavg = highduration;  // if speed increased fast ..
-      }
-      if (highduration < (2 * hightimesavg) && hightimesavg < (2 * highduration)) {
+      } else if (highduration < (2 * hightimesavg) && hightimesavg < (2 * highduration)) {
         hightimesavg = (highduration + 3 * hightimesavg) / 4; // now we know avg dit time (rolling 4 avg)
-      }
-      if (highduration >= (2 * hightimesavg) && highduration < (4 * hightimesavg)) {
+      } else if (highduration >= (2 * hightimesavg) && highduration < (4 * hightimesavg)) {
         hightimesavg = (highduration / wait + 3 * hightimesavg) / 4; // now we know avg dit time (rolling 4 avg)
-      }
+      } else
 #else
       if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
         hightimesavg = (highduration + hightimesavg + hightimesavg) / 3; // now we know avg dit time ( rolling 3 avg)
@@ -1254,9 +1252,16 @@ void tone_runner_mode()
 
 void tone_hit()
 {
-  tone(pinBz, 698, 100); // F4
+  //tone(pinBz, 262, 100); // C3
+  //tone(pinBz, 698, 100); // F3
+  tone(pinBz, 392, 100); // G3
+  //tone(pinBz, 698, 100); // F4
   delay(100);
-  tone(pinBz, 1397, 200); // F5
+  //tone(pinBz, 523, 100); // C4
+  //tone(pinBz, 698, 100); // F4
+  tone(pinBz, 784, 100); // G4
+  //tone(pinBz, 1397, 200); // F5
+
   delay(100);
 }
 
@@ -1913,7 +1918,8 @@ void readPaddleValue() {
   /*
    * to avoid conflict among tone()
    */
-  if (runner_beep != 0 && durationMark == 0) {
+  if (runner_beep != 0 && durationMark == 0 && filteredstate == LOW) {
+    /* intending no impact on sidetone and highduration */
     switch (runner_beep) {
 #ifdef OPT_RUNNER
     case RUNNER_HIT:
