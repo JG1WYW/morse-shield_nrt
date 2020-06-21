@@ -20,7 +20,6 @@ String date = "19/12/20";
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
-#define OPT_SIDETONE_600		/* 600Hz side tone */
 #define OPT_RUNNER			/* morse runner training */
 
 // keyer setting
@@ -40,7 +39,7 @@ int durationMark = 0;
 int durationSpace = 0;
 int durationLongPress = 1000;
 #ifdef OPT_PADDLE_REVERSE /* JG1WYW */
-int paddleRvs = 1; // paddle reverse
+int paddleRvs = 1; // paddle reverse (paddle on left hand side)
 #else
 int paddleRvs = 0; // paddle reverse
 #endif
@@ -65,11 +64,7 @@ int defToneFreq[] = {
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
-#ifdef OPT_SIDETONE_600 /* JG1WYW */
-int toneFreq = 600; // side tone frequency 600Hz
-#else
 int toneFreq = 440; // side tone frequency 440Hz
-#endif
 int beepFreq = 880 * 2; // beep frequency 880Hz
 
 // keyer selection
