@@ -699,25 +699,22 @@ void goertzel() {
 #ifdef OPT_BETTER_DECODE
       if ((highduration * 2) <= hightimesavg) {
         hightimesavg = highduration;  // if speed increased fast ..
-        //hightimesavg = (highduration + hightimesavg) >> 2;  // if speed increased fast ..
       }
       if (highduration < (2 * hightimesavg) && hightimesavg < (2 * highduration)) {
-#else
-      if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
-#endif
-        //hightimesavg = (highduration + hightimesavg + hightimesavg) / 3; // now we know avg dit time ( rolling 3 avg)
         hightimesavg = (highduration + 3 * hightimesavg) >> 2; // now we know avg dit time ( rolling 3 avg)
         //hightimesavg = (highduration + 7 * hightimesavg) >> 3; // now we know avg dit time ( rolling 3 avg)
       }
-#if 1
       if (highduration > (2 * hightimesavg) && highduration < (4 * hightimesavg)) {
         hightimesavg = (highduration / 3 + 3 * hightimesavg) >> 2; // now we know avg dit time ( rolling 3 avg)
+      }
+#else
+      if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
+        hightimesavg = (highduration + hightimesavg + hightimesavg) / 3; // now we know avg dit time ( rolling 3 avg)
       }
 #endif
       if (highduration > (5 * hightimesavg) ) {
 #ifdef OPT_BETTER_DECODE
         hightimesavg = highduration;  // if speed decreased fast ..
-        //hightimesavg = (highduration + hightimesavg) >> 1;  // if speed decreased fast ..
 #else
         hightimesavg = highduration + hightimesavg;   // if speed decrease fast ..
 #endif
