@@ -52,7 +52,7 @@ int paddleRvs = 0; // paddle reverse
 #endif
 
 #ifdef OPT_RUNNER /* JG1WYW */
-int runnerMode = 1; // Runner mode instead of just callsigns
+int runnerMode = 0; // Runner mode instead of just callsigns
 int runner = 0;
 #endif
 
@@ -709,6 +709,11 @@ void goertzel() {
         hightimesavg = (highduration + 3 * hightimesavg) >> 2; // now we know avg dit time ( rolling 3 avg)
         //hightimesavg = (highduration + 7 * hightimesavg) >> 3; // now we know avg dit time ( rolling 3 avg)
       }
+#if 1
+      if (highduration > (2 * hightimesavg) && highduration < (4 * hightimesavg)) {
+        hightimesavg = (highduration / 3 + 3 * hightimesavg) >> 2; // now we know avg dit time ( rolling 3 avg)
+      }
+#endif
       if (highduration > (5 * hightimesavg) ) {
 #ifdef OPT_BETTER_DECODE
         hightimesavg = highduration;  // if speed decreased fast ..
@@ -1202,6 +1207,15 @@ void readButtonValue() {
     } else if (millis() - timeStartSw[i] > durationLongPress && millis() - timeStartSw[i] < durationLongPress + 10) {
       //digitalWrite(pinLed, LOW);
       beep();
+#ifdef OPT_RUNNER
+      runnerMode = 0;
+    } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) {
+      //digitalWrite(pinLed, LOW);
+      tone(pinBz, 698, 100); // F4
+      delay(100);
+      tone(pinBz, 1397, 200); // F5
+      runnerMode = 1;
+#endif
     }
   }
 }
