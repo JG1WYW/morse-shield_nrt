@@ -22,7 +22,7 @@ String date = "19/12/20";
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_TOOLONG                     /* '_' for too long chars */
-#define OPT_BETTER_DECODE		/* better decode using low duration */
+#define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 
 // keyer setting
@@ -746,7 +746,6 @@ void goertzel() {
     }
 #ifdef OPT_TOOLONG /* JG1WYW */
     else if (filteredstate == LOW) {
-      code = 0b01100001; /* '-' */
       decode();
       code = 1;
     }
@@ -1447,6 +1446,11 @@ void trainingMode(int pressedSw) {
 void decode() {
   int i, j, k;
 
+#if 1 /* JG1WYW */
+  if (code == 1)
+    return;
+#endif
+
   if (lang == langAbc) {
     if (code == 0b01000101) { // [VA]
       printascii(0b01011011);
@@ -1521,6 +1525,15 @@ void decode() {
           break;
         }
       }
+#ifdef OPT_RUNNER
+      if (runner == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
+        tone(pinBz, 220, 100);
+	delay(100);
+	tone(pinBz, 110, 200);
+	runner_ptr = 0;
+	printascii('_');
+      }
+#endif
     }
   } else if (lang == langWabun) {
     if (code == 0b00100010) { // rata
