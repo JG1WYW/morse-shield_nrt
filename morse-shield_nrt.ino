@@ -21,6 +21,7 @@ String date = "19/12/20";
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
+#define OPT_TOOLONG                     /* '_' for too long chars */
 
 // keyer setting
 #define MIN_WPM  5
@@ -696,7 +697,11 @@ void goertzel() {
   // we think that hightimeavg = 1 bit
   if (filteredstate != filteredstatebefore) {
     stop = LOW;
+#ifdef OPT_TOOLONG /* JG1WYW */
+    if (filteredstate == LOW && code < 0b01000000) { // we did end a HIGH
+#else
     if (filteredstate == LOW && code < 0b10000000) { // we did end a HIGH
+#endif
       if (highduration < (hightimesavg * 2) && highduration > (hightimesavg * 0.6)) { /// 0.6 filter out false dits
         code = code << 1;//strcat(code, ".");
 #ifdef SERIAL_PRINT_DIT_DAH
@@ -713,6 +718,12 @@ void goertzel() {
         wpm = (wpm + (1200 / ((highduration) / 3))) / 2; // the most precise we can do ;o)
       }
     }
+#ifdef OPT_TOOLONG /* JG1WYW */
+    else if (filteredstate == LOW) {
+      printascii('_');
+      code = 1;
+    }
+#endif
 
     if (filteredstate == HIGH) { // we did end a LOW
 
