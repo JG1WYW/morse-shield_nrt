@@ -761,6 +761,9 @@ void goertzel() {
       if (lowduration >= hightimesavg * (5 * lacktime)) { // word space
         decode();
         code = 1;
+#ifdef OPT_RUNNER /* JG1WYW */
+       if (!runner)
+#endif
         printascii(SPACE);
 #ifdef SERIAL_PRINT_DIT_DAH
         Serial.println();
@@ -1300,6 +1303,7 @@ void fireLongFunction(int no) {
           pressedSw = pinSw3;
           lcd.setCursor(0, 0);
 #ifdef OPT_RUNNER
+	  lcdIndex = 0;
           if (runnerMode) {
             lcd.print(F("Runner  "));
 	  } else {
@@ -1424,7 +1428,7 @@ void trainingMode(int pressedSw) {
 	for (idx = 0 ; idx < runner_call_len ; idx++) {
 	  runner_call[idx] = presetMessage[k - runner_call_len + idx];
 	}
-	
+
         break;
       }
 #endif
@@ -1442,7 +1446,7 @@ void decode() {
   int i, j, k;
 
 #if 1 /* JG1WYW */
-  if (code == 1)
+  if (code == 1) // no decoded characters
     return;
 #endif
 
@@ -1977,6 +1981,12 @@ void setNextChar() {
           printascii(SPACE);
           break;
       }
+ #ifdef OPT_RUNNER
+      if (runner && presetMessage[pos_read] == 0) {
+        // space after callsign
+        printascii(SPACE);
+      }
+ #endif
     } else if (lang == langWabun) {
       for (i = 0; i < sizeof(CharWabun) / sizeof(unsigned char); i++) {
         if (readChar == CharWabun[i]) {
