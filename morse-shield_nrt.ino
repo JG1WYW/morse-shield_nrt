@@ -77,7 +77,6 @@ int menuIndexOffDelay;
 #ifdef OPT_AUTO_KEYERTYPE /* JG1WYW */
 int autoKeyerType = 1; // auto keyer type enabled
 int count_straight_or_paddle = 0;
-int changed_to_straight = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
 int menuIndexAutoKeyertype;
 #endif
@@ -1085,7 +1084,6 @@ void readPaddleValue() {
       if (paddleL == HIGH && paddleR == LOW) {
 	if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
 	  keyerType = keyStraight;
-	  changed_to_straight = 1;
 	  count_straight_or_paddle = 0;
 	}
       } else {
@@ -1093,10 +1091,9 @@ void readPaddleValue() {
       }
     }
     if (keyerType == keyStraight) {
-      if (changed_to_straight == 1 && paddleL == HIGH && paddleR == HIGH) {
+      if (paddleL == HIGH && paddleR == HIGH) {
 	if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
 	  keyerType = keySuper;
-	  changed_to_straight = 0;
 	  count_straight_or_paddle = 0;
 	}
       } else {
