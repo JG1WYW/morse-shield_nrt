@@ -681,17 +681,28 @@ void goertzel() {
     if (filteredstate == HIGH) { /* key pushed */
       starttimehigh = millis();
       lowduration = (millis() - startttimelow);
+#ifdef OPT_BETTER_DECODE
+      if ((lowduration * 2) <= lowtimesavg) {
+        lowtimesavg = lowduration;  // if speed increased fast ..
+      }
+      if (lowduration < (2 * lowtimesavg) && lowtimesavg < (2 * lowduration)) {
+        lowtimesavg = (lowduration + lowtimesavg + lowtimesavg) / 3;
+      }
+#if 1
+      if (lowduration > (5 * lowtimesavg)) {
+        lowtimesavg = 5 * lowtimesavg;  // if speed decreased fast ..
+      }
+#endif
+#endif
     }
 
     if (filteredstate == LOW) { /* key released */
       startttimelow = millis();
       highduration = (millis() - starttimehigh);
 #ifdef OPT_BETTER_DECODE
-#if 1
       if ((highduration * 2) <= hightimesavg) {
         hightimesavg = highduration;  // if speed increased fast ..
       }
-#endif
       if (highduration < (2 * hightimesavg) && hightimesavg < (2 * highduration)) {
 #else
       if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
@@ -705,16 +716,6 @@ void goertzel() {
         hightimesavg = highduration + hightimesavg;   // if speed decrease fast ..
 #endif
       }
-#ifdef OPT_BETTER_DECODE
-#if 0 /* not so reliable? */
-      if (hightimesavg < (lowduration * 2) && lowduration < (hightimesavg * 2)) {
-        hightimesavg = (lowduration + hightimesavg + hightimesavg) / 3;
-      }
-      if ((lowduration * 2) <= hightimesavg) {
-        hightimesavg = lowduration; // if speed increased fast ..
-      }
-#endif
-#endif
     }
   }
 
