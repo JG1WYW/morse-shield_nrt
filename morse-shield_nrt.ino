@@ -53,7 +53,7 @@ int paddleRvs = 0; // paddle reverse
 
 #ifdef OPT_RUNNER /* JG1WYW */
 int runner_mode = 0; // Runner mode instead of just callsigns
-int runner = 0;
+int running = 0; // means Now running
 int runner_miss = 0;
 int runner_accel = 0;
 int runner_beep = 0;
@@ -777,7 +777,7 @@ void goertzel() {
         decode();
         code = 1;
 #ifdef OPT_RUNNER /* JG1WYW */
-       if (!runner) // to omit such word space during running
+       if (!running) // to omit such word space during running
 #endif
         printascii(SPACE);
 #ifdef SERIAL_PRINT_DIT_DAH
@@ -811,7 +811,7 @@ void goertzel() {
   */
   // the end of main loop clean up//
 #ifdef OPT_RUNNER /* JG1WYW */
- if (!runner) // to keep lcd space as much as possible during running for verification purpose
+ if (!running) // to keep lcd space as much as possible during running for verification purpose
 #endif
   updateinfolinelcd();
   realstatebefore = realstate;
@@ -959,7 +959,7 @@ int runner_ptr = 0;
 
 void runner_stop()
 {
-  runner = 0; // stop running
+  running = 0; // stop running
   durationDot = (60.0 * 1000) / (Wpm * 50); // reset in case accelerated
 }
 #endif
@@ -1227,6 +1227,28 @@ void readPaddleValue() {
       }
     }
   }
+#ifdef OPT_RUNNER
+  /*
+   * to avoid conflict among tone()
+   */
+  if (runner_beep != 0 && durationMark == 0) {
+    switch (runner_beep) {
+    case RUNNER_HIT:
+      tone_hit();
+      break;
+    case RUNNER_MISS:
+      tone_miss();
+      break;
+    case INVADER_BEEP:
+      beep();
+      break;
+    case INVADER_ERRBEEP:
+      errBeep();
+      break;
+    }
+    runner_beep = 0;
+  }
+#endif
 }
 
 void readButtonValue() {
@@ -1397,8 +1419,10 @@ void fireLongFunction(int no) {
       lcd.setCursor(0, 1);
       lcd.print(F("        "));
 #ifndef OPT_RUNNER /* !OPT_RUNNER */
-      beep();
-      delay(200);
+      if (runner_mode) {
+        beep();
+        delay(200);
+      }
 #endif
       for (;;) {
         if (digitalRead(pressedSw) == HIGH) break;
@@ -1489,7 +1513,7 @@ void trainingMode(int pressedSw) {
       if (runner_mode) { /* runner */
         int idx;
 
-	runner = 1;
+	running = 1;
 	runner_ptr = 0;
 
         if (rand() / (RAND_MAX / 5 + 1) == 0) {
@@ -1551,7 +1575,7 @@ void decode() {
           if (restInvader < 0) {
             printascii(CharAbc[i]);
 #ifdef OPT_RUNNER /* JG1WYW */
-            if (runner == 1) {
+            if (running == 1) {
               if (code == 0b01001100) { /* '?' */
 	        int idx;
 		clearPresetMessage();
@@ -1632,7 +1656,7 @@ void decode() {
       if (restInvader >=0 && runner_mode && i == sizeof(CharAbc) / sizeof(unsigned char)) {
         runner_beep = INVADER_ERRBEEP;
       }
-      if (runner == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
+      if (running == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
         //tone_miss();
 	runner_beep = RUNNER_MISS;
 	runner_ptr = 0;
@@ -2069,7 +2093,7 @@ void setNextChar() {
           break;
       }
  #ifdef OPT_RUNNER
-      if (runner && presetMessage[pos_read] == 0) {
+      if (running && presetMessage[pos_read] == 0) {
         // space after callsign
         printascii(SPACE);
       }
@@ -2286,29 +2310,6 @@ void SetupMorseInvader() {
 void morseInvader() {
   // other functoin is running
   if (restInvader == -1) return;
-
-#ifdef OPT_RUNNER
-  /*
-   * to avoid conflict among tone()
-   */
-  if (runner_beep != 0 && durationMark == 0) {
-    switch (runner_beep) {
-    case RUNNER_HIT:
-      tone_hit();
-      break;
-    case RUNNER_MISS:
-      tone_miss();
-      break;
-    case INVADER_BEEP:
-      beep();
-      break;
-    case INVADER_ERRBEEP:
-      errBeep();
-      break;
-    }
-    runner_beep = 0;
-  }
-#endif
 
   // this is refresh interval
   static long lastInvaderTime;
