@@ -1403,6 +1403,7 @@ void readPaddleValue() {
       if (paddleR_prev == HIGH) {
         serial_timing("_R");
       }
+      serial_timing("_r");
 #endif
       if (paddleR_highStart != 0) {
         // XXX off delay aborted, but actually released
@@ -1451,6 +1452,7 @@ void readPaddleValue() {
       if (paddleL_prev == HIGH) {
         serial_timing("_L");
       }
+      serial_timing("_l");
 #endif
       if (paddleL_highStart != 0) {
         // XXX off delay aborted, but actually released
@@ -1578,13 +1580,13 @@ void readPaddleValue() {
   if (durationSpace != 0) {
 #ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
-      if (memory == -1 && paddleL == LOW && lastPaddle == R && paddleL_released) {
+      if (paddleL == LOW && lastPaddle == R && paddleL_released) {
 	paddleL_released = 0;
 	memory = L;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml");
 #endif
-      } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
+      } else if (paddleR == LOW && lastPaddle == L && paddleR_released) {
 	paddleR_released = 0;
 	memory = R;
 #ifdef OPT_TIMING_DEBUG
