@@ -757,7 +757,7 @@ void goertzel() {
       }
     }
 #ifdef OPT_TOO_LONG /* JG1WYW */
-    else if (filteredstate == LOW) {
+    else if (filteredstate == LOW) { // invoke decode expecting '_' during running to notify invalid keying (typically connecting more than two characters) immediately
       decode();
       code = 1;
     }
@@ -1651,6 +1651,7 @@ void decode() {
       if (running == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
         //tone_miss();
 	runner_beep = RUNNER_MISS;
+	runner_miss++;
 	runner_ptr = 0;
 	printascii('_');
       }
