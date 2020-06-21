@@ -101,7 +101,7 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 25; // XXX percent (of dot) for look ahead memory
+int look_ahead_memory_ratio = 15; // XXX percent (of dot) for look ahead memory
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
