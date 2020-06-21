@@ -88,8 +88,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 20;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 60;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 40;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 120;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -2385,7 +2385,7 @@ void editSetting() {
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexOffDelayDot) {
 	if (off_timer_ratio_dot > 0)
-	  off_timer_ratio_dot -= 10;
+	  off_timer_ratio_dot -= 5;
         lcd.print(off_timer_ratio_dot);
 	if (off_timer_ratio_dot < 10)
           lcd.print(F(" "));
@@ -2394,7 +2394,7 @@ void editSetting() {
         lcd.print(F(" "));
       } else if (menuIndex == menuIndexOffDelayDash) {
 	if (off_timer_ratio_dash > 0)
-	  off_timer_ratio_dash -= 10;
+	  off_timer_ratio_dash -= 5;
         lcd.print(off_timer_ratio_dash);
 	if (off_timer_ratio_dash < 10)
           lcd.print(F(" "));
@@ -2523,7 +2523,7 @@ void editSetting() {
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexOffDelayDot) {
 	if (off_timer_ratio_dot < MAX_DOT_RATIO)
-	  off_timer_ratio_dot += 10;
+	  off_timer_ratio_dot += 5;
         lcd.print(off_timer_ratio_dot);
 	if (off_timer_ratio_dot < 10)
           lcd.print(F(" "));
@@ -2532,7 +2532,7 @@ void editSetting() {
         lcd.print(F(" "));
       } else if (menuIndex == menuIndexOffDelayDash) {
 	if (off_timer_ratio_dash < MAX_DASH_RATIO)
-	  off_timer_ratio_dash += 10;
+	  off_timer_ratio_dash += 5;
         lcd.print(off_timer_ratio_dash);
 	if (off_timer_ratio_dash < 10)
           lcd.print(F(" "));
