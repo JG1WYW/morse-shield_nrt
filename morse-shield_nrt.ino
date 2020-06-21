@@ -22,8 +22,8 @@ String date = "19/12/20";
  * So far, off delay & look ahead memory is checked with improved IambicA.
  */
 #define OPT_OFF_DELAY			/* off delay timer */
-#define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
-#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
+//#define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
+//#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
