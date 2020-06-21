@@ -30,6 +30,7 @@ String date = "19/12/20";
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
+#define OPT_LAST_MENUINDEX              /* memory the last menuIndex (Experimental) */
 
 #define MOD_IAMBIC_A  /* XXX Is the originally written behavior of IambicA correct? */
 #define MOD_MISC      /* See comments for each modification */
@@ -72,8 +73,8 @@ int runner_beep = 0;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 30;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 90;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 20;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 60;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -2077,16 +2078,54 @@ void editSetting() {
   lcd.write(0b00000110);
   lcd.print(F("<    >"));
   lcd.write(0b11110111);
+#ifdef OPT_LAST_MENUINDEX
+  static int menuIndex = -1; // memory the last menuIndex
+  int right_after_invoked = 1;
+  int backward = 0;
+#define DURATION_SEMILONG_PRESS 300
+#else
   int menuIndex = -1;
+#endif
 
   lcd.setCursor(0, 0);
   lcd.print(F("Set Mode"));
   for (;;) {
     if (digitalRead(pinSw4) == LOW) break;
+#ifdef OPT_LAST_MENUINDEX
+    if (backward || (menuIndex != -1 && right_after_invoked) || digitalRead(pinSw1) == LOW) {
+      if (digitalRead(pinSw1) == LOW) {
+	backward = 0;
+	timeStart = millis();
+	while (digitalRead(pinSw1) == LOW) {
+	  if (millis() - timeStart > DURATION_SEMILONG_PRESS) {
+	    backward = 1;
+	    tone(pinBz, beepFreq * 2, 20);
+	    break;
+	  }
+	}
+	while (digitalRead(pinSw1) == LOW)
+	  /* wait until pinSw1 becomes HIGH */;
+      }
+      if (menuIndex == -1 || !right_after_invoked) {
+	beep();
+	if (backward) {
+	  backward = 0;
+	  menuIndex--;
+	  if (menuIndex < 0) menuIndex = MaxMenu -1;
+	} else {
+	  menuIndex++;
+	  if (menuIndex == MaxMenu) menuIndex = 0;
+	}
+      } else {
+	right_after_invoked = 0;
+	// menuIndex is not incremented
+      }
+#else
     if (digitalRead(pinSw1) == LOW) {
       beep();
       menuIndex++;
       if (menuIndex == MaxMenu) menuIndex = 0;
+#endif
       delay(200);
       lcd.setCursor(0, 0);
       lcd.print(setMenu[menuIndex]);
@@ -2370,7 +2409,7 @@ void editSetting() {
         else
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexAvoidChatteringCount) {
-	if (avoidChatteringCount < MAX_CHATTRING_COUNT)
+	if (avoidChatteringCount < MAX_CHATTERING_COUNT)
 	  avoidChatteringCount++;
         lcd.print(avoidChatteringCount);
 	if (avoidChatteringCount < 10)
