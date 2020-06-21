@@ -22,7 +22,7 @@ String date = "19/12/20";
  */
 //#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
-//#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
+#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_INVADER_SOUND		/* invader sound */
@@ -84,6 +84,10 @@ int autoKeyerType = 1; // auto keyer type enabled
 int count_straight_or_paddle = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
 int menuIndexAutoKeyertype;
+#endif
+
+#ifdef OPT_AVOID_CHATTERING
+int avoidChattering = 1;
 #endif
 
 #ifdef OPT_BETTER_SRAND
@@ -287,6 +291,9 @@ typedef struct PARAM_EEPROM {
 #ifdef OPT_AUTO_KEYERTYPE
   int autoKeyerType;
 #endif
+#ifdef OPT_AVOID_CHATTERING
+  int avoidChattering;
+#endif
 } param_eeprom_t;
 
  #define PARAM_EEPROM_BASE (EEPROM.length() - sizeof(param_eeprom_t))
@@ -324,6 +331,9 @@ int param_eeprom_load()
 #ifdef OPT_AUTO_KEYERTYPE
     autoKeyerType = param.autoKeyerType;
 #endif
+#ifdef OPT_AVOID_CHATTERING
+    avoidChattering = param.avoidChattering;
+#endif
 
     return 0; // success
   }
@@ -352,6 +362,9 @@ void param_eeprom_save()
 #endif
 #ifdef OPT_AUTO_KEYERTYPE
   param.autoKeyerType = autoKeyerType;
+#endif
+#ifdef OPT_AVOID_CHATTERING
+  param.avoidChattering = avoidChattering;
 #endif
 
   ptr = (byte *)&param;
@@ -755,6 +768,9 @@ void setup() {
 #ifdef OPT_AUTO_KEYERTYPE
   menuIndexAutoKeyertype = menuIndex++;
 #endif
+#ifdef OPT_AVOID_CHATTERING
+  menuIndexAvoidChattering = menuIndex++;
+#endif
 #endif /* 1 */
 
 #ifdef OPT_PARAM_EEPROM
@@ -1079,7 +1095,8 @@ void tone_invader_clear()
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
-int paddleL_stable = HIGH;
+
+ int paddleL_stable = HIGH;
 int paddleR_stable = HIGH;
 int paddleL_trans = 0;
 int paddleR_trans = 0;
@@ -1145,46 +1162,49 @@ void readPaddleValue() {
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
-  /*
-   * avoid chattering, paddle R
-   */
-  if (paddleR == LOW && paddleR_stable == HIGH) {
-    if (++paddleR_trans >= STABLE_COUNT) {
-      paddleR_stable = LOW;
-      paddleR_trans = 0;
-    } else {
-      /* stays HIGH until stable count reach */
-      paddleR = HIGH;
+  if (avoidChattering) {
+    /*
+     * avoid chattering, paddle R
+     */
+    if (paddleR == LOW && paddleR_stable == HIGH) {
+      if (++paddleR_trans >= STABLE_COUNT) {
+	paddleR_stable = LOW;
+	paddleR_trans = 0;
+      } else {
+	/* stays HIGH until stable count reach */
+	paddleR = HIGH;
+      }
+    } else if (paddleR == HIGH && paddleR_stable == LOW) {
+      if (--paddleR_trans <= -STABLE_COUNT) {
+	paddleR_stable = HIGH;
+	paddleR_trans = 0;
+      } else {
+	/* stays LOW until stable count reach */
+	paddleR = LOW;
+      }
     }
-  } else if (paddleR == HIGH && paddleR_stable == LOW) {
-    if (--paddleR_trans <= -STABLE_COUNT) {
-      paddleR_stable = HIGH;
-      paddleR_trans = 0;
-    } else {
-      /* stays LOW until stable count reach */
-      paddleR = LOW;
-    }
-  }
 
-  /*
-   * avoid chattering, paddle L
-   */
-  if (paddleL == LOW && paddleL_stable == HIGH) {
-    if (++paddleL_trans >= STABLE_COUNT) {
-      paddleL_stable = LOW;
-      paddleL_trans = 0;
-    } else {
-      /* stays HIGH until stable count reach */
-      paddleL = HIGH;
+    /*
+     * avoid chattering, paddle L
+     */
+    if (paddleL == LOW && paddleL_stable == HIGH) {
+      if (++paddleL_trans >= STABLE_COUNT) {
+	paddleL_stable = LOW;
+	paddleL_trans = 0;
+      } else {
+	/* stays HIGH until stable count reach */
+	paddleL = HIGH;
+      }
+    } else if (paddleL == HIGH && paddleL_stable == LOW) {
+      if (--paddleL_trans <= -STABLE_COUNT) {
+	paddleL_stable = HIGH;
+	paddleL_trans = 0;
+      } else {
+	/* stays LOW until stable count reach */
+	paddleL = LOW;
+      }
     }
-  } else if (paddleL == HIGH && paddleL_stable == LOW) {
-    if (--paddleL_trans <= -STABLE_COUNT) {
-      paddleL_stable = HIGH;
-      paddleL_trans = 0;
-    } else {
-      /* stays LOW until stable count reach */
-      paddleL = LOW;
-    }
+
   }
 #endif /* OPT_AVOID_CHATTERING */
 
@@ -2024,6 +2044,13 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
+#ifdef OPT_AVOID_CHATTERING
+      } else if (menuIndex == menuIndexAvoidChattering) {
+        if (avoidChattering)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
       }
     }
     if (digitalRead(pinSw2) == LOW) {
@@ -2098,6 +2125,14 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
+#ifdef OPT_AVOID_CHATTERING
+      } else if (menuIndex == menuIndexAvoidChattering) {
+	avoidChattering = !avoidChattering;
+        if (avoidChattering)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
       }
     }
     if (digitalRead(pinSw3) == LOW) {
@@ -2168,6 +2203,14 @@ void editSetting() {
       } else if (menuIndex == menuIndexAutoKeyertype) {
 	autoKeyerType = !autoKeyerType;
         if (autoKeyerType)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef OPT_AVOID_CHATTERING
+      } else if (menuIndex == menuIndexAvoidChattering) {
+	avoidChattering = !avoidChattering;
+        if (avoidChattering)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
