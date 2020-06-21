@@ -1414,6 +1414,15 @@ void readPaddleValue() {
         // XXX off delay aborted, but actually released
         paddleR_released = 1;
       }
+#if 0
+      if (paddleL_highStart != 0) {
+        // XXX off delay aborted, but actually released
+        paddleL_released = 1;
+        paddleL_prev = HIGH;
+        paddleL_highStart = 0;
+	paddleL = HIGH;
+      }
+#endif
 #endif
       paddleR_prev = LOW;
       paddleR_highStart = 0;
@@ -1464,6 +1473,15 @@ void readPaddleValue() {
         // XXX off delay aborted, but actually released
         paddleL_released = 1;
       }
+#if 0
+      if (paddleR_highStart != 0) {
+        // XXX off delay aborted, but actually released
+        paddleR_released = 1;
+        paddleR_prev = HIGH;
+        paddleR_highStart = 0;
+	paddleR = HIGH;
+      }
+#endif
 #endif
       paddleL_prev = LOW;
       paddleL_highStart = 0;
@@ -1587,13 +1605,13 @@ void readPaddleValue() {
   if (durationSpace != 0) {
 #ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
-      if (paddleL == LOW && lastPaddle == R && paddleL_released) {
+      if (memory == -1 && paddleL == LOW && lastPaddle == R && paddleL_released) {
 	paddleL_released = 0;
 	memory = L;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml130");
 #endif
-      } else if (paddleR == LOW && lastPaddle == L && paddleR_released) {
+      } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
 	paddleR_released = 0;
 	memory = R;
 #ifdef OPT_TIMING_DEBUG
@@ -1703,13 +1721,13 @@ void readPaddleValue() {
     // memory paddle LR
 #ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
-      if (paddleL == LOW && lastPaddle == R && paddleL_released) {
+      if (memory == -1 && paddleL == LOW && lastPaddle == R && paddleL_released) {
 	paddleL_released = 0;
 	memory = L;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml270");
 #endif
-      } else if (paddleR == LOW && lastPaddle == L && paddleR_released) {
+      } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
 	paddleR_released = 0;
 	memory = R;
 #ifdef OPT_TIMING_DEBUG
