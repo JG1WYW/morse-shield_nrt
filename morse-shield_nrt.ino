@@ -878,7 +878,6 @@ void tone_runner_mode()
   tone(pinBz, 349, 100); // F3
   delay(100);
   tone(pinBz, 698, 100); // F4
-  //tone(pinBz, 1397, 200); // F5
 }
 
 void tone_hit()
@@ -893,6 +892,13 @@ void tone_miss()
   tone(pinBz, 220, 100); // A2
   delay(100);
   tone(pinBz, 110, 200); // A1
+}
+
+void tone_invader_start()
+{
+  tone(pinBz, 880, 100); // A4
+  delay(100);
+  tone(pinBz, 1760, 100); // A5
 }
 #endif
 
@@ -1268,7 +1274,6 @@ void readButtonValue() {
     } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) {
       //digitalWrite(pinLed, LOW);
       tone_runner_mode();
-      //tone_hit();
       runner_mode = 1;
 #endif
     }
@@ -1393,14 +1398,20 @@ void fireLongFunction(int no) {
           break;
         } else if (digitalRead(pinSw4) == LOW) {
           pressedSw = pinSw4;
+#ifdef OPT_RUNNER
+          if (runner_mode)
+            beep();
+#endif
           invaderAnimation();
           break;
         }
       }
       lcd.setCursor(0, 1);
       lcd.print(F("        "));
+#ifndef OPT_RUNNER /* !OPT_RUNNER */
       beep();
       delay(200);
+#endif
       for (;;) {
         if (digitalRead(pressedSw) == HIGH) break;
       }
@@ -2185,6 +2196,10 @@ void invaderAnimation() {
   lcd.write(1); // invader
   lcd.write(SPACE);
   delay(500);
+#ifdef OPT_RUNNER
+  //if (runner_mode)
+    //beep();
+#endif
   lcd.setCursor(7, 0);
   lcd.print(F("3"));
   lcd.setCursor(4, 1);
@@ -2193,6 +2208,10 @@ void invaderAnimation() {
   lcd.write(SPACE);
   lcd.write(2); // invader
   delay(500);
+#ifdef OPT_RUNNER
+  if (runner_mode)
+    beep();
+#endif
   lcd.setCursor(7, 0);
   lcd.print(F("2"));
   lcd.setCursor(3, 1);
@@ -2202,6 +2221,10 @@ void invaderAnimation() {
   lcd.write(2); // invader
   lcd.write(1); // invader
   delay(500);
+#ifdef OPT_RUNNER
+  //if (runner_mode)
+    //beep();
+#endif
   lcd.setCursor(7, 0);
   lcd.print(F("2"));
   lcd.setCursor(2, 1);
@@ -2212,6 +2235,10 @@ void invaderAnimation() {
   lcd.write(1); // invader
   lcd.write(SPACE);
   delay(500);
+#ifdef OPT_RUNNER
+  if (runner_mode)
+    beep();
+#endif
   lcd.setCursor(7, 0);
   lcd.print(F("1"));
   lcd.setCursor(1, 1);
@@ -2223,6 +2250,10 @@ void invaderAnimation() {
   lcd.write(SPACE);
   lcd.write(2); // invader
   delay(500);
+#ifdef OPT_RUNNER
+  //if (runner_mode)
+    //beep();
+#endif
   lcd.setCursor(7, 0);
   lcd.print(F("1"));
   lcd.setCursor(0, 1);
@@ -2235,6 +2266,12 @@ void invaderAnimation() {
   lcd.write(2); // invader
   lcd.write(3); // invader
   delay(500);
+#ifdef OPT_RUNNER
+  if (runner_mode) {
+    tone_invader_start();
+    delay(500);
+  }
+#endif
   lcd.setCursor(0, 0);
   lcd.print(F("        "));
 }
