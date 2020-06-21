@@ -77,8 +77,8 @@ int defToneFreq[] = {
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
 //int toneFreq = 349; // side tone frequency F3
-int toneFreq = 392; // side tone frequency G3
-//int toneFreq = 440; // side tone frequency 440Hz, A3
+//int toneFreq = 392; // side tone frequency G3
+int toneFreq = 440; // side tone frequency 440Hz, A3
 //int toneFreq = 698; // side tone frequency F4
 //int toneFreq = 784; // side tone frequency G4
 int beepFreq = 880 * 2; // beep frequency 880Hz
@@ -215,8 +215,6 @@ int gameStarted = 0;
 // setting menu
 // ToDo: save param on EEPROM
 #if defined(OPT_OFF_DELAY) /* JG1WYW */
-#define MaxMenu 9
-#elif defined(OPT_RUNNER) /* JG1WYW */
 #define MaxMenu 8
 #else
 #define MaxMenu 7
@@ -229,10 +227,6 @@ char *setMenu[] {
   "SideTone", // sidetone on, off / tone[Hz]
   "CQint:ms", // beacon interval
   "CQ times"  // beacon times
-#ifdef OPT_RUNNER /* JG1WYW */
-  ,
-  "Runner  "  // Runner mode
-#endif
 #ifdef OPT_OFF_DELAY /* JG1WYW */
   ,
   "Offdelay"  // off delay
@@ -1718,15 +1712,8 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_RUNNER /* JG1WYW */
-      } else if (menuIndex == 7) {
-        if (runnerMode)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
-#endif
 #ifdef OPT_OFF_DELAY /* JG1WYW */
-      } else if (menuIndex == 8) {
+      } else if (menuIndex == 7) {
         if (offDelay)
           lcd.print(F(" on "));
         else
@@ -1780,16 +1767,8 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_RUNNER /* JG1WYW */
-      } else if (menuIndex == 7) {
-        runnerMode = !runnerMode;
-        if (runnerMode)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
-#endif
 #ifdef OPT_OFF_DELAY /* JG1WYW */
-      } else if (menuIndex == 8) {
+      } else if (menuIndex == 7) {
         offDelay = !offDelay;
         if (offDelay)
           lcd.print(F(" on "));
@@ -1844,16 +1823,8 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_RUNNER /* JG1WYW */
-      } else if (menuIndex == 7) {
-        runnerMode = !runnerMode;
-        if (runnerMode)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
-#endif
 #ifdef OPT_OFF_DELAY /* JG1WYW */
-      } else if (menuIndex == 8) {
+      } else if (menuIndex == 7) {
         offDelay = !offDelay;
         if (offDelay)
           lcd.print(F(" on "));
