@@ -34,7 +34,7 @@ String date = "19/12/20";
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
 #define OPT_BETTER_IAMBIC_A             /* Improved behavior of IambicA */
-//#define OPT_DECODE_INVALID              /* '_' for invalid chars when runner */
+#define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when runner */
 //#define OPT_DECODE_DEBUG
 //#define OPT_TIMING_DEBUG                /* Debug flag */
 
@@ -100,7 +100,7 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 10;   /* XXX percent (of dot) for look ahead memory */
+int look_ahead_memory_ratio = 15;   /* XXX percent (of dot) for look ahead memory */
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
@@ -1057,10 +1057,19 @@ void goertzel() {
   // we think that hightimeavg = 1 bit
   if (filteredstate != filteredstatebefore) {
     stop = LOW;
-#ifdef OPT_DECODE_INVALID
-    if (filteredstate == LOW && code < 0b01000000) { // we did end a HIGH
-#else
     if (filteredstate == LOW && code < 0b10000000) { // we did end a HIGH
+#if defined(OPT_RUNNER) && defined(OPT_DECODE_INVALID_IMMEDIATELY)
+     if (running && code >= 0b01000000) {
+	// invoke decode expecting '_' during running to notify invalid keying (typically connecting more than two characters) immediately
+#ifdef OPT_DECODE_DEBUG
+	Serial.print(F("(1)"));
+#endif
+	decode();
+	code = 1;
+#ifdef OPT_BETTER_DECODE
+	stop = HIGH;
+#endif
+     } else {
 #endif
       if (highduration < (hightimesavg * 2) && highduration > (hightimesavg * 0.6)) { /// 0.6 filter out false dits
         code = code << 1;//strcat(code, ".");
@@ -1081,19 +1090,10 @@ void goertzel() {
 #endif
         wpm = (wpm + (1200 / ((highduration) / 3))) / 2; // the most precise we can do ;o)
       }
-    }
-#ifdef OPT_DECODE_INVALID
-    else if (filteredstate == LOW) { // invoke decode expecting '_' during running to notify invalid keying (typically connecting more than two characters) immediately
-#ifdef OPT_DECODE_DEBUG
-      Serial.print(F("(1)"));
-#endif
-      decode();
-      code = 1;
-#ifdef OPT_BETTER_DECODE
-      stop = HIGH;
+#if defined(OPT_RUNNER) && defined(OPT_DECODE_INVALID_IMMEDIATELY)
+     }
 #endif
     }
-#endif
 
     if (filteredstate == HIGH) { // we did end a LOW
 
@@ -1403,10 +1403,10 @@ void readPaddleValue() {
       /* immediately active, clear off delay timer */
 #ifdef OPT_TIMING_DEBUG
       if (paddleR_highStart != 0) {
-        serial_timing("~R10");
+        serial_timing("~R:10");
       }
       if (paddleR_prev == HIGH) {
-        serial_timing("_R20");
+        serial_timing("_R:20");
       }
 #endif
 #ifdef OPT_BETTER_IAMBIC_A
@@ -1431,7 +1431,7 @@ void readPaddleValue() {
       paddleR_prev = HIGH;
       paddleR_highStart = millis();
 #ifdef OPT_TIMING_DEBUG
-      serial_timing("^r30");
+      serial_timing("^r:30");
 #endif
       if (paddleRvs) {
         /* reversed to DOT */
@@ -1450,7 +1450,7 @@ void readPaddleValue() {
         /* off delay expired */
         paddleR_highStart = 0;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("^R40");
+        serial_timing("^R:40");
 #endif
       }
     }
@@ -1462,10 +1462,10 @@ void readPaddleValue() {
       /* immediately active, clear off delay timer */
 #ifdef OPT_TIMING_DEBUG
       if (paddleL_highStart != 0) {
-        serial_timing("~L50");
+        serial_timing("~L:50");
       }
       if (paddleL_prev == HIGH) {
-        serial_timing("_L60");
+        serial_timing("_L:60");
       }
 #endif
 #ifdef OPT_BETTER_IAMBIC_A
@@ -1490,7 +1490,7 @@ void readPaddleValue() {
       paddleL_prev = HIGH;
       paddleL_highStart = millis();
 #ifdef OPT_TIMING_DEBUG
-      serial_timing("^l70");
+      serial_timing("^l:70");
 #endif
       if (paddleRvs) {
         /* reversed to DASH */
@@ -1509,7 +1509,7 @@ void readPaddleValue() {
         /* off delay expired */
         paddleL_highStart = 0;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("^L80");
+        serial_timing("^L:80");
 #endif
       }
     }
@@ -1550,13 +1550,13 @@ void readPaddleValue() {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
         lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("bL90");
+        serial_timing("bL:90");
 #endif
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
         lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("bR100");
+        serial_timing("bR:100");
 #endif
       }
       digitalWrite(pinLed, HIGH);
@@ -1577,7 +1577,7 @@ void readPaddleValue() {
       }
       lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
-      serial_timing("L110");
+      serial_timing("L:110");
 #endif
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1593,7 +1593,7 @@ void readPaddleValue() {
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
       lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
-      serial_timing("R120");
+      serial_timing("R:120");
 #endif
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1609,13 +1609,13 @@ void readPaddleValue() {
 	paddleL_released = 0;
 	memory = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("ml130");
+        serial_timing("ml:130");
 #endif
       } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
 	paddleR_released = 0;
 	memory = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("mr140");
+        serial_timing("mr:140");
 #endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
@@ -1625,23 +1625,23 @@ void readPaddleValue() {
           if (lastPaddle == R) {
             memory = L;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("lbl150");
+            serial_timing("lbl:150");
 #endif
           } else {
             memory = R;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("lbr160");
+            serial_timing("lbr:160");
 #endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("ll170");
+            serial_timing("ll:170");
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("lr180");
+          serial_timing("lr:180");
 #endif
 	}
       }
@@ -1654,12 +1654,12 @@ void readPaddleValue() {
       if (paddleL == LOW && lastPaddle == R) {
         memory = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("ml190");
+        serial_timing("ml:190");
 #endif
       } else if (paddleR == LOW && lastPaddle == L) {
         memory = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("mr200");
+        serial_timing("mr:200");
 #endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
@@ -1669,23 +1669,23 @@ void readPaddleValue() {
           if (lastPaddle == R) {
             memory = L;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("lbl210");
+            serial_timing("lbl:210");
 #endif
           } else {
             memory = R;
 #ifdef OPT_TIMING_DEBUG
-            serial_timing("lbr220");
+            serial_timing("lbr:220");
 #endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("ll230");
+          serial_timing("ll:230");
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("lr240");
+          serial_timing("lr:240");
 #endif
 	}
       }
@@ -1700,13 +1700,13 @@ void readPaddleValue() {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
           lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("ML250");
+          serial_timing("ML:250");
 #endif
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
           lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
-          serial_timing("MR260");
+          serial_timing("MR:260");
 #endif
         }
         memory = -1;
@@ -1725,13 +1725,13 @@ void readPaddleValue() {
 	paddleL_released = 0;
 	memory = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("ml270");
+        serial_timing("ml:270");
 #endif
       } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
 	paddleR_released = 0;
 	memory = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("mr280");
+        serial_timing("mr:280");
 #endif
       }
     } else
@@ -1740,12 +1740,12 @@ void readPaddleValue() {
       if (paddleL == LOW && lastPaddle == R) {
         memory = L;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("ml290");
+        serial_timing("ml:290");
 #endif
       } else if (paddleR == LOW && lastPaddle == L) {
         memory = R;
 #ifdef OPT_TIMING_DEBUG
-        serial_timing("mr300");
+        serial_timing("mr:300");
 #endif
       }
     }
@@ -3024,6 +3024,9 @@ void setNextChar() {
       } else if (readChar == ']') {
         combineChar = false;
         printascii(']');
+#ifdef OPT_TIMING_DEBUG
+        Serial.println();
+#endif
       }
       switch (readChar) {
         case ' ':
