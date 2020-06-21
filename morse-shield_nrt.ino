@@ -31,6 +31,7 @@ String date = "19/12/20";
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
+#define OPT_WORD_SPACE                  /* word space dots */
 
 #define MOD_IAMBIC_A  /* XXX Is the originally written behavior of IambicA correct? */
 #define MOD_MISC      /* See comments for each modification */
@@ -68,6 +69,13 @@ int runner_beep = 0;
 #define RUNNER_MISS     2
 #define INVADER_BEEP    3
 #define INVADER_ERRBEEP 4
+#endif
+
+#ifdef OPT_WORD_SPACE
+int wordSpace = 7;
+int charSpace = 3;
+int menuIndexWordSpace;
+int menuIndexCharSpace;
 #endif
 
 #ifdef OPT_OFF_DELAY
@@ -270,6 +278,11 @@ char *setMenu[] {
   ,
   "ToneFreq"  // sidetone frequency
 #endif
+#ifdef OPT_WORD_SPACE
+  ,
+  "Word Spc",  // word space dots
+  "Char Spc"   // character space dots
+#endif
 #ifdef OPT_OFF_DELAY
   ,
   "OffDelay",  // off delay
@@ -305,6 +318,10 @@ typedef struct PARAM_EEPROM {
 #ifdef OPT_TONE_FREQ
   int toneFreq;
 #endif
+#ifdef OPT_WORD_SPACE
+  int wordSpace;
+  int charSpace;
+#endif
 #ifdef OPT_OFF_DELAY
   int offDelay;
   int off_timer_ratio_dot;
@@ -320,7 +337,7 @@ typedef struct PARAM_EEPROM {
 #endif
 } param_eeprom_t;
 
- #define PARAM_EEPROM_BASE (EEPROM.length() - sizeof(param_eeprom_t))
+#define PARAM_EEPROM_BASE (128 * 4)
 
 int param_eeprom_load()
 {
@@ -348,6 +365,10 @@ int param_eeprom_load()
     defCqTimes = param.defCqTimes;
 #ifdef OPT_TONE_FREQ
     toneFreq = param.toneFreq;
+#endif
+#ifdef OPT_WORD_SPACE
+    wordSpace = param.wordSpace;
+    charSpace = param.charSpace;
 #endif
 #ifdef OPT_OFF_DELAY
     offDelay = param.offDelay;
@@ -384,6 +405,9 @@ void param_eeprom_save()
   param.defCqTimes = defCqTimes;
 #ifdef OPT_TONE_FREQ
   param.toneFreq = toneFreq;
+#endif
+#ifdef OPT_WORD_SPACE
+  param.wordSpace = wordSpace;
 #endif
 #ifdef OPT_OFF_DELAY
   param.offDelay = offDelay;
@@ -794,6 +818,10 @@ void setup() {
   int menuIndex = MENU_INDEX_EXTRA;
 #ifdef OPT_TONE_FREQ
   menuIndexToneFreq = menuIndex++;
+#endif
+#ifdef OPT_WORD_SPACE
+  menuIndexWordSpace = menuIndex++;
+  menuIndexCharSpace = menuIndex++;
 #endif
 #ifdef OPT_OFF_DELAY
   menuIndexOffDelay = menuIndex++;
@@ -1455,7 +1483,11 @@ void readPaddleValue() {
 #endif
     // ending of mark
     if (millis() - timeStart > durationMark) {
+#ifdef OPT_WORD_SPACE
+      durationSpace = endingChar ? durationDot * charSpace : durationDot;
+#else
       durationSpace = endingChar ? durationDot * 3 : durationDot;
+#endif
       durationMark = 0;
       endingChar = 0;
       noTone(pinBz);
@@ -2167,6 +2199,18 @@ void editSetting() {
 	if (toneFreq < 1000)
           lcd.print(F(" "));
 #endif
+#ifdef OPT_WORD_SPACE
+      } else if (menuIndex == menuIndexWordSpace) {
+        lcd.print(wordSpace);
+	if (wordSpace < 10)
+          lcd.print(F(" "));
+	lcd.print(F("  "));
+      } else if (menuIndex == menuIndexCharSpace) {
+        lcd.print(charSpace);
+	if (charSpace < 10)
+          lcd.print(F(" "));
+	lcd.print(F("  "));
+#endif
 #ifdef OPT_OFF_DELAY
       } else if (menuIndex == menuIndexOffDelay) {
         if (offDelay)
@@ -2268,6 +2312,22 @@ void editSetting() {
         lcd.print(toneFreq);
 	if (toneFreq < 1000)
           lcd.print(F(" "));
+#endif
+#ifdef OPT_WORD_SPACE
+      } else if (menuIndex == menuIndexWordSpace) {
+	if (wordSpace > 1)
+	  wordSpace--;
+        lcd.print(wordSpace);
+	if (wordSpace < 10)
+          lcd.print(F(" "));
+	lcd.print(F("  "));
+      } else if (menuIndex == menuIndexCharSpace) {
+	if (charSpace > 1)
+	  charSpace--;
+        lcd.print(charSpace);
+	if (charSpace < 10)
+          lcd.print(F(" "));
+	lcd.print(F("  "));
 #endif
 #ifdef OPT_OFF_DELAY
       } else if (menuIndex == menuIndexOffDelay) {
@@ -2382,6 +2442,22 @@ void editSetting() {
         lcd.print(toneFreq);
 	if (toneFreq < 1000)
           lcd.print(F(" "));
+#endif
+#ifdef OPT_WORD_SPACE
+      } else if (menuIndex == menuIndexWordSpace) {
+	if (wordSpace < 10)
+	  wordSpace++;
+        lcd.print(wordSpace);
+	if (wordSpace < 10)
+          lcd.print(F(" "));
+	lcd.print(F("  "));
+      } else if (menuIndex == menuIndexCharSpace) {
+	if (charSpace < 10)
+	  charSpace++;
+        lcd.print(charSpace);
+	if (charSpace < 10)
+          lcd.print(F(" "));
+	lcd.print(F("  "));
 #endif
 #ifdef OPT_OFF_DELAY
       } else if (menuIndex == menuIndexOffDelay) {
@@ -2626,7 +2702,11 @@ void setNextChar() {
 
   // send space
   if (nextCode == 0xFF) {
+#ifdef OPT_WORD_SPACE
+    durationSpace = durationDot * wordSpace;
+#else
     durationSpace = durationDot * 7;
+#endif
     timeStart = millis();
     nextCode = 0x01;
     // An effective code
