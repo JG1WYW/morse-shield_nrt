@@ -21,7 +21,7 @@ String date = "19/12/20";
  * These options were added by JG1WYW
  */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
-#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
+//#define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
 #define OPT_INVADER_SOUND		/* invader sound */
@@ -33,7 +33,7 @@ String date = "19/12/20";
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
 
-#define MOD_IAMBIC_A  /* XXX Is the originally written behavior of IambicA correct? */
+#define MOD_IAMBIC_A  /* Improved behavior of IambicA */
 #define MOD_MISC      /* See comments for each modification */
 
 #endif /* JG1WYW */
@@ -1435,14 +1435,7 @@ void readPaddleValue() {
 	memory = R;
       }
     } else
-    if (keyerType == keyIambicB || keyerType == keySuper) {
-      if (paddleL == LOW && lastPaddle == R) {
-	memory = L;
-      } else if (paddleR == LOW && lastPaddle == L) {
-	memory = R;
-      }
-    }
-#else
+#endif
     if (keyerType == keyIambicB || keyerType == keySuper) {
 
       // memory paddle LR
@@ -1452,7 +1445,6 @@ void readPaddleValue() {
         memory = R;
       }
     }
-#endif
     // ending of space
     if (millis() - timeStart > durationSpace) {
       durationSpace = 0;
@@ -1485,14 +1477,7 @@ void readPaddleValue() {
 	memory = R;
       }
     } else
-      if (keyerType == keyIambicB || (keyerType == keySuper && (millis() - timeStart > durationDot))) {
-      if (paddleL == LOW && lastPaddle == R) {
-	memory = L;
-      } else if (paddleR == LOW && lastPaddle == L) {
-	memory = R;
-      }
-    }
-#else
+#endif
     if (keyerType == keyIambicB || ((keyerType == keySuper) && (millis() - timeStart > durationDot))) {
       if (paddleL == LOW && lastPaddle == R) {
         memory = L;
@@ -1500,7 +1485,6 @@ void readPaddleValue() {
         memory = R;
       }
     }
-#endif
     // ending of mark
     if (millis() - timeStart > durationMark) {
 #ifdef OPT_WORD_SPACE
