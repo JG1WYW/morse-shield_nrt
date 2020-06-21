@@ -39,17 +39,17 @@ int durationDot = 60;
 int durationMark = 0;
 int durationSpace = 0;
 int durationLongPress = 1000;
-#ifdef PADDLE_REVERSE /* NRT */
+#ifdef PADDLE_REVERSE /* JG1WYW */
 int paddleRvs = 1; // paddle reverse
 #else
 int paddleRvs = 0; // paddle reverse
 #endif
 
-#ifdef OFF_DELAY /* NRT */
+#ifdef OFF_DELAY /* JG1WYW */
 int offDelay = 1; // off delay enabled
 #endif
 
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
 int runnerMode = 1; // Runner mode instead of just callsigns
 #endif
 
@@ -65,7 +65,7 @@ int defToneFreq[] = {
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
-#ifdef SIDETONE_600 /* NRT */
+#ifdef SIDETONE_600 /* JG1WYW */
 int toneFreq = 600; // side tone frequency 600Hz
 #else
 int toneFreq = 440; // side tone frequency 440Hz
@@ -142,7 +142,7 @@ int magnitudelimit_low = 100;
 int realstate = LOW;
 int realstatebefore = LOW;
 int filteredstate = LOW;
-//#if 1 /* NRT */
+//#if 1 /* JG1WYW */
 //int filteredstatebefore = HIGH;
 //#else
 int filteredstatebefore = LOW;
@@ -178,7 +178,7 @@ int nbtime = 6;  // ms noise blanker
 long starttimehigh;
 long highduration;
 long lasthighduration;
-#if 1 /* NRT */
+#if 1 /* JG1WYW */
 long hightimesavg = 60;
 #else
 long hightimesavg;
@@ -190,7 +190,7 @@ long laststarttime = 0;
 
 char code = 1;//[20]; estimated code
 int stop = LOW;
-#if 1 /* NRT */
+#if 1 /* JG1WYW */
 int wpm = 20;
 #else
 int wpm;
@@ -206,9 +206,9 @@ int gameStarted = 0;
 
 // setting menu
 // ToDo: save param on EEPROM
-#if defined(RUNNER) /* NRT */
+#if defined(RUNNER) /* JG1WYW */
 #define MaxMenu 9
-#elif defined(OFF_DELAY) /* NRT */
+#elif defined(OFF_DELAY) /* JG1WYW */
 #define MaxMenu 8
 #else
 #define MaxMenu 7
@@ -221,11 +221,11 @@ char *setMenu[] {
   "SideTone", // sidetone on, off / tone[Hz]
   "CQint:ms", // beacon interval
   "CQ times"  // beacon times
-#ifdef OFF_DELAY /* NRT */
+#ifdef OFF_DELAY /* JG1WYW */
   ,
   "Offdelay"  // off delay
 #endif
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
   ,
   "Runner  "  // Runner mode
 #endif
@@ -561,7 +561,7 @@ void setup() {
 
   // Create the random seed
   randomSeed(analogRead(pinVol));
-#if 1 /* NRT */
+#if 1 /* JG1WYW */
   srand(analogRead(pinVol));
 #endif
 
@@ -823,7 +823,7 @@ void errBeep() {
   tone(pinBz, 220, 20);
 }
 
-#ifdef AVOID_CHATTERING /* NRT */
+#ifdef AVOID_CHATTERING /* JG1WYW */
 int paddleL_stable = HIGH;
 int paddleR_stable = HIGH;
 int paddleL_trans = 0;
@@ -833,7 +833,7 @@ int paddleR_trans = 0;
 #define STABLE_COUNT 5
 #endif
 
-#ifdef OFF_DELAY /* NRT */
+#ifdef OFF_DELAY /* JG1WYW */
 int paddleL_prev = HIGH;
 int paddleR_prev = HIGH;
 unsigned long paddleL_highStart = 0;
@@ -863,7 +863,7 @@ int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
 #endif
 
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
 int runner = 0;
 unsigned int runner_call[8];
 int runner_call_len = 0;
@@ -874,7 +874,7 @@ void readPaddleValue() {
   int paddleL = digitalRead(pinPaddleL);
   int paddleR = digitalRead(pinPaddleR);
 
-#ifdef AUTO_SWITCH_KEYERTYPE /* NRT */
+#ifdef AUTO_SWITCH_KEYERTYPE /* JG1WYW */
   /*
    * automatic change between keyStraight and keySuper
    */
@@ -900,9 +900,9 @@ void readPaddleValue() {
       count_straight_or_paddle = 0;
     }
   }
-#endif /* NRT */
+#endif /* JG1WYW */
 
-#ifdef AVOID_CHATTERING /* NRT */
+#ifdef AVOID_CHATTERING /* JG1WYW */
   /*
    * avoid chattering, paddle R
    */
@@ -946,7 +946,7 @@ void readPaddleValue() {
   }
 #endif /* AVOID_CHATTERING */
 
-#ifdef OFF_DELAY /* NRT */
+#ifdef OFF_DELAY /* JG1WYW */
   /*
    * off delay is only for electric keyer. (i.e., not incl. straight key)
    * for now, only super keyer is cared.
@@ -1012,9 +1012,9 @@ void readPaddleValue() {
       }
     }
   } /* (offDelay && keyerType == keySuper) */
-#endif /* NRT */
+#endif /* JG1WYW */
 
-#if 1 /* NRT */
+#if 1 /* JG1WYW */
   if (paddleR == LOW && keyerType == keyStraight) {
     /* ignore R when straight key */
     paddleR = HIGH;
@@ -1120,7 +1120,7 @@ void readPaddleValue() {
     }
     // key up straight key
     if (keyerType == keyStraight) {
-#if 1 /* NRT */
+#if 1 /* JG1WYW */
       if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > durationDot)) { /* pos_read condition prevents from all dots message output */
 #else
       if (paddleL == HIGH && (millis() - timeStart > durationDot)) {
@@ -1167,7 +1167,7 @@ void fireFunction(int no) {
   Serial.print(F("Press="));
   Serial.println(no + 1);
 
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
   runner = 0;
 #endif
   // clear preset messages
@@ -1197,7 +1197,7 @@ void fireLongFunction(int no) {
   Serial.print(F("LongPress="));
   Serial.println(no + 1);
 
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
   runner = 0;
 #endif
   // clear preset messages
@@ -1338,7 +1338,7 @@ void trainingMode(int pressedSw) {
     // 10 random callsigns JA
     lang = langAbc;
     for (i = 0; i < 10; i++) {
-#if 1 /* NRT */
+#if 1 /* JG1WYW */
      if (rand() / (RAND_MAX / 4) == 0) {
       presetMessage[k] = '7' + rand() / (RAND_MAX / 2 + 1); /* 7-8 */
       k++;
@@ -1353,7 +1353,7 @@ void trainingMode(int pressedSw) {
         presetMessage[k] += 16;
       }
       k++;
-#if 1 /* NRT */
+#if 1 /* JG1WYW */
      }
 #endif
 #ifndef RUNNER /* !RUNNDER */
@@ -1432,7 +1432,7 @@ void decode() {
         if (code == BinAbc[i]) {
           if (restInvader < 0) {
             printascii(CharAbc[i]);
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
             if (runner == 1) {
               if (code == 0b01001100) { /* ? */
 	        int idx;
@@ -1632,14 +1632,14 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OFF_DELAY /* NRT */
+#ifdef OFF_DELAY /* JG1WYW */
       } else if (menuIndex == 7) {
         if (offDelay)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
 #endif
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
       } else if (menuIndex == 8) {
         if (runnerMode)
           lcd.print(F(" on "));
@@ -1694,7 +1694,7 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OFF_DELAY /* NRT */
+#ifdef OFF_DELAY /* JG1WYW */
       } else if (menuIndex == 7) {
         offDelay = !offDelay;
         if (offDelay)
@@ -1702,7 +1702,7 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
       } else if (menuIndex == 8) {
         runnerMode = !runnerMode;
         if (runnerMode)
@@ -1758,7 +1758,7 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OFF_DELAY /* NRT */
+#ifdef OFF_DELAY /* JG1WYW */
       } else if (menuIndex == 7) {
         offDelay = !offDelay;
         if (offDelay)
@@ -1766,7 +1766,7 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
-#ifdef RUNNER /* NRT */
+#ifdef RUNNER /* JG1WYW */
       } else if (menuIndex == 8) {
         runnerMode = !runnerMode;
         if (runnerMode)
