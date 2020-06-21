@@ -71,7 +71,11 @@ int defToneFreq[] = {
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
+//int toneFreq = 349; // side tone frequency F3
+//int toneFreq = 392; // side tone frequency G3
 int toneFreq = 440; // side tone frequency 440Hz
+//int toneFreq = 698; // side tone frequency F4
+//int toneFreq = 784; // side tone frequency G4
 int beepFreq = 880 * 2; // beep frequency 880Hz
 
 // keyer selection
@@ -1405,7 +1409,7 @@ void trainingMode(int pressedSw) {
 	runner_ptr = 0;
 
         if (rand() / (RAND_MAX / 5 + 1) == 0) {
-          presetMessage[k] = '/'; /* Portable */
+          presetMessage[k] = '/'; /* stroke */
           k++;
           presetMessage[k] = '0' + rand() / (RAND_MAX / 10 + 1) ;
           k++;
