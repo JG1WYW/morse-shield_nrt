@@ -19,7 +19,7 @@ String date = "19/12/20";
 #if 1 /* JG1WYW */
 /*
  * These options were added by JG1WYW
- * So far, off delay & look ahead memory is checked with improved IambicA.
+ * So far, off delay is checked with improved Iambic A.
  */
 #define OPT_OFF_DELAY			/* off delay timer */
 #define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
@@ -88,8 +88,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 80;    /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 135;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 70;    /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 140;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
 #define MAX_DASH_RATIO 200
