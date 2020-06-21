@@ -768,7 +768,7 @@ void goertzel() {
         decode();
         code = 1;
 #ifdef OPT_RUNNER /* JG1WYW */
-       if (!runner)
+       if (!runner) // to omit such word space during running
 #endif
         printascii(SPACE);
 #ifdef SERIAL_PRINT_DIT_DAH
@@ -802,7 +802,7 @@ void goertzel() {
   */
   // the end of main loop clean up//
 #ifdef OPT_RUNNER /* JG1WYW */
- if (!runner)
+ if (!runner) // to keep lcd space as much as possible during running for verification purpose
 #endif
   updateinfolinelcd();
   realstatebefore = realstate;
@@ -1159,7 +1159,7 @@ void readPaddleValue() {
     // key up straight key
     if (keyerType == keyStraight) {
 #if 1 /* JG1WYW */
-      if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > durationDot)) { /* pos_read condition prevents from all dots message output */
+      if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > durationDot)) { /* pos_read condition prevents from all-dots message output */
 #else
       if (paddleL == HIGH && (millis() - timeStart > durationDot)) {
 #endif
@@ -1181,10 +1181,10 @@ void readButtonValue() {
     sw[i] = digitalRead(pinBtn[i]);
     // button was pressed
     if (sw[i] == LOW && timeStartSw[i] == 0) {
-#if 1 /* JG1WYW */
+#ifdef OPT_BETTER_SRAND /* JG1WYW */
       if (first_srand) {
         first_srand = 0;
-          srand(millis()); /* seed for rand() */
+        srand(millis()); /* seed for rand() */
       }
 #endif
       //digitalWrite(pinLed, HIGH);
