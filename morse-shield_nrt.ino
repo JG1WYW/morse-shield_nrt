@@ -49,6 +49,7 @@ int paddleRvs = 0; // paddle reverse
 
 #ifdef OPT_RUNNER /* JG1WYW */
 int runnerMode = 1; // Runner mode instead of just callsigns
+int runner = 0;
 #endif
 
 #ifdef OPT_OFF_DELAY /* JG1WYW */
@@ -791,6 +792,9 @@ void goertzel() {
     }
   */
   // the end of main loop clean up//
+#ifdef OPT_RUNNER /* JG1WYW */
+ if (!runner)
+#endif
   updateinfolinelcd();
   realstatebefore = realstate;
   lasthighduration = highduration;
@@ -888,7 +892,6 @@ int paddleL_off_delay; /* off delay ms */
 #endif
 
 #ifdef OPT_RUNNER /* JG1WYW */
-int runner = 0;
 unsigned int runner_call[8];
 int runner_call_len = 0;
 int runner_ptr = 0;
