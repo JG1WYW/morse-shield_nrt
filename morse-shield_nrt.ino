@@ -760,11 +760,12 @@ void setup() {
 #ifdef OPT_PARAM_EEPROM
   param_eeprom_load();
   // reset toneFreqIndex (no matter which result returned)
-  if (int i = 0 ; i < (sizeof(defToneFreq) / sizeof(int)) ; i++) {
+  for (int i = 0 ; i < (sizeof(defToneFreq) / sizeof(int)) ; i++) {
     toneFreqIndex = 0;
     if (toneFreq <= defToneFreq[i]) {
       toneFreqIndex = i;
-      break                                                                         }
+      break;
+    }
   }
 #endif
 }
