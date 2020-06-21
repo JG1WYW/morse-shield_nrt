@@ -74,16 +74,8 @@ int runner_beep = 0;
 #endif
 
 #ifdef OPT_INVADER_SOUND
-
 int invaderSound = 1;
-unsigned long invaderBeepStart = 0;
-unsigned long invaderErrBeepStart = 0;
-
-#define INVADER_BEEP_MS     20
-#define INVADER_ERR_BEEP_MS 20
-
 int menuIndexInvaderSound;
-
 #endif
 
 #ifdef OPT_WORD_SPACE
@@ -1421,12 +1413,6 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
-#ifdef OPT_INVADER_SOUND
-      if (invaderSound) {
-	invaderBeepStart = 0;
-	invaderErrBeepStart = 0;
-      }
-#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
     }
     // pressing the L paddle
@@ -1444,12 +1430,6 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
-#ifdef OPT_INVADER_SOUND
-      if (invaderSound) {
-	invaderBeepStart = 0;
-	invaderErrBeepStart = 0;
-      }
-#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
     }
     // pressing the R paddle
@@ -1463,12 +1443,6 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
-#ifdef OPT_INVADER_SOUND
-      if (invaderSound) {
-	invaderBeepStart = 0;
-	invaderErrBeepStart = 0;
-      }
-#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
     }
   }
@@ -1510,12 +1484,6 @@ void readPaddleValue() {
         digitalWrite(pinLed, HIGH);
         key = DOWN;
         timeStart = millis();
-#ifdef OPT_INVADER_SOUND
-      if (invaderSound) {
-	invaderBeepStart = 0;
-	invaderErrBeepStart = 0;
-      }
-#endif
         if (sidetone) tone(pinBz, toneFreq); // side tone
       }
     }
@@ -1586,37 +1554,15 @@ void readPaddleValue() {
 #endif
 #ifdef OPT_INVADER_SOUND
     case INVADER_BEEP:
-      //beep();
-      if (invaderBeepStart == 0) {
-	invaderBeepStart = millis();
-	tone(pinBz, beepFreq); // same freq to beep()
-      }
+      beep();
       break;
     case INVADER_ERRBEEP:
-      //errBeep();
-      if (invaderErrBeepStart == 0) {
-	invaderErrBeepStart = millis();
-	tone(pinBz, 220); // same freq to errBeep()
-      }
+      errBeep();
       break;
 #endif
     }
     runner_beep = 0;
   }
-
-#ifdef OPT_INVADER_SOUND
-  if (invaderSound) {
-    if (invaderBeepStart != 0 && (millis() - invaderBeepStart) > INVADER_BEEP_MS) {
-      noTone(pinBz);
-      invaderBeepStart = 0;
-    }
-    if (invaderErrBeepStart != 0 && (millis() - invaderErrBeepStart) > INVADER_ERR_BEEP_MS) {
-      noTone(pinBz);
-      invaderErrBeepStart = 0;
-    }
-  }
-#endif
-
 #endif /* defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND) */
 }
 
