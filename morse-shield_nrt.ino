@@ -116,7 +116,7 @@ int first_srand = 1;
 #endif
 
 #ifdef OPT_TONE_FREQ
-int toneFreqIndex = 0;
+int toneFreqIndex = 0; // must be adjust to toneFreq whenever changed
 int menuIndexToneFreq;
 #endif
 
@@ -286,8 +286,8 @@ char *setMenu[] {
 #ifdef OPT_OFF_DELAY
   ,
   "OffDelay",  // off delay
-  "OfDl Dot",  // off delay dot ratio
-  "OfDl Dsh"   // off delay dash ratio
+  "OfDlyDot",  // off delay dot ratio
+  "OfDlyDsh"   // off delay dash ratio
 #endif
 #ifdef OPT_AVOID_CHATTERING
   ,
