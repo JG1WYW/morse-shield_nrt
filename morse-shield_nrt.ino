@@ -881,7 +881,7 @@ void setup() {
     line2[i] = SPACE;
   }
 
-#ifdef MOD_MISC
+#if 1 /* XXX dynamic menu indexing */
   /*
    * set menuIndex dynamically
    */
