@@ -18,7 +18,7 @@ String date = "19/12/20";
 
 #if 1 /* JG1WYW */
 /*
- * These options were written by JG1WYW
+ * These options were added by JG1WYW
  */
 //#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
@@ -1876,8 +1876,13 @@ void decode() {
             lcd.setCursor(0, 1);
             lcd.write(CharWabun[i]);
             lcd.noCursor();
+#if 1 /* made wabun same to abc */
             for (j = 1; j < colums; j++) {
               if (line1[j] == CharWabun[i]) { // hit
+#else
+            for (j = 1; j < colums - 1; j++) {
+              if (line1[j] == CharWabun[i]) {
+#endif
                 gamePts += (1 + combo);
                 if (combo < 4) combo++;
                 lcd.write(SPACE);
@@ -1892,7 +1897,7 @@ void decode() {
                 break;
               }
             }
-#ifdef OPT_INVADER_SOUND
+#ifdef OPT_INVADER_SOUND /* made wabun same to abc */
             if (j == colums) {
 	      combo = 0; // wrong
               runner_beep = INVADER_ERRBEEP;
