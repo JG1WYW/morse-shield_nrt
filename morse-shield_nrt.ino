@@ -873,6 +873,14 @@ void errBeep() {
 }
 
 #ifdef OPT_RUNNER
+void tone_runner_mode()
+{
+  tone(pinBz, 349, 100); // F3
+  delay(100);
+  tone(pinBz, 698, 100); // F4
+  //tone(pinBz, 1397, 200); // F5
+}
+
 void tone_hit()
 {
   tone(pinBz, 698, 100); // F4
@@ -1259,7 +1267,8 @@ void readButtonValue() {
       runner_mode = 0;
     } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) {
       //digitalWrite(pinLed, LOW);
-      tone_hit();
+      tone_runner_mode();
+      //tone_hit();
       runner_mode = 1;
 #endif
     }
