@@ -408,6 +408,7 @@ void param_eeprom_save()
 #endif
 #ifdef OPT_WORD_SPACE
   param.wordSpace = wordSpace;
+  param.charSpace = charSpace;
 #endif
 #ifdef OPT_OFF_DELAY
   param.offDelay = offDelay;
