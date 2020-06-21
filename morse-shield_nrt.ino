@@ -1907,7 +1907,6 @@ void decode() {
 		   durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
 		}
 		runner_ptr = 0;
-		delay(100);
 		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
