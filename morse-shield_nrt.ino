@@ -20,7 +20,6 @@ String date = "19/12/20";
 /*
  * These options were added by JG1WYW
  */
-#define OPT_PADDLE_REVERSE		/* paddle reversed by default */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
@@ -53,11 +52,7 @@ int durationDot = 60;
 int durationMark = 0;
 int durationSpace = 0;
 int durationLongPress = 1000;
-#ifdef OPT_PADDLE_REVERSE
-int paddleRvs = 1; // paddle reverse (paddle on left hand side)
-#else
 int paddleRvs = 0; // paddle reverse
-#endif
 
 #ifdef OPT_RUNNER
 int runner_mode = 0; // Runner mode instead of just callsigns
