@@ -76,7 +76,17 @@ int runner_beep = 0;
 
 #ifdef OPT_OFF_DELAY
 int offDelay = 1; // off delay enabled
+
+int off_timer_ratio_dash = 100; /* extra percent (of dot) for dash */
+int off_timer_ratio_dot = 20;   /* extra percent (of dot) for dot */
+
+#define MAX_DASH_RATIO 200
+#define MAX_DOT_RATIO  100
+
 int menuIndexOffDelay;
+int menuIndexOffDelayDot;
+int menuIndexOffDelayDash;
+
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
@@ -261,7 +271,9 @@ char *setMenu[] {
 #endif
 #ifdef OPT_OFF_DELAY
   ,
-  "Offdelay"  // off delay
+  "OffDelay",  // off delay
+  "OfDl Dot",  // off delay dot ratio
+  "OfDl Dsh"   // off delay dash ratio
 #endif
 #ifdef OPT_AVOID_CHATTERING
   ,
@@ -292,6 +304,8 @@ typedef struct PARAM_EEPROM {
 #endif
 #ifdef OPT_OFF_DELAY
   int offDelay;
+  int off_timer_ratio_dot;
+  int off_timer_ratio_dash;
 #endif
 #ifdef OPT_AVOID_CHATTERING
   int avoidChattering;
@@ -332,6 +346,8 @@ int param_eeprom_load()
 #endif
 #ifdef OPT_OFF_DELAY
     offDelay = param.offDelay;
+    off_timer_ratio_dot = param.off_timer_ratio_dot;
+    off_timer_ratio_dash = param.off_timer_ratio_dash;
 #endif
 #ifdef OPT_AVOID_CHATTERING
     avoidChattering = param.avoidChattering;
@@ -364,6 +380,8 @@ void param_eeprom_save()
 #endif
 #ifdef OPT_OFF_DELAY
   param.offDelay = offDelay;
+  param.off_timer_ratio_dot = off_timer_ratio_dot;
+  param.off_timer_ratio_dash = off_timer_ratio_dash;
 #endif
 #ifdef OPT_AVOID_CHATTERING
   param.avoidChattering = avoidChattering;
@@ -769,6 +787,8 @@ void setup() {
 #endif
 #ifdef OPT_OFF_DELAY
   menuIndexOffDelay = menuIndex++;
+  menuIndexOffDelayDot = menuIndex++;
+  menuIndexOffDelayDash = menuIndex++;
 #endif
 #ifdef OPT_AVOID_CHATTERING
   menuIndexAvoidChattering = menuIndex++;
@@ -1115,9 +1135,6 @@ int paddleR_prev = HIGH;
 unsigned long paddleL_highStart = 0;
 unsigned long paddleR_highStart = 0;
 
-#define OFF_TIMER_RATIO_DASH 100 /* extra percent (of dot) for dash */
-#define OFF_TIMER_RATIO_DOT  20  /* extra percent (of dot) for dot */
-
 int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
 #endif
@@ -1231,10 +1248,10 @@ void readPaddleValue() {
       paddleR_highStart = millis();
       if (paddleRvs) {
         /* reversed to DOT */
-        paddleR_off_delay = durationDot * OFF_TIMER_RATIO_DOT / 100;
+        paddleR_off_delay = durationDot * off_timer_ratio_dot / 100;
       } else {
         /* normal DASH */
-        paddleR_off_delay = durationDot * OFF_TIMER_RATIO_DASH / 100;
+        paddleR_off_delay = durationDot * off_timer_ratio_dash / 100;
       }
       /* paddleR stays active during off delay timer */
       paddleR = LOW;
@@ -1261,10 +1278,10 @@ void readPaddleValue() {
       paddleL_highStart = millis();
       if (paddleRvs) {
         /* reversed to DASH */
-        paddleL_off_delay = durationDot * OFF_TIMER_RATIO_DASH / 100;
+        paddleL_off_delay = durationDot * off_timer_ratio_dash / 100;
       } else {
         /* normal DOT */
-        paddleL_off_delay = durationDot * OFF_TIMER_RATIO_DOT / 100;
+        paddleL_off_delay = durationDot * off_timer_ratio_dot / 100;
       }
       /* paddleL stays active during off delay timer */
       paddleL = LOW;
@@ -2050,6 +2067,20 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexOffDelayDot) {
+        lcd.print(off_timer_ratio_dot);
+	if (off_timer_ratio_dot < 10)
+          lcd.print(F(" "));
+	if (off_timer_ratio_dot < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+      } else if (menuIndex == menuIndexOffDelayDash) {
+        lcd.print(off_timer_ratio_dash);
+	if (off_timer_ratio_dash < 10)
+          lcd.print(F(" "));
+	if (off_timer_ratio_dash < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
 #endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
@@ -2130,6 +2161,24 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexOffDelayDot) {
+	if (off_timer_ratio_dot > 0)
+	  off_timer_ratio_dot -= 10;
+        lcd.print(off_timer_ratio_dot);
+	if (off_timer_ratio_dot < 10)
+          lcd.print(F(" "));
+	if (off_timer_ratio_dot < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+      } else if (menuIndex == menuIndexOffDelayDash) {
+	if (off_timer_ratio_dash > 0)
+	  off_timer_ratio_dash -= 10;
+        lcd.print(off_timer_ratio_dash);
+	if (off_timer_ratio_dash < 10)
+          lcd.print(F(" "));
+	if (off_timer_ratio_dash < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
 #endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
@@ -2212,6 +2261,24 @@ void editSetting() {
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
+      } else if (menuIndex == menuIndexOffDelayDot) {
+	if (off_timer_ratio_dot < MAX_DOT_RATIO)
+	  off_timer_ratio_dot += 10;
+        lcd.print(off_timer_ratio_dot);
+	if (off_timer_ratio_dot < 10)
+          lcd.print(F(" "));
+	if (off_timer_ratio_dot < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+      } else if (menuIndex == menuIndexOffDelayDash) {
+	if (off_timer_ratio_dash < MAX_DASH_RATIO)
+	  off_timer_ratio_dash += 10;
+        lcd.print(off_timer_ratio_dash);
+	if (off_timer_ratio_dash < 10)
+          lcd.print(F(" "));
+	if (off_timer_ratio_dash < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
 #endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
