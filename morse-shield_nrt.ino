@@ -23,6 +23,7 @@ String date = "19/12/20";
  */
 #define OPT_OFF_DELAY			/* off delay timer */
 #define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
+#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
@@ -126,7 +127,6 @@ int menuIndexAutoKeyertypeElekey;
 
 #ifdef OPT_INVADER_SOUND
 int invaderSound = 1;
-int menuIndexInvaderSound;
 #endif
 
 #ifdef OPT_BETTER_SRAND
@@ -149,6 +149,14 @@ int defToneFreq[] = {
 };
 int toneFreq = 440; // side tone frequency 440Hz, A3
 int beepFreq = 880 * 2; // beep frequency 880Hz
+
+#ifdef OPT_TWO_TONE
+int twoTone = 0; // experimental
+int toneTail = 0;
+int durationTail = 0;
+#define TONE_TAIL_RATIO 90
+int menuIndexTwoTone;
+#endif
 
 // keyer selection
 #define keyIambicA  0
@@ -315,6 +323,10 @@ char *setMenu[] {
   "LAMemory",  // look ahead memory
   "LAMratio"   // look ahead memory ratio
 #endif
+#ifdef OPT_TWO_TONE
+  ,
+  "Two-Tone"   // enable invader sound
+#endif
 #ifdef OPT_AVOID_CHATTERING
   ,
   "AvodChtr",  // to avoid chattering
@@ -324,10 +336,6 @@ char *setMenu[] {
   ,
   "AtoKyChg",  // auto keyer type change
   "AtoKyEle"   // auto keyer type when elekey
-#endif
-#ifdef OPT_INVADER_SOUND
-  ,
-  "InvdrSnd"   // enable invader sound
 #endif
 };
 
@@ -361,6 +369,9 @@ typedef struct PARAM_EEPROM {
   int lookAheadMemory;
   int look_ahead_memory_ratio;
 #endif
+#ifdef OPT_TWO_TONE
+  int twoTone;
+#endif
 #ifdef OPT_AVOID_CHATTERING
   int avoidChattering;
   int avoidChatteringCount;
@@ -368,9 +379,6 @@ typedef struct PARAM_EEPROM {
 #ifdef OPT_AUTO_KEYERTYPE
   int autoKeyerType;
   int autoKeyerTypeElekey;
-#endif
-#ifdef OPT_INVADER_SOUND
-  int invaderSound;
 #endif
 } param_eeprom_t;
 
@@ -416,6 +424,9 @@ int param_eeprom_load()
     lookAheadMemory = param.lookAheadMemory;
     look_ahead_memory_ratio = param.look_ahead_memory_ratio;
 #endif
+#ifdef OPT_TWO_TONE
+    twoTone = param.twoTone;
+#endif
 #ifdef OPT_AVOID_CHATTERING
     avoidChattering = param.avoidChattering;
     avoidChatteringCount = param.avoidChatteringCount;
@@ -423,9 +434,6 @@ int param_eeprom_load()
 #ifdef OPT_AUTO_KEYERTYPE
     autoKeyerType = param.autoKeyerType;
     autoKeyerTypeElekey = param.autoKeyerTypeElekey;
-#endif
-#ifdef OPT_INVADER_SOUND
-    invaderSound = param.invaderSound;
 #endif
 
     return 0; // success
@@ -463,6 +471,9 @@ void param_eeprom_save()
   param.lookAheadMemory = lookAheadMemory;
   param.look_ahead_memory_ratio = look_ahead_memory_ratio;
 #endif
+#ifdef OPT_TWO_TONE
+  param.twoTone = twoTone;
+#endif
 #ifdef OPT_AVOID_CHATTERING
   param.avoidChattering = avoidChattering;
   param.avoidChatteringCount = avoidChatteringCount;
@@ -470,9 +481,6 @@ void param_eeprom_save()
 #ifdef OPT_AUTO_KEYERTYPE
   param.autoKeyerType = autoKeyerType;
   param.autoKeyerTypeElekey = autoKeyerTypeElekey;
-#endif
-#ifdef OPT_INVADER_SOUND
-  param.invaderSound = invaderSound;
 #endif
 
   ptr = (byte *)&param;
@@ -904,6 +912,9 @@ void setup() {
   menuIndexLookAheadMemory = menuIndex++;
   menuIndexLookAheadMemoryRatio = menuIndex++;
 #endif
+#ifdef OPT_TWO_TONE
+  menuIndexTwoTone = menuIndex++;
+#endif
 #ifdef OPT_AVOID_CHATTERING
   menuIndexAvoidChattering = menuIndex++;
   menuIndexAvoidChatteringCount = menuIndex++;
@@ -911,9 +922,6 @@ void setup() {
 #ifdef OPT_AUTO_KEYERTYPE
   menuIndexAutoKeyertype = menuIndex++;
   menuIndexAutoKeyertypeElekey = menuIndex++;
-#endif
-#ifdef OPT_INVADER_SOUND
-  menuIndexInvaderSound = menuIndex++;
 #endif
 #endif /* 1 */
 
@@ -1546,12 +1554,20 @@ void readPaddleValue() {
 #endif
       if (lastPaddle != L) {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
+#ifdef OPT_TWO_TONE
+	if (twoTone)
+	  durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+#endif
         lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("bL,90");
 #endif
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
+#ifdef OPT_TWO_TONE
+	if (twoTone)
+	  durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+#endif
         lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("bR,100");
@@ -1560,7 +1576,15 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_TWO_TONE
+      if (sidetone) {
+	tone(pinBz, toneFreq); // side tone
+	if (twoTone)
+	  toneTail = 0;
+      }
+#else
       if (sidetone) tone(pinBz, toneFreq); // side tone
+#endif
     }
     // pressing the L paddle
   } else if (paddleL == LOW && durationSpace == 0) {
@@ -1572,6 +1596,10 @@ void readPaddleValue() {
         durationMark = 10000; // key down straight key
       } else {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
+#ifdef OPT_TWO_TONE
+	if (twoTone)
+	  durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+#endif
       }
       lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
@@ -1580,7 +1608,15 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_TWO_TONE
+      if (sidetone) {
+	tone(pinBz, toneFreq); // side tone
+	if (twoTone)
+	  toneTail = 0;
+      }
+#else
       if (sidetone) tone(pinBz, toneFreq); // side tone
+#endif
     }
     // pressing the R paddle
   } else if (paddleR == LOW && durationSpace == 0) {
@@ -1589,6 +1625,10 @@ void readPaddleValue() {
       paddleR_released = 0;
 #endif
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
+#ifdef OPT_TWO_TONE
+      if (twoTone)
+	durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+#endif
       lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
       serial_timing("R,120");
@@ -1596,7 +1636,15 @@ void readPaddleValue() {
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_TWO_TONE
+      if (sidetone) {
+	tone(pinBz, toneFreq); // side tone
+	if (twoTone)
+	  toneTail = 0;
+      }
+#else
       if (sidetone) tone(pinBz, toneFreq); // side tone
+#endif
     }
   }
 
@@ -1696,12 +1744,20 @@ void readPaddleValue() {
       if (memory != -1) {
         if (memory == L) {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
+#ifdef OPT_TWO_TONE
+	  if (twoTone)
+	    durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+#endif
           lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
           serial_timing("ML,250");
 #endif
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
+#ifdef OPT_TWO_TONE
+	  if (twoTone)
+	    durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+#endif
           lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
           serial_timing("MR,260");
@@ -1711,11 +1767,26 @@ void readPaddleValue() {
         digitalWrite(pinLed, HIGH);
         key = DOWN;
         timeStart = millis();
+#ifdef OPT_TWO_TONE
+	if (sidetone) {
+	  tone(pinBz, toneFreq); // side tone
+	  if (twoTone)
+	    toneTail = 0;
+	}
+#else
         if (sidetone) tone(pinBz, toneFreq); // side tone
+#endif
       }
     }
   }
   if (durationMark != 0) {
+#ifdef OPT_TWO_TONE
+    if (twoTone && sidetone && toneTail == 0 && (millis() - timeStart) > durationTail) {
+      toneTail = 1;
+      noTone(pinBz);
+      tone(pinBz, toneFreq*2);
+    }
+#endif
     // memory paddle LR
 #ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
@@ -2533,6 +2604,13 @@ void editSetting() {
           lcd.print(F(" "));
         lcd.print(F(" "));
 #endif
+#ifdef OPT_TWO_TONE
+      } else if (menuIndex == menuIndexTwoTone) {
+        if (twoTone)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
         if (avoidChattering)
@@ -2555,13 +2633,6 @@ void editSetting() {
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexAutoKeyertypeElekey) {
         lcd.print(keyName[autoKeyerTypeElekey]);
-#endif
-#ifdef OPT_INVADER_SOUND
-      } else if (menuIndex == menuIndexInvaderSound) {
-        if (invaderSound)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
 #endif
       }
     }
@@ -2681,6 +2752,14 @@ void editSetting() {
           lcd.print(F(" "));
         lcd.print(F(" "));
 #endif
+#ifdef OPT_TWO_TONE
+      } else if (menuIndex == menuIndexTwoTone) {
+	twoTone = !twoTone;
+        if (twoTone)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
 	avoidChattering = !avoidChattering;
@@ -2710,14 +2789,6 @@ void editSetting() {
 	  autoKeyerTypeElekey--;
 	}
         lcd.print(keyName[autoKeyerTypeElekey]);
-#endif
-#ifdef OPT_INVADER_SOUND
-      } else if (menuIndex == menuIndexInvaderSound) {
-        invaderSound = !invaderSound;
-        if (invaderSound)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
 #endif
       }
     }
@@ -2837,6 +2908,14 @@ void editSetting() {
           lcd.print(F(" "));
         lcd.print(F(" "));
 #endif
+#ifdef OPT_TWO_TONE
+      } else if (menuIndex == menuIndexTwoTone) {
+	twoTone = !twoTone;
+        if (twoTone)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
 	avoidChattering = !avoidChattering;
@@ -2866,14 +2945,6 @@ void editSetting() {
 	  autoKeyerTypeElekey++;
 	}
         lcd.print(keyName[autoKeyerTypeElekey]);
-#endif
-#ifdef OPT_INVADER_SOUND
-      } else if (menuIndex == menuIndexInvaderSound) {
-        invaderSound = !invaderSound;
-        if (invaderSound)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
 #endif
       }
     }
