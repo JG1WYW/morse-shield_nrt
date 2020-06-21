@@ -1208,9 +1208,7 @@ void readButtonValue() {
       runnerMode = 0;
     } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) {
       //digitalWrite(pinLed, LOW);
-      tone(pinBz, 698, 100); // F4
-      delay(100);
-      tone(pinBz, 1397, 200); // F5
+      tone_ok();
       runnerMode = 1;
 #endif
     }
@@ -1461,6 +1459,22 @@ void trainingMode(int pressedSw) {
   }
 }
 
+#ifdef OPT_RUNNER
+void tone_ok()
+{
+  tone(pinBz, 698, 100); // F4
+  delay(100);
+  tone(pinBz, 1397, 200); // F5
+}
+
+void tone_ng()
+{
+  tone(pinBz, 220, 100); // A2
+  delay(100);
+  tone(pinBz, 110, 200); // A1
+}
+#endif
+
 // translate cw code to ascii //
 void decode() {
   int i, j, k;
@@ -1505,17 +1519,13 @@ void decode() {
 		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
-                  tone(pinBz, 698, 100); // F4
-		  delay(100);
-                  tone(pinBz, 1397, 200); // F5
+                  tone_ok();
 		  delay(1000);
 		  printascii(SPACE);
                   trainingMode(pinSw3);
 		}
 	      } else {
-	        tone(pinBz, 220, 100); // A2
-		delay(100);
-	        tone(pinBz, 110, 200); // A1
+	        tone_ng();
 		runner_ptr = 0;
 		printascii(SPACE);
 	      }
@@ -1546,9 +1556,7 @@ void decode() {
       }
 #ifdef OPT_RUNNER
       if (runner == 1 && i == sizeof(CharAbc) / sizeof(unsigned char)) {
-        tone(pinBz, 220, 100);
-	delay(100);
-	tone(pinBz, 110, 200);
+        tone_ok();
 	runner_ptr = 0;
 	printascii('_');
       }
