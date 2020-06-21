@@ -1022,10 +1022,16 @@ void goertzel() {
     if (filteredstate == HIGH) { /* key pushed */
       starttimehigh = millis();
       lowduration = (millis() - startttimelow);
+#ifdef OPT_BETTER_DECODE
+      stop = HIGH;
+#endif
     }
 
     if (filteredstate == LOW) { /* key released */
       startttimelow = millis();
+#ifdef OPT_BETTER_DECODE
+      stop = LOW;
+#endif
       highduration = (millis() - starttimehigh);
 #ifdef OPT_BETTER_DECODE
       if ((highduration * 2) <= hightimesavg) {
@@ -1056,20 +1062,11 @@ void goertzel() {
   // and what kind of pause we do have 1 - 3 or 7 pause
   // we think that hightimeavg = 1 bit
   if (filteredstate != filteredstatebefore) {
+#ifdef OPT_BETTER_DECODE
+    if (filteredstate == LOW && (unsigned int)code < 0b10000000) { // we did end a HIGH
+#else
     stop = LOW;
     if (filteredstate == LOW && code < 0b10000000) { // we did end a HIGH
-#if defined(OPT_RUNNER) && defined(OPT_DECODE_INVALID_IMMEDIATELY)
-     if (running && code >= 0b01000000) {
-	// invoke decode expecting '_' during running to notify invalid keying (typically connecting more than two characters) immediately
-#ifdef OPT_DECODE_DEBUG
-	Serial.print(F("(1)"));
-#endif
-	decode();
-	code = 1;
-#ifdef OPT_BETTER_DECODE
-	stop = HIGH;
-#endif
-     } else {
 #endif
       if (highduration < (hightimesavg * 2) && highduration > (hightimesavg * 0.6)) { /// 0.6 filter out false dits
         code = code << 1;//strcat(code, ".");
@@ -1090,10 +1087,17 @@ void goertzel() {
 #endif
         wpm = (wpm + (1200 / ((highduration) / 3))) / 2; // the most precise we can do ;o)
       }
-#if defined(OPT_RUNNER) && defined(OPT_DECODE_INVALID_IMMEDIATELY)
-     }
-#endif
     }
+#if defined(OPT_RUNNER) && defined(OPT_DECODE_INVALID_IMMEDIATELY)
+    else if (running && filteredstate == LOW) {
+	// invoke decode expecting '_' during running to notify invalid keying (typically connecting more than two characters) immediately
+#ifdef OPT_DECODE_DEBUG
+	Serial.print(F("(1)"));
+#endif
+	decode();
+	code = 1;
+    }
+#endif
 
     if (filteredstate == HIGH) { // we did end a LOW
 
@@ -1112,9 +1116,6 @@ void goertzel() {
 #endif
         decode();
         code = 1;
-#ifdef OPT_BETTER_DECODE
-        stop = HIGH;
-#endif
 #ifdef SERIAL_PRINT_DIT_DAH
         Serial.print(F("/"));
 #endif
@@ -1125,9 +1126,6 @@ void goertzel() {
 #endif
         decode();
         code = 1;
-#ifdef OPT_BETTER_DECODE
-        stop = HIGH;
-#endif
 #ifdef OPT_RUNNER
        if (!running) // to omit word space during running
 #endif
@@ -1141,7 +1139,7 @@ void goertzel() {
 
   // write if no more letters
 #ifdef OPT_BETTER_DECODE
-  if ((millis() - startttimelow) > (hightimesavg * 6) && stop == LOW) {
+  if (stop == LOW && (millis() - startttimelow) > (hightimesavg * 6)) {
 #else
   if ((millis() - startttimelow) > (highduration * 6) && stop == LOW) {
 #endif
