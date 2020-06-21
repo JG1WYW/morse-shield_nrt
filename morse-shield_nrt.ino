@@ -19,10 +19,20 @@ String date = "19/12/20";
 #if 1 /* JG1WYW */
 /*
  * These options were added by JG1WYW
- * So far, off delay and look ahead memory is tested with improved Iambic A.
+ * So far, off delay and look ahead memory is tested with improved Iambic_A.
+ *
+ * EEPROM:
+ *  - Save settings by long press on Sw3
+ *  - Load default by pressing on Sw4 during power on (not initializing EEPROM)
+ *
+ * Experimental features (need to be enabled explicitly):
+ *  - Off delay
+ *  - Look ahead memory
+ *  - Avoid chattering
+ *
  */
-#define OPT_OFF_DELAY			/* off delay timer */
-#define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
+#define OPT_OFF_DELAY			/* off delay timers */
+#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
@@ -34,7 +44,7 @@ String date = "19/12/20";
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
-#define OPT_BETTER_IAMBIC_A             /* Improved behavior of IambicA */
+#define OPT_BETTER_IAMBIC_A             /* Improved behavior of Iambic_A */
 #define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when running */
 //#define OPT_DECODE_DEBUG
 //#define OPT_TIMING_DEBUG                /* Debug flag */
@@ -87,10 +97,10 @@ int menuIndexCharSpace;
 #endif
 
 #ifdef OPT_OFF_DELAY
-int offDelay = 0; // off delay disabled by default (Experimental)
+int offDelay = 0; // off-delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 25;    /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 80;   /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 30;    /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 130;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
 #define MAX_DASH_RATIO 200
