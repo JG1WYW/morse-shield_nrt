@@ -70,10 +70,10 @@ int runner_beep = 0;
 #endif
 
 #ifdef OPT_OFF_DELAY
-int offDelay = 1; // off delay enabled (Experimental)
+int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 40;   /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 120;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 30;   /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 90;  /* XXX extra percent (of dot) for dash */
 
 #define MAX_DASH_RATIO 200
 #define MAX_DOT_RATIO  100
@@ -84,8 +84,10 @@ int menuIndexOffDelayDash;
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
-int avoidChattering = 1;
+int avoidChattering = 0; // avoid chattering disabled by default (Experimental)
 int avoidChatteringCount = 5; // Stable count
+
+#define MAX_CHATTERING_COUNT 10
 
 int menuIndexAvoidChattering;
 int menuIndexAvoidChatteringCount;
@@ -2368,7 +2370,7 @@ void editSetting() {
         else
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexAvoidChatteringCount) {
-	if (avoidChatteringCount < 10)
+	if (avoidChatteringCount < MAX_CHATTRING_COUNT)
 	  avoidChatteringCount++;
         lcd.print(avoidChatteringCount);
 	if (avoidChatteringCount < 10)
