@@ -31,6 +31,9 @@ String date = "19/12/20";
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
+
+#define CORRECT_IAMBICA /* XXX Is the original behavior of IambicA correct? */
+
 #endif
 
 // keyer setting
@@ -164,7 +167,12 @@ int pinBtn[4] = {pinSw1, pinSw2, pinSw3, pinSw4};
 #define langWabun 1
 int lang = langAbc;
 
+#ifdef CORRECT_IAMBICA
+int lastPaddle = -1; // memory key param
+int prev_lastPaddle = -1;
+#else
 int lastPaddle = L; // memory key param
+#endif
 int endingChar = 0; // space after letter(1) or dit/dah(0)
 
 static int pos_read = 0;
@@ -1323,9 +1331,15 @@ void readPaddleValue() {
     if (durationMark == 0 && keyerType != keyStraight) {
       if (lastPaddle != L) {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
+#ifdef CORRECT_IAMBICA
+	prev_lastPaddle = -1;
+#endif
         lastPaddle = L;
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
+#ifdef CORRECT_IAMBICA
+	prev_lastPaddle = -1;
+#endif
         lastPaddle = R;
       }
       digitalWrite(pinLed, HIGH);
@@ -1341,6 +1355,9 @@ void readPaddleValue() {
       } else {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
       }
+#ifdef CORRECT_IAMBICA
+      prev_lastPaddle = lastPaddle;
+#endif
       lastPaddle = L;
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1351,6 +1368,9 @@ void readPaddleValue() {
   } else if (paddleR == LOW && durationSpace == 0) {
     if (durationMark == 0 && keyerType != keyStraight) {
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
+#ifdef CORRECT_IAMBICA
+      prev_lastPaddle = lastPaddle;
+#endif
       lastPaddle = R;
       digitalWrite(pinLed, HIGH);
       key = DOWN;
@@ -1360,6 +1380,21 @@ void readPaddleValue() {
   }
 
   if (durationSpace != 0) {
+#ifdef CORRECT_IAMBICA
+    if (paddleL == LOW && paddleR == LOW) {
+      if (keyerType == keyIambicB || keyerType == keySuper || (keyerType == keyIambicA && prev_lastPaddle == -1)) {
+	if (lastPaddle != L) {
+	  memory = L;
+	} else {
+	  memory = R;
+	}
+      }
+    } else if (paddleL == LOW && lastPaddle == R) {
+      memory = L;
+    } else if (paddleR == LOW && lastPaddle == L) {
+      memory = R;
+    }
+#else
     if (keyerType == keyIambicB || keyerType == keySuper) {
 
       // memory paddle LR
@@ -1369,6 +1404,7 @@ void readPaddleValue() {
         memory = R;
       }
     }
+#endif
     // ending of space
     if (millis() - timeStart > durationSpace) {
       durationSpace = 0;
@@ -1376,6 +1412,9 @@ void readPaddleValue() {
       if (memory != -1) {
         if (memory == L) {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
+#ifdef CORRECT_IAMBICA
+	  prev_lastPaddle = lastPaddle;
+#endif
           lastPaddle = L;
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
@@ -1391,6 +1430,21 @@ void readPaddleValue() {
   }
   if (durationMark != 0) {
     // memory paddle LR
+#ifdef CORRECT_IAMBICA
+    if (paddleL == LOW && paddleR == LOW) {
+      if (keyerType == keyIambicB || (keyerType == keySuper && (millis() - timeStart > durationDot)) || (keyerType == keyIambicA && prev_lastPaddle == -1)) {
+	if (lastPaddle != L) {
+	  memory = L;
+	} else {
+	  memory = R;
+	}
+      }
+    } else if (paddleL == LOW && lastPaddle == R) {
+      memory = L;
+    } else if (paddleR == LOW && lastPaddle == L) {
+      memory = R;
+    }
+#else
     if (keyerType == keyIambicB || ((keyerType == keySuper) && (millis() - timeStart > durationDot))) {
       if (paddleL == LOW && lastPaddle == R) {
         memory = L;
@@ -1398,6 +1452,7 @@ void readPaddleValue() {
         memory = R;
       }
     }
+#endif
     // ending of mark
     if (millis() - timeStart > durationMark) {
       durationSpace = endingChar ? durationDot * 3 : durationDot;
