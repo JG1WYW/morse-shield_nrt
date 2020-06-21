@@ -79,15 +79,16 @@ int offDelay = 1; // off delay enabled
 int menuIndexOffDelay;
 #endif
 
+#ifdef OPT_AVOID_CHATTERING
+int avoidChattering = 1;
+int menuIndexAvoidChattering;
+#endif
+
 #ifdef OPT_AUTO_KEYERTYPE
 int autoKeyerType = 1; // auto keyer type enabled
 int count_straight_or_paddle = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
 int menuIndexAutoKeyertype;
-#endif
-
-#ifdef OPT_AVOID_CHATTERING
-int avoidChattering = 1;
 #endif
 
 #ifdef OPT_BETTER_SRAND
@@ -262,6 +263,10 @@ char *setMenu[] {
   ,
   "Offdelay"  // off delay
 #endif
+#ifdef OPT_AVOID_CHATTERING
+  ,
+  "AvodChtr"  // to avoid chattering
+#endif
 #ifdef OPT_AUTO_KEYERTYPE
   ,
   "AtoKyChg"  // auto keyer type change
@@ -288,11 +293,11 @@ typedef struct PARAM_EEPROM {
 #ifdef OPT_OFF_DELAY
   int offDelay;
 #endif
-#ifdef OPT_AUTO_KEYERTYPE
-  int autoKeyerType;
-#endif
 #ifdef OPT_AVOID_CHATTERING
   int avoidChattering;
+#endif
+#ifdef OPT_AUTO_KEYERTYPE
+  int autoKeyerType;
 #endif
 } param_eeprom_t;
 
@@ -328,11 +333,11 @@ int param_eeprom_load()
 #ifdef OPT_OFF_DELAY
     offDelay = param.offDelay;
 #endif
-#ifdef OPT_AUTO_KEYERTYPE
-    autoKeyerType = param.autoKeyerType;
-#endif
 #ifdef OPT_AVOID_CHATTERING
     avoidChattering = param.avoidChattering;
+#endif
+#ifdef OPT_AUTO_KEYERTYPE
+    autoKeyerType = param.autoKeyerType;
 #endif
 
     return 0; // success
@@ -360,11 +365,11 @@ void param_eeprom_save()
 #ifdef OPT_OFF_DELAY
   param.offDelay = offDelay;
 #endif
-#ifdef OPT_AUTO_KEYERTYPE
-  param.autoKeyerType = autoKeyerType;
-#endif
 #ifdef OPT_AVOID_CHATTERING
   param.avoidChattering = avoidChattering;
+#endif
+#ifdef OPT_AUTO_KEYERTYPE
+  param.autoKeyerType = autoKeyerType;
 #endif
 
   ptr = (byte *)&param;
@@ -765,11 +770,11 @@ void setup() {
 #ifdef OPT_OFF_DELAY
   menuIndexOffDelay = menuIndex++;
 #endif
-#ifdef OPT_AUTO_KEYERTYPE
-  menuIndexAutoKeyertype = menuIndex++;
-#endif
 #ifdef OPT_AVOID_CHATTERING
   menuIndexAvoidChattering = menuIndex++;
+#endif
+#ifdef OPT_AUTO_KEYERTYPE
+  menuIndexAutoKeyertype = menuIndex++;
 #endif
 #endif /* 1 */
 
@@ -2037,16 +2042,16 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_AUTO_KEYERTYPE
-      } else if (menuIndex == menuIndexAutoKeyertype) {
-        if (autoKeyerType)
+#ifdef OPT_AVOID_CHATTERING
+      } else if (menuIndex == menuIndexAvoidChattering) {
+        if (avoidChattering)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_AVOID_CHATTERING
-      } else if (menuIndex == menuIndexAvoidChattering) {
-        if (avoidChattering)
+#ifdef OPT_AUTO_KEYERTYPE
+      } else if (menuIndex == menuIndexAutoKeyertype) {
+        if (autoKeyerType)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -2104,7 +2109,7 @@ void editSetting() {
 	if (toneFreqIndex > 0)
 	  toneFreqIndex--;
 	toneFreq = defToneFreq[toneFreqIndex];
-	tone(pinBz, toneFreq, 20);
+	tone(pinBz, toneFreq, 100);
         lcd.print(toneFreq);
 	if (toneFreq < 1000)
           lcd.print(F(" "));
@@ -2117,18 +2122,18 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_AUTO_KEYERTYPE
-      } else if (menuIndex == menuIndexAutoKeyertype) {
-	autoKeyerType = !autoKeyerType;
-        if (autoKeyerType)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
-#endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
 	avoidChattering = !avoidChattering;
         if (avoidChattering)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef OPT_AUTO_KEYERTYPE
+      } else if (menuIndex == menuIndexAutoKeyertype) {
+	autoKeyerType = !autoKeyerType;
+        if (autoKeyerType)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -2186,7 +2191,7 @@ void editSetting() {
 	if (toneFreqIndex < (sizeof(defToneFreq) / sizeof(int)) - 1)
 	  toneFreqIndex++;
 	toneFreq = defToneFreq[toneFreqIndex];
-	tone(pinBz, toneFreq, 20);
+	tone(pinBz, toneFreq, 100);
         lcd.print(toneFreq);
 	if (toneFreq < 1000)
           lcd.print(F(" "));
@@ -2199,18 +2204,18 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_AUTO_KEYERTYPE
-      } else if (menuIndex == menuIndexAutoKeyertype) {
-	autoKeyerType = !autoKeyerType;
-        if (autoKeyerType)
-          lcd.print(F(" on "));
-        else
-          lcd.print(F("off "));
-#endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
 	avoidChattering = !avoidChattering;
         if (avoidChattering)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef OPT_AUTO_KEYERTYPE
+      } else if (menuIndex == menuIndexAutoKeyertype) {
+	autoKeyerType = !autoKeyerType;
+        if (autoKeyerType)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
