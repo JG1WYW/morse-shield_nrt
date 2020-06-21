@@ -54,6 +54,8 @@ int paddleRvs = 0; // paddle reverse
 #ifdef OPT_RUNNER /* JG1WYW */
 int runnerMode = 0; // Runner mode instead of just callsigns
 int runner = 0;
+int runner_miss = 0;
+int runner_accel = 0;
 #endif
 
 #ifdef OPT_OFF_DELAY /* JG1WYW */
@@ -830,6 +832,9 @@ void readPotValue() {
 void setNewWpm(int wpm) {
   Wpm = wpm;
   durationDot = (60.0 * 1000) / (Wpm * 50);
+#ifdef OPT_RUNNER
+  runner_accel = 0; // reset acceleration when Wpm is modified manually
+#endif
 
   Serial.print(F("WPM="));
   Serial.println(Wpm);
@@ -1315,7 +1320,7 @@ void fireLongFunction(int no) {
           pressedSw = pinSw3;
           lcd.setCursor(0, 0);
 #ifdef OPT_RUNNER
-	  lcdIndex = 0;
+          lcdIndex = 0;
           if (runnerMode) {
             lcd.print(F("Runner  "));
 	  } else {
@@ -1509,17 +1514,32 @@ void decode() {
 		for (idx = 0 ; idx < runner_call_len ; idx++) {
 		  presetMessage[idx] = runner_call[idx];
 		}
+		if (runner_accel > 0) {
+		   runner_accel--;
+		   runner_miss = 0;
+		   durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
+		}
 		runner_ptr = 0;
 		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
                   tone_hit();
+		  if (runner_miss == 0) {
+		    runner_accel++;
+		  } else {
+		    if (runner_accel > 0) {
+		      runner_accel--;
+		    }
+		    runner_miss = 0;
+		  }
+		  durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
 		  delay(1000);
 		  printascii(SPACE);
                   trainingMode(pinSw3);
 		}
 	      } else {
 	        tone_miss();
+		runner_miss++;
 		runner_ptr = 0;
 		printascii(SPACE);
 	      }
