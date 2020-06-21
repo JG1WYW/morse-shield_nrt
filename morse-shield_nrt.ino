@@ -21,6 +21,9 @@ String date = "19/12/20";
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
 #define OPT_RUNNER			/* morse runner training */
+#define OPT_TOOLONG                     /* '_' for too long chars */
+#define OPT_BETTER_DECODE		/* better decode using low duration */
+#define OPT_BETTER_SRAND		/* random seed using timing */
 
 // keyer setting
 #define MIN_WPM  5
@@ -56,6 +59,10 @@ int offDelay = 1; // off delay enabled
 int count_straight_or_paddle = 0;
 int changed_to_straight = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
+#endif
+
+#ifdef OPT_BETTER_SRAND
+int first_srand = 1;
 #endif
 
 // side tone
@@ -552,9 +559,6 @@ void setup() {
 
   // Create the random seed
   randomSeed(analogRead(pinVol));
-#if 1 /* JG1WYW */
-  srand(analogRead(pinVol)); /* seed for rand() */
-#endif
 
   // I/O pins setup
   for (int i = 0; i < 4; i++) pinMode(pinBtn[i], INPUT_PULLUP);
@@ -674,20 +678,36 @@ void goertzel() {
 
   // Then we do want to have some durations on high and low
   if (filteredstate != filteredstatebefore) {
-    if (filteredstate == HIGH) {
+    if (filteredstate == HIGH) { /* key pushed */
       starttimehigh = millis();
       lowduration = (millis() - startttimelow);
     }
 
-    if (filteredstate == LOW) {
+    if (filteredstate == LOW) { /* key released */
       startttimelow = millis();
       highduration = (millis() - starttimehigh);
+#ifdef OPT_BETTER_DECODE
+      if (highduration < (2 * hightimesavg) && hightimesavg < (2 * highduration)) {
+#else
       if (highduration < (2 * hightimesavg) || hightimesavg == 0) {
+#endif
         hightimesavg = (highduration + hightimesavg + hightimesavg) / 3; // now we know avg dit time ( rolling 3 avg)
       }
       if (highduration > (5 * hightimesavg) ) {
+#ifdef OPT_BETTER_DECODE
+        hightimesavg = highduration;  // if speed decreased fast ..
+#else
         hightimesavg = highduration + hightimesavg;   // if speed decrease fast ..
+#endif
       }
+#ifdef OPT_BETTER_DECODE
+      if (hightimesavg < (lowduration * 2) && lowduration < (hightimesavg * 2)) {
+        hightimesavg = (lowduration + hightimesavg + hightimesavg) / 3;
+      }
+      if ((lowduration * 2) < hightimesavg) {
+        hightimesavg = lowduration; // if speed increased fast ..
+      }
+#endif
     }
   }
 
@@ -696,7 +716,11 @@ void goertzel() {
   // we think that hightimeavg = 1 bit
   if (filteredstate != filteredstatebefore) {
     stop = LOW;
+#ifdef OPT_TOOLONG /* JG1WYW */
+    if (filteredstate == LOW && code < 0b01000000) { // we did end a HIGH
+#else
     if (filteredstate == LOW && code < 0b10000000) { // we did end a HIGH
+#endif
       if (highduration < (hightimesavg * 2) && highduration > (hightimesavg * 0.6)) { /// 0.6 filter out false dits
         code = code << 1;//strcat(code, ".");
 #ifdef SERIAL_PRINT_DIT_DAH
@@ -713,6 +737,13 @@ void goertzel() {
         wpm = (wpm + (1200 / ((highduration) / 3))) / 2; // the most precise we can do ;o)
       }
     }
+#ifdef OPT_TOOLONG /* JG1WYW */
+    else if (filteredstate == LOW) {
+      code = 0b01100001; /* '-' */
+      decode();
+      code = 1;
+    }
+#endif
 
     if (filteredstate == HIGH) { // we did end a LOW
 
@@ -740,7 +771,11 @@ void goertzel() {
   }
 
   // write if no more letters
+#ifdef OPT_BETTER_DECODE
+  if ((millis() - startttimelow) > (hightimesavg * 6) && stop == LOW) {
+#else
   if ((millis() - startttimelow) > (highduration * 6) && stop == LOW) {
+#endif
     decode();
     code = 1; //code[0] = '\0';
     stop = HIGH;
@@ -1133,6 +1168,12 @@ void readButtonValue() {
     sw[i] = digitalRead(pinBtn[i]);
     // button was pressed
     if (sw[i] == LOW && timeStartSw[i] == 0) {
+#if 1 /* JG1WYW */
+      if (first_srand) {
+        first_srand = 0;
+          srand(millis()); /* seed for rand() */
+      }
+#endif
       //digitalWrite(pinLed, HIGH);
       timeStartSw[i] = millis();
       beep();
