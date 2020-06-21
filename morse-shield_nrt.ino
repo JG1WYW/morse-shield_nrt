@@ -154,7 +154,7 @@ int beepFreq = 880 * 2; // beep frequency 880Hz
 int twoTone = 0; // experimental
 int toneTail = 0;
 int durationTail = 0;
-#define TONE_TAIL_RATIO 20
+#define TONE_TAIL_RATIO 25
 int menuIndexTwoTone;
 #endif
 
