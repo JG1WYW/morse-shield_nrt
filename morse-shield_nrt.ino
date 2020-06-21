@@ -89,7 +89,7 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 20;    /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dot = 25;    /* XXX extra percent (of dot) for dot */
 int off_timer_ratio_dash = 100;   /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
