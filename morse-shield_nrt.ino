@@ -154,7 +154,7 @@ int beepFreq = 880 * 2; // beep frequency 880Hz
 int twoTone = 0; // experimental
 int toneTail = 0;
 int durationTail = 0;
-#define TONE_TAIL_RATIO 100
+#define TONE_TAIL_RATIO 20
 int menuIndexTwoTone;
 #endif
 
@@ -1560,8 +1560,10 @@ void readPaddleValue() {
 	    toneTail = 1;
 	  else
 	    toneTail = 0;
-	  durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
-	  //durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	  toneTail = 0;
+	  //durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+	  durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	  toneTail = 0;
 	}
 #endif
         lastPaddle = L;
@@ -1576,8 +1578,9 @@ void readPaddleValue() {
 	    toneTail = 0;
 	  else
 	    toneTail = 1;
-	  durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
-	  //durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	  //durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+	  durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	  toneTail = 0;
 	}
 #endif
         lastPaddle = R;
@@ -1614,8 +1617,9 @@ void readPaddleValue() {
 	    toneTail = 1;
 	  else
 	    toneTail = 0;
-	  durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
-	  //durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	  //durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+	  durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	  toneTail = 0;
 	}
 #endif
       }
@@ -1649,8 +1653,9 @@ void readPaddleValue() {
 	  toneTail = 0;
 	else
 	  toneTail = 1;
-	durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
-	//durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	//durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+	durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	toneTail = 0;
       }
 #endif
       lastPaddle = R;
@@ -1774,8 +1779,9 @@ void readPaddleValue() {
 	      toneTail = 1;
 	    else
 	      toneTail = 0;
-	    durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
-	    //durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	    //durationTail = !paddleRvs ? durationDot * (100 - TONE_TAIL_RATIO) / 100 : durationDot * wait - durationDot * TONE_TAIL_RATIO / 100;
+	    durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	    toneTail = 0;
 	  }
 #endif
           lastPaddle = L;
@@ -1790,8 +1796,9 @@ void readPaddleValue() {
 	      toneTail = 0;
 	    else
 	      toneTail = 1;
-	    durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
-	    //durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	    //durationTail = !paddleRvs ? durationDot * wait - durationDot * TONE_TAIL_RATIO / 100 : durationDot * (100 - TONE_TAIL_RATIO) / 100;
+	    durationTail = durationMark * (100 - TONE_TAIL_RATIO) / 100;
+	    toneTail = 0;
 	  }
 #endif
           lastPaddle = R;
@@ -1820,7 +1827,7 @@ void readPaddleValue() {
     if (twoTone && sidetone && toneTail == 0 && (millis() - timeStart) > durationTail) {
       toneTail = 1;
       noTone(pinBz);
-      tone(pinBz, toneFreq*2);
+      tone(pinBz, toneFreq*5/8);
     }
 #endif
     // memory paddle LR
