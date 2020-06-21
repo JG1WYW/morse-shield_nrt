@@ -77,7 +77,7 @@ int runner_beep = 0;
 #ifdef OPT_OFF_DELAY
 int offDelay = 1; // off delay enabled
 
-int off_timer_ratio_dash = 100; /* extra percent (of dot) for dash */
+int off_timer_ratio_dash = 80;  /* extra percent (of dot) for dash */
 int off_timer_ratio_dot = 20;   /* extra percent (of dot) for dot */
 
 #define MAX_DASH_RATIO 200
@@ -1496,6 +1496,9 @@ void fireFunction(int no) {
   Serial.print(F("Press="));
   Serial.println(no + 1);
 
+#if 1 // XXX stop side tone
+  noTone(pinBz);
+#endif
 #ifdef OPT_RUNNER
   runner_stop(); /* pushing button to disable runner */
 #endif
@@ -1526,6 +1529,9 @@ void fireLongFunction(int no) {
   Serial.print(F("LongPress="));
   Serial.println(no + 1);
 
+#if 1 // XXX stop side tone
+  noTone(pinBz);
+#endif
 #ifdef OPT_RUNNER
   runner_stop(); /* pushing button to disable runner */
 #endif
