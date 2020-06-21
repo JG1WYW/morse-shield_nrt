@@ -19,6 +19,7 @@ String date = "19/12/20";
 #if 1 /* JG1WYW */
 /*
  * These options were added by JG1WYW
+ * So far, off delay & look ahead memory is checked with improved IambicA.
  */
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
 #define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
