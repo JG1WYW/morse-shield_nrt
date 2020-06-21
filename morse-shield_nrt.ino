@@ -66,6 +66,7 @@ int runner_mode = 0; // Runner mode instead of just callsigns
 int running = 0; // means Now running
 int runner_miss = 0;
 int runner_accel = 0;
+int runnerDurationDot = 60;
 #endif
 
 #if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND)
@@ -1310,11 +1311,22 @@ unsigned int runner_call[8];
 int runner_call_len = 0;
 int runner_ptr = 0;
 
+void reset_durationDot()
+{
+  if (Wpm != 0)
+    durationDot = (60.0 * 1000) / (Wpm * 50); // reset in case accelerated
+}
+
+void accel_durationDot()
+{
+  if (Wpm != 0)
+    durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
+}
+
 void runner_stop()
 {
   running = 0; // stop running
-  if (Wpm != 0)
-    durationDot = (60.0 * 1000) / (Wpm * 50); // reset in case accelerated
+  reset_durationDot();
 }
 #endif
 
@@ -1535,6 +1547,13 @@ void readPaddleValue() {
     clearBeacon();
     return;
   }
+
+#ifdef OPT_RUNNER
+  if (running && (paddleR == LOW || paddleL == LOW)) {
+    // normal speed for actual keying
+    reset_durationDot();
+  }
+#endif
 
 #ifdef OPT_BETTER_IAMBIC_A
   if (paddleR_released == 0 && paddleR == HIGH) {
@@ -2287,10 +2306,10 @@ void decode() {
 		  presetMessage[idx] = runner_call[idx];
 		}
 		if (runner_accel > 0) {
-		   runner_accel--; // repeat (?) becomes 5% slower
+		   runner_accel--; // '?' becomes 5% slower
 		   runner_miss = 0;
-		   durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
 		}
+		accel_durationDot(); // accelerated speed for callsigns
 		runner_ptr = 0;
 		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
@@ -2304,8 +2323,8 @@ void decode() {
 		      runner_accel--; // miss(es) becomes 5% slower
 		    }
 		  }
+		  accel_durationDot(); // accelerated speed for callsigns
 		  runner_miss = 0;
-		  durationDot = (60.0 * 1000) / (Wpm * 50) * 100 / (100 + 5 * runner_accel);
 		  delay(1000);
 		  printascii(SPACE);
                   trainingMode(pinSw3);
