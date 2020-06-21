@@ -44,12 +44,12 @@ int paddleRvs = 1; // paddle reverse (paddle on left hand side)
 int paddleRvs = 0; // paddle reverse
 #endif
 
-#ifdef OPT_OFF_DELAY /* JG1WYW */
-int offDelay = 1; // off delay enabled
-#endif
-
 #ifdef OPT_RUNNER /* JG1WYW */
 int runnerMode = 1; // Runner mode instead of just callsigns
+#endif
+
+#ifdef OPT_OFF_DELAY /* JG1WYW */
+int offDelay = 1; // off delay enabled
 #endif
 
 #ifdef OPT_AUTO_SWITCH_KEYERTYPE
@@ -170,7 +170,7 @@ long starttimehigh;
 long highduration;
 long lasthighduration;
 #if 1 /* JG1WYW */
-long hightimesavg = 60; /* to start with moderate highduration */
+long hightimesavg = 60; /* to begin with moderate highduration */
 #else
 long hightimesavg;
 #endif
@@ -197,9 +197,9 @@ int gameStarted = 0;
 
 // setting menu
 // ToDo: save param on EEPROM
-#if defined(OPT_RUNNER) /* JG1WYW */
+#if defined(OPT_OFF_DELAY) /* JG1WYW */
 #define MaxMenu 9
-#elif defined(OPT_OFF_DELAY) /* JG1WYW */
+#elif defined(OPT_RUNNER) /* JG1WYW */
 #define MaxMenu 8
 #else
 #define MaxMenu 7
@@ -212,13 +212,13 @@ char *setMenu[] {
   "SideTone", // sidetone on, off / tone[Hz]
   "CQint:ms", // beacon interval
   "CQ times"  // beacon times
-#ifdef OPT_OFF_DELAY /* JG1WYW */
-  ,
-  "Offdelay"  // off delay
-#endif
 #ifdef OPT_RUNNER /* JG1WYW */
   ,
   "Runner  "  // Runner mode
+#endif
+#ifdef OPT_OFF_DELAY /* JG1WYW */
+  ,
+  "Offdelay"  // off delay
 #endif
 };
 
@@ -553,7 +553,7 @@ void setup() {
   // Create the random seed
   randomSeed(analogRead(pinVol));
 #if 1 /* JG1WYW */
-  srand(analogRead(pinVol));
+  srand(analogRead(pinVol)); /* seed for rand() */
 #endif
 
   // I/O pins setup
@@ -940,9 +940,8 @@ void readPaddleValue() {
 #ifdef OPT_OFF_DELAY /* JG1WYW */
   /*
    * off delay is only for electric keyer. (i.e., not incl. straight key)
-   * for now, only super keyer is cared.
    */
-  if (offDelay && keyerType == keySuper) {
+  if (offDelay && keyerType != keyStraight) {
     /*
      * off delay, paddle R
      */
@@ -1002,7 +1001,7 @@ void readPaddleValue() {
         paddleL_highStart = 0;
       }
     }
-  } /* (offDelay && keyerType == keySuper) */
+  } /* (offDelay && keyerType != keyStraight) */
 #endif /* JG1WYW */
 
 #if 1 /* JG1WYW */
@@ -1159,7 +1158,7 @@ void fireFunction(int no) {
   Serial.println(no + 1);
 
 #ifdef OPT_RUNNER /* JG1WYW */
-  runner = 0;
+  runner = 0; /* pushing button to disable runner */
 #endif
   // clear preset messages
   if (pos_read > 0) {
@@ -1189,7 +1188,7 @@ void fireLongFunction(int no) {
   Serial.println(no + 1);
 
 #ifdef OPT_RUNNER /* JG1WYW */
-  runner = 0;
+  runner = 0; /* pushing button to disable runner */
 #endif
   // clear preset messages
   if (pos_read > 0) {
@@ -1347,7 +1346,7 @@ void trainingMode(int pressedSw) {
 #if 1 /* JG1WYW */
      }
 #endif
-#ifndef OPT_RUNNER /* !RUNNDER */
+#ifndef OPT_RUNNER /* !OPT_RUNNDER */
       if (presetMessage[k - 1] == 'S') {
         presetMessage[k] = '6';
       } else if (presetMessage[k - 1] == 'D') {
@@ -1355,7 +1354,7 @@ void trainingMode(int pressedSw) {
       } else {
 #endif
         presetMessage[k] = '0' + rand() / (RAND_MAX / 10 + 1) ;
-#ifndef OPT_RUNNER /* !RUNNDER */
+#ifndef OPT_RUNNER /* !OPT_RUNNDER */
       }
 #endif
       k++;
@@ -1363,7 +1362,7 @@ void trainingMode(int pressedSw) {
         presetMessage[k] = 'A' + rand() / (RAND_MAX / 26 + 1) ;
         k++;
       }
-#ifdef OPT_RUNNER /* !RUNNDER */
+#ifdef OPT_RUNNER /* !OPT_RUNNDER */
       if (runnerMode) { /* runner */
         int idx;
 
@@ -1432,12 +1431,14 @@ void decode() {
 		  presetMessage[idx] = runner_call[idx];
 		}
 		runner_ptr = 0;
+		printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
                   tone(pinBz, 720, 100);
 		  delay(100);
                   tone(pinBz, 1440, 200);
 		  delay(1000);
+		  printascii(SPACE);
                   trainingMode(pinSw3);
 		}
 	      } else {
@@ -1445,6 +1446,7 @@ void decode() {
 		delay(100);
 	        tone(pinBz, 110, 200);
 		runner_ptr = 0;
+		printascii(SPACE);
 	      }
 	    }
 #endif
@@ -1623,16 +1625,16 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_RUNNER /* JG1WYW */
       } else if (menuIndex == 7) {
-        if (offDelay)
+        if (runnerMode)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_OFF_DELAY /* JG1WYW */
       } else if (menuIndex == 8) {
-        if (runnerMode)
+        if (offDelay)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -1685,18 +1687,18 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_RUNNER /* JG1WYW */
       } else if (menuIndex == 7) {
-        offDelay = !offDelay;
-        if (offDelay)
+        runnerMode = !runnerMode;
+        if (runnerMode)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_OFF_DELAY /* JG1WYW */
       } else if (menuIndex == 8) {
-        runnerMode = !runnerMode;
-        if (runnerMode)
+        offDelay = !offDelay;
+        if (offDelay)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -1749,18 +1751,18 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_OFF_DELAY /* JG1WYW */
+#ifdef OPT_RUNNER /* JG1WYW */
       } else if (menuIndex == 7) {
-        offDelay = !offDelay;
-        if (offDelay)
+        runnerMode = !runnerMode;
+        if (runnerMode)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
 #endif
-#ifdef OPT_RUNNER /* JG1WYW */
+#ifdef OPT_OFF_DELAY /* JG1WYW */
       } else if (menuIndex == 8) {
-        runnerMode = !runnerMode;
-        if (runnerMode)
+        offDelay = !offDelay;
+        if (offDelay)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
