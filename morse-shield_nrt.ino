@@ -20,8 +20,8 @@ String date = "19/12/20";
 #define OPT_OFF_DELAY			/* off delay timer for super keyer */
 #define OPT_AVOID_CHATTERING		/* indend to avoid chattering */
 #define OPT_AUTO_SWITCH_KEYERTYPE	/* adapt to paddle/straight change */
-#define OPT_SIDETONE_600			/* 600Hz side tone */
-#define OPT_RUNNER				/* morse runner training */
+#define OPT_SIDETONE_600		/* 600Hz side tone */
+#define OPT_RUNNER			/* morse runner training */
 
 // keyer setting
 #define MIN_WPM  5
