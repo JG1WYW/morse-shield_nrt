@@ -1115,8 +1115,8 @@ int paddleR_prev = HIGH;
 unsigned long paddleL_highStart = 0;
 unsigned long paddleR_highStart = 0;
 
-#define OFF_TIMER_RATIO_DASH 150 /* extra percent (of dot) for dash */
-#define OFF_TIMER_RATIO_DOT  50  /* extra percent (of dot) for dot */
+#define OFF_TIMER_RATIO_DASH 100 /* extra percent (of dot) for dash */
+#define OFF_TIMER_RATIO_DOT  0   /* extra percent (of dot) for dot */
 
 int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
@@ -1610,6 +1610,10 @@ void fireLongFunction(int no) {
       param_eeprom_save();
       lcd.setCursor(0, 0);
       lcd.print(F("Saved   "));
+      //tone_hit();
+      tone(pinBz, 698, 100); // F4
+      delay(100);
+      tone(pinBz, 1397, 200); // F5
 #endif
       break;
     case 3: // setting
