@@ -24,7 +24,7 @@ String date = "19/12/20";
 #define OPT_OFF_DELAY			/* off delay timer */
 #define OPT_LOOK_AHEAD_MEMORY           /* Look ahead Memory in space */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
-#define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
+//#define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
 #define OPT_RUNNER			/* morse runner training */
@@ -89,8 +89,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 0; // off delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 15;    /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 30;   /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 25;    /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 75;   /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
 #define MAX_DASH_RATIO 200
