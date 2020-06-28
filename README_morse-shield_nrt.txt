@@ -1,5 +1,5 @@
 #
-# morse-shield_nrt: arduino_morse_runner_(バージョン).diff
+# morse-shield_nrt: arduino_morse_runner_20200628a.diff
 # All rights reserved. Copyright (C) 2020 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
 # ABSOLUTELY NO WARRANTY
 # 
@@ -39,6 +39,29 @@
     * "AtoKyEle"  : 自動選択するエレキーの種別                           [デフォルト Supr](範囲 IbcA / IbcB / Supr)
                     自動判定後、Dash が終わった後、このエレキーに戻る
 
+    << 推奨値 >>
+    * Lang A/ア   : ABC
+    * Pdl Rev.    : お好み
+    * Key mode    : IbcA  (* Iambic A を変更して動作確認しています)
+    * Wait 1:*    : 3.00
+    * SideTone    : on
+    * CQint:ms    : 2000
+    * CQ times    : 10
+
+    (追加分)
+    * "ToneFreq"  : お好み
+    * "Word Spc"  : 4
+    * "Char Spc"  : 3
+    * "OffDelay"  : on
+    * "OffDlyDot" : 30
+    * "OffDlyDsh" : 130
+    * "LAMemory"  : on
+    * "LAMratio"  : 20
+    * "AvodChtr"  : on
+    * "StbleCnt"  : 10
+    * "AtoKyChg"  : on
+    * "AtoKyEle"  : IbcA  (* Iambic A を変更して動作確認しています)
+
   - EEPROMへの設定の書き込み
     * 「Sw3長押し」で設定を EEPROM へ書き込みます。
 
@@ -64,7 +87,7 @@
 
       - 間違えると、ブッとブザーが鳴ります。最初から打ち直してください。
         打ったコールサインはLCDパネルに表示されています。きちんと認識されていますか?
-        違うようであれば "?" を打って聞き直しましょう。
+        文字と文字が繋っていると認識されませんので、少し丁寧に打ちましょう。
 
       - コールサインが合っていれば、ピロッとブザーが鳴って、次の局があなたを呼んできます。
 
