@@ -1,5 +1,5 @@
 #
-# morse-shield_nrt: arduino_morse_runner_20200629a.diff
+# morse-shield_nrt: arduino_morse_runner_20200704a.diff
 # All rights reserved. Copyright (C) 2020 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
 # ABSOLUTELY NO WARRANTY
 # 
@@ -64,9 +64,12 @@
 
   - EEPROMへの設定の書き込み
     * 「Sw3長押し」で設定を EEPROM へ書き込みます。
+      書き込んだデータは、バージョンが変更された際に書き込み対象のデータに追加変更があると、
+      起動時に読み込まれず、各パラメータの値はリセットされた状態となります。
 
   - EEPROMから設定を読み込まずに起動
-    * 「Sw4長押し」したたま電源を投入すると、設定を EEPROM から読み込まずに起動します。
+    * 「Sw4長押し」したたま電源を投入すると、設定を EEPROM から読み込まずに起動し、
+       各パラメータの値はデフォルト値にリセットされた状態となります。
 
   - Morse Runner
 
@@ -77,6 +80,7 @@
       自分に合ったスピード、例えば 20wpm くらいに合わせましょう。
 
     * 次に「Sw2長押し」で Training メニューに入り、「Sw3」で Morse Runner を開始します。
+      (Sw2長押しで、従来、Training メニューの表示で c だった部分が r に変更されている状態です。)
     
       - あなたが CQ を出した後、誰かがあなたを呼んできました。相手のコールサインは取れましたか?
         取れなかった場合は、取れたコールサインの途中まで打って、最後に "?" と打ちましょう。
