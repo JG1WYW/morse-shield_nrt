@@ -56,7 +56,7 @@
     * "OffDlyDot" : 20
     * "OffDlyDsh" : 120
     * "LAMemory"  : on
-    * "LAMratio"  : 20
+    * "LAMratio"  : 25
     * "AvodChtr"  : on
     * "StbleCnt"  : 10
     * "AtoKyChg"  : on
