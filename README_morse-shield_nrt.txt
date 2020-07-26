@@ -24,12 +24,12 @@
     * "Word Spc"  : メモリーキーヤー送出時の Word 間の space (dotの個数) [デフォルト 7]   (範囲 1 - 10)
     * "Char Spc"  : メモリーキーヤー送出時の 文字間の space (dot個数)    [デフォルト 3]   (範囲 1 - 10)
     * "OffDelay"  : Off-delay timer の on / off                          [デフォルト off] (範囲 off / on)
-    * "OffDlyDot" : Dot の off-delay (dot 1個分に対するパーセント)       [デフォルト 30]  (範囲 0 - 100)
+    * "OffDlyDot" : Dot の off-delay (dot 1個分に対するパーセント)       [デフォルト 20]  (範囲 0 - 100)
                     Dot を離した後も、この時間、Dot が持続する
-    * "OffDlyDsh" : Dash の off-delay (dot 1個分に対するパーセント)      [デフォルト 130] (範囲 0 - 200)
+    * "OffDlyDsh" : Dash の off-delay (dot 1個分に対するパーセント)      [デフォルト 120] (範囲 0 - 200)
                     Dash を離した後も、この時間、Dash が持続する
     * "LAMemory"  : Look ahead memory の on / off                        [デフォルト off] (範囲 off / on)
-    * "LAMratio"  : 先読みする割合 (dot 1個分に対するパーセント)         [デフォルト 20]  (範囲 0 - 100)
+    * "LAMratio"  : 先読みする割合 (dot 1個分に対するパーセント)         [デフォルト 25]  (範囲 0 - 100)
                     次の Dot / Dash の判定タイミングから、この時間だけ先読み
     * "AvodChtr"  : チャタリング防止の on / off                          [デフォルト off] (範囲 off / on)
     * "StbleCnt"  : 安定化のカウント                                     [デフォルト 10]  (範囲 5 - 100)
