@@ -1,5 +1,5 @@
 #
-# morse-shield_nrt: arduino_morse_runner_20200725a.diff
+# morse-shield_nrt: arduino_morse_runner_20200731a.diff
 # All rights reserved. Copyright (C) 2020 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
 # ABSOLUTELY NO WARRANTY
 # 
@@ -29,7 +29,7 @@
     * "OffDlyDsh" : Dash の off-delay (dot 1個分に対するパーセント)      [デフォルト 120] (範囲 0 - 200)
                     Dash を離した後も、この時間、Dash が持続する
     * "LAMemory"  : Look ahead memory の on / off                        [デフォルト off] (範囲 off / on)
-    * "LAMratio"  : 先読みする割合 (dot 1個分に対するパーセント)         [デフォルト 25]  (範囲 0 - 100)
+    * "LAMratio"  : 先読みする割合 (dot 1個分に対するパーセント)         [デフォルト 20]  (範囲 0 - 100)
                     次の Dot / Dash の判定タイミングから、この時間だけ先読み
     * "AvodChtr"  : チャタリング防止の on / off                          [デフォルト off] (範囲 off / on)
     * "StbleCnt"  : 安定化のカウント                                     [デフォルト 10]  (範囲 5 - 100)
@@ -56,7 +56,7 @@
     * "OffDlyDot" : 20
     * "OffDlyDsh" : 120
     * "LAMemory"  : on
-    * "LAMratio"  : 25
+    * "LAMratio"  : 20
     * "AvodChtr"  : on
     * "StbleCnt"  : 10
     * "AtoKyChg"  : on
