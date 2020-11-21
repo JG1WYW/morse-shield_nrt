@@ -119,7 +119,7 @@ int menuIndexLookAheadMemoryRatio;
 
 #ifdef OPT_AVOID_CHATTERING
 int avoidChattering = 0; // avoid chattering disabled by default (Experimental)
-int avoidChatteringCount = 10; // Stable count
+int avoidChatteringCount = 50; // Stable count
 
 #define MAX_CHATTERING_COUNT 100
 
@@ -205,8 +205,8 @@ int pinBtn[4] = {pinSw1, pinSw2, pinSw3, pinSw4};
 int lang = langAbc;
 
 #ifdef OPT_BETTER_IAMBIC_A
-int paddleR_released = 1; // to check if re-pressed once after press detected
-int paddleL_released = 1;
+int paddleR_pressed = 0; // to check if re-pressed once after press detected
+int paddleL_pressed = 0;
 #endif
 int lastPaddle = L; // memory key param
 int endingChar = 0; // space after letter(1) or dit/dah(0)
@@ -1442,20 +1442,19 @@ void readPaddleValue() {
         serial_timing("_R,20");
       }
 #endif
-#ifdef OPT_BETTER_IAMBIC_A
-      if (paddleR_highStart != 0) {
-        // XXX off delay aborted, but actually released
-        paddleR_released = 1;
-      }
-#if 0
       if (paddleL_highStart != 0) {
         // XXX off delay aborted, but actually released
-        paddleL_released = 1;
         paddleL_prev = HIGH;
         paddleL_highStart = 0;
 	paddleL = HIGH;
       }
+#ifdef OPT_BETTER_IAMBIC_A
+      if (paddleR_prev == HIGH) {
+         paddleR_pressed = 1;
+#ifdef OPT_TIMING_DEBUG
+         serial_timing(".R,30");
 #endif
+      }
 #endif
       paddleR_prev = LOW;
       paddleR_highStart = 0;
@@ -1501,20 +1500,19 @@ void readPaddleValue() {
         serial_timing("_L,60");
       }
 #endif
-#ifdef OPT_BETTER_IAMBIC_A
-      if (paddleL_highStart != 0) {
-        // XXX off delay aborted, but actually released
-        paddleL_released = 1;
-      }
-#if 0
       if (paddleR_highStart != 0) {
         // XXX off delay aborted, but actually released
-        paddleR_released = 1;
         paddleR_prev = HIGH;
         paddleR_highStart = 0;
 	paddleR = HIGH;
       }
+#ifdef OPT_BETTER_IAMBIC_A
+      if (paddleL_prev == HIGH) {
+         paddleL_pressed = 1;
+#ifdef OPT_TIMING_DEBUG
+         serial_timing(".L,30");
 #endif
+      }
 #endif
       paddleL_prev = LOW;
       paddleL_highStart = 0;
@@ -1570,24 +1568,16 @@ void readPaddleValue() {
   }
 #endif
 
-#ifdef OPT_BETTER_IAMBIC_A
-  if (paddleR_released == 0 && paddleR == HIGH) {
-    paddleR_released = 1;
-  }
-  if (paddleL_released == 0 && paddleL == HIGH) {
-    paddleL_released = 1;
-  }
-#endif
-
   // pressing both paddles
   if (paddleL == LOW && paddleR == LOW && durationSpace == 0) {
     if (durationMark == 0 && keyerType != keyStraight) {
 #ifdef OPT_BETTER_IAMBIC_A
-      paddleR_released = 0;
-      paddleL_released = 0;
+      paddleR_pressed = 0;
+      paddleL_pressed = 0;
 #endif
       if (lastPaddle != L) {
         durationMark = !paddleRvs ? durationDot : durationDot * wait;
+        lastPaddle = L;
 #ifdef OPT_TWO_TONE
 	if (twoTone) {
 	  if (!paddleRvs)
@@ -1599,12 +1589,12 @@ void readPaddleValue() {
 	  toneTail = 0;
 	}
 #endif
-        lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("bL,90");
 #endif
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
+        lastPaddle = R;
 #ifdef OPT_TWO_TONE
 	if (twoTone) {
 	  if (!paddleRvs)
@@ -1616,7 +1606,6 @@ void readPaddleValue() {
 	  toneTail = 0;
 	}
 #endif
-        lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("bR,100");
 #endif
@@ -1637,9 +1626,6 @@ void readPaddleValue() {
     // pressing the L paddle
   } else if (paddleL == LOW && durationSpace == 0) {
     if (durationMark == 0) {
-#ifdef OPT_BETTER_IAMBIC_A
-      paddleL_released = 0;
-#endif
       if (keyerType == keyStraight) {
         durationMark = 10000; // key down straight key
       } else {
@@ -1657,6 +1643,9 @@ void readPaddleValue() {
 #endif
       }
       lastPaddle = L;
+#ifdef OPT_BETTER_IAMBIC_A
+      paddleL_pressed = 0;
+#endif
 #ifdef OPT_TIMING_DEBUG
       serial_timing("L,110");
 #endif
@@ -1676,10 +1665,11 @@ void readPaddleValue() {
     // pressing the R paddle
   } else if (paddleR == LOW && durationSpace == 0) {
     if (durationMark == 0 && keyerType != keyStraight) {
-#ifdef OPT_BETTER_IAMBIC_A
-      paddleR_released = 0;
-#endif
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
+      lastPaddle = R;
+#ifdef OPT_BETTER_IAMBIC_A
+      paddleR_pressed = 0;
+#endif
 #ifdef OPT_TWO_TONE
       if (twoTone) {
 	if (!paddleRvs)
@@ -1691,7 +1681,6 @@ void readPaddleValue() {
 	toneTail = 0;
       }
 #endif
-      lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
       serial_timing("R,120");
 #endif
@@ -1713,15 +1702,15 @@ void readPaddleValue() {
   if (durationSpace != 0) {
 #ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
-      if (memory == -1 && paddleL == LOW && lastPaddle == R && paddleL_released) {
-	paddleL_released = 0;
+      if (memory == -1 && paddleL == LOW && paddleL_pressed) {
 	memory = L;
+        paddleL_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml,130");
 #endif
-      } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
-	paddleR_released = 0;
+      } else if (memory == -1 && paddleR == LOW && paddleR_pressed) {
 	memory = R;
+        paddleR_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("mr,140");
 #endif
@@ -1732,22 +1721,26 @@ void readPaddleValue() {
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
+            paddleL_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
             serial_timing("lbl,150");
 #endif
           } else {
             memory = R;
+            paddleR_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
             serial_timing("lbr,160");
 #endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
+          paddleL_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
             serial_timing("ll,170");
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
+          paddleR_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
           serial_timing("lr,180");
 #endif
@@ -1806,6 +1799,7 @@ void readPaddleValue() {
       if (memory != -1) {
         if (memory == L) {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
+          lastPaddle = L;
 #ifdef OPT_TWO_TONE
 	  if (twoTone) {
 	    if (!paddleRvs)
@@ -1817,12 +1811,12 @@ void readPaddleValue() {
 	    toneTail = 0;
 	  }
 #endif
-          lastPaddle = L;
 #ifdef OPT_TIMING_DEBUG
           serial_timing("ML,250");
 #endif
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
+          lastPaddle = R;
 #ifdef OPT_TWO_TONE
 	  if (twoTone) {
 	    if (!paddleRvs)
@@ -1834,7 +1828,6 @@ void readPaddleValue() {
 	    toneTail = 0;
 	  }
 #endif
-          lastPaddle = R;
 #ifdef OPT_TIMING_DEBUG
           serial_timing("MR,260");
 #endif
@@ -1866,15 +1859,15 @@ void readPaddleValue() {
     // memory paddle LR
 #ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
-      if (memory == -1 && paddleL == LOW && lastPaddle == R && paddleL_released) {
-	paddleL_released = 0;
+      if (memory == -1 && paddleL == LOW && paddleL_pressed) {
 	memory = L;
+        paddleL_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml,270");
 #endif
-      } else if (memory == -1 && paddleR == LOW && lastPaddle == L && paddleR_released) {
-	paddleR_released = 0;
+      } else if (memory == -1 && paddleR == LOW && paddleR_pressed) {
 	memory = R;
+        paddleR_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("mr,280");
 #endif
@@ -2740,7 +2733,7 @@ void editSetting() {
         lcd.print(keyName[keyerType]);
       } else if (menuIndex == 3) {
         wait -= 0.1;
-        if (wait < 3.0) wait = 3.0;
+        if (wait < 2.0) wait = 3.0;
         lcd.print(wait);
       } else if (menuIndex == 4) {
         sidetone = !sidetone;
