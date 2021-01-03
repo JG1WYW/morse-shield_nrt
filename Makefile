@@ -1,7 +1,7 @@
 #
 # morse_shield_nrt
 #
-ver=20201121a
+ver=20210103a
 
 # archive name
 target=morse-shield_nrt-$(ver)

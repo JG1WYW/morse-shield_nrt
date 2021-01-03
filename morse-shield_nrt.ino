@@ -37,6 +37,7 @@ String date = "19/12/20";
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
+#define OPT_MEMORY_CLICK		/* memory click */
 #define OPT_RUNNER			/* runner training of callsigns */
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
@@ -167,6 +168,11 @@ int toneTail = 0;
 int durationTail = 0;
 #define TONE_TAIL_RATIO 33
 int menuIndexTwoTone;
+#endif
+
+#ifdef OPT_MEMORY_CLICK
+static int memoryClick = 0;
+int menuIndexMemoryClick;
 #endif
 
 // keyer selection
@@ -336,7 +342,11 @@ char *setMenu[] {
 #endif
 #ifdef OPT_TWO_TONE
   ,
-  "Two-Tone"   // enable invader sound
+  "Two-Tone"   // enable two tone sound
+#endif
+#ifdef OPT_MEMORY_CLICK
+  ,
+  "MemClick"   // memory click
 #endif
 #ifdef OPT_AVOID_CHATTERING
   ,
@@ -382,6 +392,9 @@ typedef struct PARAM_EEPROM {
 #endif
 #ifdef OPT_TWO_TONE
   int twoTone;
+#endif
+#ifdef OPT_MEMORY_CLICK
+  int memoryClick;
 #endif
 #ifdef OPT_AVOID_CHATTERING
   int avoidChattering;
@@ -438,6 +451,9 @@ int param_eeprom_load()
 #ifdef OPT_TWO_TONE
     twoTone = param.twoTone;
 #endif
+#ifdef OPT_MEMORY_CLICK
+    memoryClick = param.memoryClick;
+#endif
 #ifdef OPT_AVOID_CHATTERING
     avoidChattering = param.avoidChattering;
     avoidChatteringCount = param.avoidChatteringCount;
@@ -484,6 +500,9 @@ void param_eeprom_save()
 #endif
 #ifdef OPT_TWO_TONE
   param.twoTone = twoTone;
+#endif
+#ifdef OPT_MEMORY_CLICK
+  param.memoryClick = memoryClick;
 #endif
 #ifdef OPT_AVOID_CHATTERING
   param.avoidChattering = avoidChattering;
@@ -926,6 +945,9 @@ void setup() {
 #ifdef OPT_TWO_TONE
   menuIndexTwoTone = menuIndex++;
 #endif
+#ifdef OPT_MEMORY_CLICK
+  menuIndexMemoryClick = menuIndex++;
+#endif
 #ifdef OPT_AVOID_CHATTERING
   menuIndexAvoidChattering = menuIndex++;
   menuIndexAvoidChatteringCount = menuIndex++;
@@ -1301,6 +1323,37 @@ void tone_invader_clear()
   delay(100);
   tone(pinBz, 1568, 100); // G5
   delay(100);
+}
+#endif
+
+#ifdef OPT_MEMORY_CLICK
+static unsigned long timeEnd = 0;
+
+#define MEMORY_CLICK_RATIO 5 /* % */
+
+void memory_click_start()
+{
+  if (timeEnd == 0) {
+    tone(pinBz, beepFreq * 3);
+    //tone(pinBz, beepFreq * 2);
+    //tone(pinBz, toneFreq * 2);
+    timeEnd = millis() + durationDot * MEMORY_CLICK_RATIO / 100;
+    if (timeEnd == 0) // zero means not started
+      timeEnd = 1;
+  }
+}
+
+void memory_click_stop()
+{
+  if (durationMark != 0) {
+    if (sidetone)
+      tone(pinBz, toneFreq); // side tone
+    else
+      noTone(pinBz);
+  } else {
+    noTone(pinBz);
+  }
+  timeEnd = 0;
 }
 #endif
 
@@ -1704,12 +1757,20 @@ void readPaddleValue() {
     if (keyerType == keyIambicA) {
       if (memory == -1 && paddleL == LOW && paddleL_pressed) {
 	memory = L;
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+#endif
         paddleL_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml,130");
 #endif
       } else if (memory == -1 && paddleR == LOW && paddleR_pressed) {
 	memory = R;
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+#endif
         paddleR_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("mr,140");
@@ -1721,12 +1782,20 @@ void readPaddleValue() {
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
+#ifdef OPT_MEMORY_CLICK
+            if (memoryClick)
+              memory_click_start();
+#endif
             paddleL_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
             serial_timing("lbl,150");
 #endif
           } else {
             memory = R;
+#ifdef OPT_MEMORY_CLICK
+            if (memoryClick)
+              memory_click_start();
+#endif
             paddleR_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
             serial_timing("lbr,160");
@@ -1734,12 +1803,20 @@ void readPaddleValue() {
           }
 	} else if (paddleL == LOW) {
           memory = L;
+#ifdef OPT_MEMORY_CLICK
+          if (memoryClick)
+            memory_click_start();
+#endif
           paddleL_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
             serial_timing("ll,170");
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
+#ifdef OPT_MEMORY_CLICK
+          if (memoryClick)
+            memory_click_start();
+#endif
           paddleR_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
           serial_timing("lr,180");
@@ -1752,13 +1829,21 @@ void readPaddleValue() {
     if (keyerType == keyIambicB || keyerType == keySuper) {
 
       // memory paddle LR
-      if (paddleL == LOW && lastPaddle == R) {
+      if (memory == -1 && paddleL == LOW && lastPaddle == R) {
         memory = L;
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+#endif
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml,190");
 #endif
-      } else if (paddleR == LOW && lastPaddle == L) {
+      } else if (memory == -1 && paddleR == LOW && lastPaddle == L) {
         memory = R;
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+#endif
 #ifdef OPT_TIMING_DEBUG
         serial_timing("mr,200");
 #endif
@@ -1769,22 +1854,38 @@ void readPaddleValue() {
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
+#ifdef OPT_MEMORY_CLICK
+            if (memoryClick)
+              memory_click_start();
+#endif
 #ifdef OPT_TIMING_DEBUG
             serial_timing("lbl,210");
 #endif
           } else {
             memory = R;
+#ifdef OPT_MEMORY_CLICK
+            if (memoryClick)
+              memory_click_start();
+#endif
 #ifdef OPT_TIMING_DEBUG
             serial_timing("lbr,220");
 #endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
+#ifdef OPT_MEMORY_CLICK
+          if (memoryClick)
+            memory_click_start();
+#endif
 #ifdef OPT_TIMING_DEBUG
           serial_timing("ll,230");
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
+#ifdef OPT_MEMORY_CLICK
+          if (memoryClick)
+            memory_click_start();
+#endif
 #ifdef OPT_TIMING_DEBUG
           serial_timing("lr,240");
 #endif
@@ -1861,12 +1962,20 @@ void readPaddleValue() {
     if (keyerType == keyIambicA) {
       if (memory == -1 && paddleL == LOW && paddleL_pressed) {
 	memory = L;
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+#endif
         paddleL_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml,270");
 #endif
       } else if (memory == -1 && paddleR == LOW && paddleR_pressed) {
 	memory = R;
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+#endif
         paddleR_pressed = 0;
 #ifdef OPT_TIMING_DEBUG
         serial_timing("mr,280");
@@ -1875,13 +1984,21 @@ void readPaddleValue() {
     } else
 #endif
     if (keyerType == keyIambicB || ((keyerType == keySuper) && (millis() - timeStart > durationDot))) {
-      if (paddleL == LOW && lastPaddle == R) {
+      if (memory == -1 && paddleL == LOW && lastPaddle == R) {
         memory = L;
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+#endif
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml,290");
 #endif
-      } else if (paddleR == LOW && lastPaddle == L) {
+      } else if (memory == -1 && paddleR == LOW && lastPaddle == L) {
         memory = R;
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+#endif
 #ifdef OPT_TIMING_DEBUG
         serial_timing("mr,300");
 #endif
@@ -1944,6 +2061,11 @@ void readPaddleValue() {
     runner_beep = 0;
   }
 #endif /* defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND) */
+#ifdef OPT_MEMORY_CLICK
+  if (timeEnd && timeEnd < millis()) {
+    memory_click_stop();
+  }
+#endif
 }
 
 void readButtonValue() {
@@ -2681,6 +2803,13 @@ void editSetting() {
         else
           lcd.print(F("off "));
 #endif
+#ifdef OPT_MEMORY_CLICK
+      } else if (menuIndex == menuIndexMemoryClick) {
+        if (memoryClick)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
 #ifdef OPT_AVOID_CHATTERING
       } else if (menuIndex == menuIndexAvoidChattering) {
         if (avoidChattering)
@@ -2826,6 +2955,14 @@ void editSetting() {
       } else if (menuIndex == menuIndexTwoTone) {
 	twoTone = !twoTone;
         if (twoTone)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef OPT_MEMORY_CLICK
+      } else if (menuIndex == menuIndexMemoryClick) {
+        memoryClick = !memoryClick;
+        if (memoryClick)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -2982,6 +3119,14 @@ void editSetting() {
       } else if (menuIndex == menuIndexTwoTone) {
 	twoTone = !twoTone;
         if (twoTone)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
+#ifdef OPT_MEMORY_CLICK
+      } else if (menuIndex == menuIndexMemoryClick) {
+        memoryClick = !memoryClick;
+        if (memoryClick)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
