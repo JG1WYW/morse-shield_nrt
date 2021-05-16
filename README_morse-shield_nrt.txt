@@ -1,5 +1,5 @@
 #
-# morse-shield_nrt: arduino_morse_runner_20210515a.diff
+# morse-shield_nrt: arduino_morse_runner_20210516a.diff
 # All rights reserved. Copyright (C) 2020,2021 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
 # ABSOLUTELY NO WARRANTY
 # 

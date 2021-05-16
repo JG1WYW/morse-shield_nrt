@@ -91,14 +91,14 @@ int runner_beep = 0;
 #endif
 
 #ifdef OPT_WORD_SPACE
-int wordSpace = 7;
+int wordSpace = 4; /* XXX 7 is too short */
 int charSpace = 3;
 int menuIndexWordSpace;
 int menuIndexCharSpace;
 #endif
 
 #ifdef OPT_OFF_DELAY
-int offDelay = 0; // off-delay disabled by default (Experimental)
+int offDelay = 1; // off-delay disabled by default (Experimental)
 
 int off_timer_ratio_dot = 20;    /* XXX extra percent (of dot) for dot */
 int off_timer_ratio_dash = 120;  /* XXX extra percent (of dot) for dash */
@@ -112,15 +112,15 @@ int menuIndexOffDelayDash;
 #endif
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
-int lookAheadMemory = 0; // lookAheadMemory is disabled by default (Experimental)
+int lookAheadMemory = 1; // lookAheadMemory is disabled by default (Experimental)
 int look_ahead_memory_ratio = 20; // XXX percent (of dot) for look ahead memory
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
-int avoidChattering = 0; // avoid chattering disabled by default (Experimental)
-int avoidChatteringCount = 50; // Stable count
+int avoidChattering = 1; // avoid chattering disabled by default (Experimental)
+int avoidChatteringCount = 20; // Stable count
 
 #define MAX_CHATTERING_COUNT 100
 
@@ -129,8 +129,8 @@ int menuIndexAvoidChatteringCount;
 #endif
 
 #ifdef OPT_AUTO_KEYERTYPE
-int autoKeyerType = 0; // auto keyer type disabled by default (Experimental)
-int autoKeyerTypeElekey = 2; // XXX Supr, auto keyer type when elekey changed from straight key
+int autoKeyerType = 1; // auto keyer type disabled by default (Experimental)
+int autoKeyerTypeElekey = 0; // XXX Supr, auto keyer type when elekey changed from straight key
 int count_straight_or_paddle = 0;
 #define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
 int menuIndexAutoKeyertype;
@@ -159,7 +159,11 @@ int defToneFreq[] = {
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
-int toneFreq = 440; // side tone frequency 440Hz, A3
+#ifdef OPT_TONE_FREQ
+int toneFreq = 220; // side tone frequency 220Hz, A3
+#else
+int toneFreq = 440; // side tone frequency 440Hz, A4
+#endif
 int beepFreq = 880 * 2; // beep frequency 880Hz
 
 #ifdef OPT_TWO_TONE
@@ -181,7 +185,11 @@ int menuIndexMemoryClick;
 #define keySuper    2 // super keyer
 #define keyStraight 3 // straight key
 #define keyBug      4 // bug key
+#ifdef OPT_BETTER_IAMBIC_A
+int keyerType = keyIambicA;
+#else
 int keyerType = keySuper;
+#endif
 static int memory = -1;
 
 char *keyName[] {
@@ -1372,6 +1380,11 @@ int paddleL_stable = HIGH;
 int paddleR_stable = HIGH;
 int paddleL_trans = 0;
 int paddleR_trans = 0;
+
+#define AVG_THRESHOLD 0.1
+
+float paddleL_avg = 0;
+float paddleR_avg = 0;
 #endif
 
 #ifdef OPT_RUNNER
@@ -1432,6 +1445,35 @@ void readPaddleValue() {
 
 #ifdef OPT_AVOID_CHATTERING
   if (avoidChattering) {
+    float weight = 1.0 / avoidChatteringCount;
+
+    /*
+     * avoid chattering, paddle R
+     */
+    if (paddleR == LOW)
+        paddleR_avg += paddleR_avg * (/*1.0*/ - weight) /* + 0 * weight */;
+    else
+        paddleR_avg += paddleR_avg * (/*1.0*/ - weight) + /* 1 * */ weight;
+    if (paddleR_avg < AVG_THRESHOLD && paddleR_stable == HIGH)
+        paddleR_stable = LOW;
+    if (paddleR_avg > (1.0 - AVG_THRESHOLD) && paddleR_stable == LOW)
+        paddleR_stable = HIGH;
+    paddleR = paddleR_stable;
+
+    /*
+     * avoid chattering, paddle L
+     */
+    if (paddleL == LOW)
+        paddleL_avg += paddleL_avg * (/*1.0*/ - weight) /* + 0 * weight */;
+    else
+        paddleL_avg += paddleL_avg * (/*1.0*/ - weight) + /* 1 * */ weight;
+    if (paddleL_avg < AVG_THRESHOLD && paddleL_stable == HIGH)
+        paddleL_stable = LOW;
+    if (paddleL_avg > (1.0 - AVG_THRESHOLD) && paddleL_stable == LOW)
+        paddleL_stable = HIGH;
+    paddleL = paddleL_stable;
+
+#if 0
     /*
      * avoid chattering, paddle R
      */
@@ -1473,6 +1515,7 @@ void readPaddleValue() {
 	paddleL = LOW;
       }
     }
+#endif
 
   }
 #endif /* OPT_AVOID_CHATTERING */
@@ -1504,7 +1547,7 @@ void readPaddleValue() {
       }
 #endif
 #ifdef OPT_BETTER_IAMBIC_A
-      if (paddleR_prev == HIGH || paddleR_highStart != 0) {
+      if (paddleR_prev == HIGH) {
          paddleR_pressed = 1;
 #ifdef OPT_TIMING_DEBUG
          serial_timing(".R,30");
@@ -1564,7 +1607,7 @@ void readPaddleValue() {
       }
 #endif
 #ifdef OPT_BETTER_IAMBIC_A
-      if (paddleL_prev == HIGH || paddleL_highStart != 0) {
+      if (paddleL_prev == HIGH) {
          paddleL_pressed = 1;
 #ifdef OPT_TIMING_DEBUG
          serial_timing(".L,30");
