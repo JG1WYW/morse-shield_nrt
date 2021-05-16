@@ -20,28 +20,28 @@
     * 「Sw4」でメニューから出ます。
 
     << 追加項目 >>
-    * "ToneFreq"  : トーンの周波数 [Hz] を選択                           [デフォルト 440] (範囲 220 - 1661)
-    * "Word Spc"  : メモリーキーヤー送出時の Word 間の space (dotの個数) [デフォルト 7]   (範囲 1 - 10)
+    * "ToneFreq"  : トーンの周波数 [Hz] を選択                           [デフォルト 220] (範囲 220 - 1661)
+    * "Word Spc"  : メモリーキーヤー送出時の Word 間の space (dotの個数) [デフォルト 4]   (範囲 1 - 10)
     * "Char Spc"  : メモリーキーヤー送出時の 文字間の space (dot個数)    [デフォルト 3]   (範囲 1 - 10)
-    * "OffDelay"  : Off-delay timer の on / off                          [デフォルト off] (範囲 off / on)
+    * "OffDelay"  : Off-delay timer の on / off                          [デフォルト on] (範囲 off / on)
     * "OffDlyDot" : Dot の off-delay (dot 1個分に対するパーセント)       [デフォルト 20]  (範囲 0 - 100)
                     Dot を離した後も、この時間、Dot が持続する
     * "OffDlyDsh" : Dash の off-delay (dot 1個分に対するパーセント)      [デフォルト 120] (範囲 0 - 200)
                     Dash を離した後も、この時間、Dash が持続する
-    * "LAMemory"  : Look ahead memory の on / off                        [デフォルト off] (範囲 off / on)
+    * "LAMemory"  : Look ahead memory の on / off                        [デフォルト on] (範囲 off / on)
     * "LAMratio"  : 先読みする割合 (dot 1個分に対するパーセント)         [デフォルト 20]  (範囲 0 - 100)
                     次の Dot / Dash の判定タイミングから、この時間だけ先読み
-    * "AvodChtr"  : チャタリング防止の on / off                          [デフォルト off] (範囲 off / on)
-    * "StbleCnt"  : 安定化のカウント                                     [デフォルト 10]  (範囲 5 - 100)
+    * "AvodChtr"  : チャタリング防止の on / off                          [デフォルト on] (範囲 off / on)
+    * "StbleCnt"  : 安定化のカウント                                     [デフォルト 20]  (範囲 5 - 100)
                     この回数、安定すれば key down/up の値を取り込む
     * "AtoKyChg"  : キー種別の自動選択 on / off                          [デフォルト off] (範囲 off / on)
                     Dash が3秒程度、入り続けると Straight Key と判定
-    * "AtoKyEle"  : 自動選択するエレキーの種別                           [デフォルト Supr](範囲 IbcA / IbcB / Supr)
+    * "AtoKyEle"  : 自動選択するエレキーの種別                           [デフォルト IbcA](範囲 IbcA / IbcB / Supr)
                     自動判定後、Dash が終わった後、このエレキーに戻る
 
-    << 推奨値 >>
+    << デフォルト値 >>
     * Lang A/ア   : ABC
-    * Pdl Rev.    : お好み
+    * Pdl Rev.    : off
     * Key mode    : IbcA  (* Iambic A を変更して動作確認しています)
     * Wait 1:*    : 3.00
     * SideTone    : on
@@ -49,7 +49,7 @@
     * CQ times    : 10
 
     (追加分)
-    * "ToneFreq"  : お好み
+    * "ToneFreq"  : 220
     * "Word Spc"  : 4
     * "Char Spc"  : 3
     * "OffDelay"  : on
@@ -58,7 +58,7 @@
     * "LAMemory"  : on
     * "LAMratio"  : 20
     * "AvodChtr"  : on
-    * "StbleCnt"  : 10
+    * "StbleCnt"  : 20
     * "AtoKyChg"  : on
     * "AtoKyEle"  : IbcA  (* Iambic A を変更して動作確認しています)
 
