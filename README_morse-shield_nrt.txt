@@ -1,5 +1,5 @@
 #
-# morse-shield_nrt: arduino_morse_runner_20210516a.diff
+# morse-shield_nrt: arduino_morse_runner_20211002a.diff
 # All rights reserved. Copyright (C) 2020,2021 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
 # ABSOLUTELY NO WARRANTY
 # 
@@ -8,7 +8,7 @@
 
   中茂さんの Morse Shield [1]で動作するスケッチ(プログラム)の修正版で、
   モールス信号を送るための「エレクトリックキーヤー」の機能に、主な追加機能として、
-  コールサインを『聞いて』、実際にキーを『打つ』練習ができる、『Morse Runner』の機能を
+  コールサインを『聞いて』、実際にキーを『打つ』練習ができる、『Morse Runner』風の機能を
   加えたものです。
 
 ■ 使い方
@@ -24,15 +24,15 @@
     * "Word Spc"  : メモリーキーヤー送出時の Word 間の space (dotの個数) [デフォルト 4]   (範囲 1 - 10)
     * "Char Spc"  : メモリーキーヤー送出時の 文字間の space (dot個数)    [デフォルト 3]   (範囲 1 - 10)
     * "OffDelay"  : Off-delay timer の on / off                          [デフォルト on] (範囲 off / on)
-    * "OffDlyDot" : Dot の off-delay (dot 1個分に対するパーセント)       [デフォルト 20]  (範囲 0 - 100)
+    * "OffDlyDot" : Dot の off-delay (dot 1個分に対するパーセント)       [デフォルト 0]  (範囲 0 - 100)
                     Dot を離した後も、この時間、Dot が持続する
-    * "OffDlyDsh" : Dash の off-delay (dot 1個分に対するパーセント)      [デフォルト 120] (範囲 0 - 200)
+    * "OffDlyDsh" : Dash の off-delay (dot 1個分に対するパーセント)      [デフォルト 50] (範囲 0 - 200)
                     Dash を離した後も、この時間、Dash が持続する
     * "LAMemory"  : Look ahead memory の on / off                        [デフォルト on] (範囲 off / on)
-    * "LAMratio"  : 先読みする割合 (dot 1個分に対するパーセント)         [デフォルト 20]  (範囲 0 - 100)
+    * "LAMratio"  : 先読みする割合 (dot 1個分に対するパーセント)         [デフォルト 25]  (範囲 0 - 100)
                     次の Dot / Dash の判定タイミングから、この時間だけ先読み
     * "AvodChtr"  : チャタリング防止の on / off                          [デフォルト on] (範囲 off / on)
-    * "StbleCnt"  : 安定化のカウント                                     [デフォルト 20]  (範囲 5 - 100)
+    * "StbleCnt"  : 安定化のカウント                                     [デフォルト 50]  (範囲 5 - 100)
                     この回数、安定すれば key down/up の値を取り込む
     * "AtoKyChg"  : キー種別の自動選択 on / off                          [デフォルト off] (範囲 off / on)
                     Dash が3秒程度、入り続けると Straight Key と判定
@@ -53,12 +53,12 @@
     * "Word Spc"  : 4
     * "Char Spc"  : 3
     * "OffDelay"  : on
-    * "OffDlyDot" : 20
-    * "OffDlyDsh" : 120
+    * "OffDlyDot" : 0
+    * "OffDlyDsh" : 50
     * "LAMemory"  : on
-    * "LAMratio"  : 20
+    * "LAMratio"  : 25
     * "AvodChtr"  : on
-    * "StbleCnt"  : 20
+    * "StbleCnt"  : 50
     * "AtoKyChg"  : on
     * "AtoKyEle"  : IbcA  (* Iambic A を変更して動作確認しています)
 

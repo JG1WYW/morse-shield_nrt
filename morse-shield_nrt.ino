@@ -34,6 +34,7 @@ String date = "19/12/20";
 #define OPT_OFF_DELAY			/* off delay timers */
 #define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
+//#define OPT_ESP32                       /* ESP32 instead of Arduino Uno */
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
@@ -49,14 +50,22 @@ String date = "19/12/20";
 #define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when running */
 //#define OPT_DECODE_DEBUG
 //#define OPT_TIMING_DEBUG                /* Debug flag */
+#ifdef OPT_ESP32
+#define OPT_VIBRATION  	                /* vibration feedback */
+#endif
 
 #define MOD_MISC      /* See comments for each modification */
 
 #endif /* JG1WYW */
 
 // keyer setting
+#ifdef MOD_MISC
+#define MIN_WPM 15
+#define MAX_WPM 25
+#else
 #define MIN_WPM  5
 #define MAX_WPM 50
+#endif
 #define L        0
 #define R        1
 #define UP       0
@@ -100,8 +109,8 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 1; // off-delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 20;    /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 120;  /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 0;     /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 50;   /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
 #define MAX_DASH_RATIO 200
@@ -113,14 +122,14 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 1; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 20; // XXX percent (of dot) for look ahead memory
+int look_ahead_memory_ratio = 25; // XXX percent (of dot) for look ahead memory
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
 int avoidChattering = 1; // avoid chattering disabled by default (Experimental)
-int avoidChatteringCount = 20; // Stable count
+int avoidChatteringCount = 50; // Stable count
 
 #define MAX_CHATTERING_COUNT 100
 
@@ -131,10 +140,16 @@ int menuIndexAvoidChatteringCount;
 #ifdef OPT_AUTO_KEYERTYPE
 int autoKeyerType = 1; // auto keyer type disabled by default (Experimental)
 int autoKeyerTypeElekey = 0; // XXX Supr, auto keyer type when elekey changed from straight key
-int count_straight_or_paddle = 0;
-#define MAX_STRAIGHT_OR_PADDLE 12000 /* 3sec */
+unsigned long auto_keyer_start = 0;
+#define MAX_STRAIGHT_OR_PADDLE 3000 /* 3sec */
 int menuIndexAutoKeyertype;
 int menuIndexAutoKeyertypeElekey;
+#endif
+
+#ifdef OPT_VIBRATION
+//#define VIBRATION_PERIOD  (durationDot / 3)
+#define VIBRATION_PERIOD  20
+unsigned long vibration_end = 0;
 #endif
 
 #ifdef OPT_INVADER_SOUND
@@ -199,6 +214,26 @@ char *keyName[] {
   "Strt"
 };
 
+#ifdef OPT_ESP32
+
+// I/O pins setting analog
+#define pinVol      36
+#define pinAudioIn  39
+// I/O pins setting digital
+#define pinPaddleL   4
+#define pinPaddleR  16
+#define pinBz       32 // audioOutPin
+#ifdef OPT_VIBRATION
+#define pinVb       33
+#endif
+#define pinLed      17
+#define pinSw4      14
+#define pinSw3      12
+#define pinSw2      13
+#define pinSw1      15
+
+#else
+
 // I/O pins setting analog
 #define pinVol     A0
 #define pinAudioIn A1
@@ -211,6 +246,9 @@ char *keyName[] {
 #define pinSw3      3
 #define pinSw2      4
 #define pinSw1      5
+
+#endif
+
 int pinBtn[4] = {pinSw1, pinSw2, pinSw3, pinSw4};
 
 // keyer language
@@ -422,6 +460,10 @@ int param_eeprom_load()
   byte *ptr;
   int cksum = 0;
 
+#ifdef OPT_ESP32
+  return 0;
+#endif
+
   ptr = (byte *)&param;
   for (int i = 0 ; i < sizeof(param_eeprom_t) ; i++) {
     *ptr = EEPROM.read(PARAM_EEPROM_BASE + i);
@@ -540,9 +582,9 @@ void param_eeprom_save()
 
 void tone_eeprom()
 {
-  tone(pinBz, 698, 100); // F4
+  buzzer(pinBz, 698, 100); // F4
   delay(100);
-  tone(pinBz, 1397, 200); // F5
+  buzzer(pinBz, 1397, 200); // F5
   delay(100);
 }
 
@@ -870,7 +912,63 @@ byte we[8] = {
   0b00000
 };
 
+#ifdef OPT_ESP32
+
+void startVibration()
+{
+  ledcWriteTone(2, 120);
+}
+
+void stopVibration()
+{
+  ledcWrite(2, 0);
+}
+
+void buzzer(int dummyPin, int freq, int duration)
+{
+  ledcWriteTone(1, freq);
+  delay(duration);
+  ledcWrite(1, 0);
+}
+
+void tone(int dummyPin, int freq)
+{
+  ledcWriteTone(1, freq);
+#ifdef OPT_VIBRATION
+  startVibration();
+  vibration_end = millis() + VIBRATION_PERIOD;
+#endif
+}
+
+void noTone(int dummyPin)
+{
+  ledcWrite(1, 0);
+  //stopVibration();
+}
+
+#else
+
+void buzzer(int pin, int freq, int duration)
+{
+  tone(pin, freq, duration);
+}
+
+#endif
+
 void setup() {
+
+#ifdef OPT_ESP32
+  /* tone setup */
+  ledcSetup(1, 12000, 8); // Channel 1, Hz, 8bit
+  ledcAttachPin(pinBz, 1); // Channel 1
+
+#ifdef OPT_VIBRATION
+  /* vibration setup */
+  ledcSetup(2, 12000, 8); // Channel 2, Hz, 8bit
+  ledcAttachPin(pinVb, 2); // Channel 2
+#endif
+#endif
+
 #if 0 /* not used */
   // The basic goertzel calculation
   int  k;
@@ -897,6 +995,11 @@ void setup() {
   pinMode(pinPaddleR, INPUT_PULLUP);
   pinMode(pinBz, OUTPUT);
   pinMode(pinLed, OUTPUT);
+
+#ifdef MOD_MISC
+  /* turn off led */
+  digitalWrite(pinLed, LOW);
+#endif
 
   // clear 4x switchs hold time
   for (int i = 0; i < 4; i++) timeStartSw[i] = 0;
@@ -1231,7 +1334,11 @@ void readPotValue() {
   int potValue = analogRead(pinVol);
 
   if (potValue - potValueOld > potStep || potValue - potValueOld < -potStep) {
+#ifdef OPT_ESP32
+    int wpm = map(potValue, 0, 4095 - potStep, MIN_WPM, MAX_WPM);
+#else
     int wpm = map(potValue, 0, 1023 - potStep, MIN_WPM, MAX_WPM);
+#endif
 #ifdef MOD_MISC
     if (wpm != Wpm || potValueOld == INIT_POT_VAL) setNewWpm(wpm);
 #else
@@ -1274,42 +1381,42 @@ void setNewWpm(int wpm) {
 }
 
 void beep() {
-  tone(pinBz, beepFreq, 20);
+  buzzer(pinBz, beepFreq, 20);
 }
 
 void errBeep() {
-  tone(pinBz, 220, 20);
+  buzzer(pinBz, 220, 20);
 }
 
 #ifdef OPT_RUNNER
 void tone_runner_mode()
 {
-  tone(pinBz, 349, 100); // F3
+  buzzer(pinBz, 349, 100); // F3
   delay(100);
-  tone(pinBz, 698, 100); // F4
+  buzzer(pinBz, 698, 100); // F4
   delay(100);
 }
 
 void tone_hit()
 {
-  //tone(pinBz, 262, 100); // C3
-  //tone(pinBz, 698, 100); // F3
-  tone(pinBz, 392, 100); // G3
-  //tone(pinBz, 698, 100); // F4
+  //buzzer(pinBz, 262, 100); // C3
+  //buzzer(pinBz, 698, 100); // F3
+  buzzer(pinBz, 392, 100); // G3
+  //buzzer(pinBz, 698, 100); // F4
   delay(100);
-  //tone(pinBz, 523, 100); // C4
-  //tone(pinBz, 698, 100); // F4
-  tone(pinBz, 784, 100); // G4
-  //tone(pinBz, 1397, 200); // F5
+  //buzzer(pinBz, 523, 100); // C4
+  //buzzer(pinBz, 698, 100); // F4
+  buzzer(pinBz, 784, 100); // G4
+  //buzzer(pinBz, 1397, 200); // F5
 
   delay(100);
 }
 
 void tone_miss()
 {
-  tone(pinBz, 220, 100); // A2
+  buzzer(pinBz, 220, 100); // A2
   delay(100);
-  tone(pinBz, 110, 200); // A1
+  buzzer(pinBz, 110, 200); // A1
   delay(100);
 }
 #endif
@@ -1317,19 +1424,19 @@ void tone_miss()
 #ifdef OPT_INVADER_SOUND
 void tone_invader_start()
 {
-  tone(pinBz, 880, 100); // A4
+  buzzer(pinBz, 880, 100); // A4
   delay(100);
-  tone(pinBz, 1760, 100); // A5
+  buzzer(pinBz, 1760, 100); // A5
   delay(100);
 }
 
 void tone_invader_clear()
 {
-  tone(pinBz, 784, 100); // G4
+  buzzer(pinBz, 784, 100); // G4
   delay(100);
-  tone(pinBz, 1047, 100); // C5
+  buzzer(pinBz, 1047, 100); // C5
   delay(100);
-  tone(pinBz, 1568, 100); // G5
+  buzzer(pinBz, 1568, 100); // G5
   delay(100);
 }
 #endif
@@ -1381,7 +1488,7 @@ int paddleR_stable = HIGH;
 int paddleL_trans = 0;
 int paddleR_trans = 0;
 
-#define AVG_THRESHOLD 0.1
+#define AVG_THRESHOLD 0.25 /*0.1*/
 
 float paddleL_avg = 0;
 float paddleR_avg = 0;
@@ -1422,22 +1529,22 @@ void readPaddleValue() {
      */
     if (keyerType != keyStraight) {
       if (paddleL == HIGH && paddleR == LOW) {
-	if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
+	if (auto_keyer_start + MAX_STRAIGHT_OR_PADDLE < millis()) {
 	  keyerType = keyStraight;
-	  count_straight_or_paddle = 0;
+          auto_keyer_start = millis();
 	}
       } else {
-	count_straight_or_paddle = 0;
+        auto_keyer_start = millis();
       }
     }
     if (keyerType == keyStraight) {
       if (paddleL == HIGH && paddleR == HIGH) {
-	if (++count_straight_or_paddle > MAX_STRAIGHT_OR_PADDLE) {
+	if (auto_keyer_start + MAX_STRAIGHT_OR_PADDLE < millis()) {
 	  keyerType = autoKeyerTypeElekey;
-	  count_straight_or_paddle = 0;
+          auto_keyer_start = millis();
 	}
       } else {
-	count_straight_or_paddle = 0;
+        auto_keyer_start = millis();
       }
     }
   }
@@ -1454,9 +1561,9 @@ void readPaddleValue() {
         paddleR_avg += paddleR_avg * (/*1.0*/ - weight) /* + 0 * weight */;
     else
         paddleR_avg += paddleR_avg * (/*1.0*/ - weight) + /* 1 * */ weight;
-    if (paddleR_avg < AVG_THRESHOLD && paddleR_stable == HIGH)
+    if (paddleR_stable == HIGH && paddleR_avg < AVG_THRESHOLD)
         paddleR_stable = LOW;
-    if (paddleR_avg > (1.0 - AVG_THRESHOLD) && paddleR_stable == LOW)
+    if (paddleR_stable == LOW && paddleR_avg > (1.0 - AVG_THRESHOLD))
         paddleR_stable = HIGH;
     paddleR = paddleR_stable;
 
@@ -1467,9 +1574,9 @@ void readPaddleValue() {
         paddleL_avg += paddleL_avg * (/*1.0*/ - weight) /* + 0 * weight */;
     else
         paddleL_avg += paddleL_avg * (/*1.0*/ - weight) + /* 1 * */ weight;
-    if (paddleL_avg < AVG_THRESHOLD && paddleL_stable == HIGH)
+    if (paddleL_stable == HIGH && paddleL_avg < AVG_THRESHOLD)
         paddleL_stable = LOW;
-    if (paddleL_avg > (1.0 - AVG_THRESHOLD) && paddleL_stable == LOW)
+    if (paddleL_stable == LOW && paddleL_avg > (1.0 - AVG_THRESHOLD))
         paddleL_stable = HIGH;
     paddleL = paddleL_stable;
 
@@ -1644,6 +1751,40 @@ void readPaddleValue() {
 #endif
       }
     }
+
+  } else if (keyerType != keyStraight) {
+    /*
+     * taking care better Iambic A when offdelay is disabled
+     */
+
+    /*
+     * paddle R
+     */
+    if (paddleR == LOW) {
+#ifdef OPT_BETTER_IAMBIC_A
+      if (paddleR_prev == HIGH) {
+         paddleR_pressed = 1;
+      }
+#endif
+      paddleR_prev = LOW;
+    } else {
+      paddleR_prev = HIGH;
+    }
+
+    /*
+     * paddle L
+     */
+    if (paddleL == LOW) {
+#ifdef OPT_BETTER_IAMBIC_A
+      if (paddleL_prev == HIGH) {
+         paddleL_pressed = 1;
+      }
+#endif
+      paddleL_prev = LOW;
+    } else {
+      paddleL_prev = HIGH;
+    }
+
   } /* (offDelay && keyerType != keyStraight) */
 #endif
 
@@ -1668,10 +1809,16 @@ void readPaddleValue() {
   }
 #endif
 
+  /*
+   * Paddle LOW = Pushed, HIGH = Released
+   */
+
   // pressing both paddles
-  if (paddleL == LOW && paddleR == LOW && durationSpace == 0) {
+  if (durationSpace == 0 && paddleL == LOW && paddleR == LOW) {
     if (durationMark == 0 && keyerType != keyStraight) {
+      memory = -1;
 #ifdef OPT_BETTER_IAMBIC_A
+      /* reset memory and pressed status at the beginning of every mark */
       paddleR_pressed = 0;
       paddleL_pressed = 0;
 #endif
@@ -1724,7 +1871,7 @@ void readPaddleValue() {
 #endif
     }
     // pressing the L paddle
-  } else if (paddleL == LOW && durationSpace == 0) {
+  } else if (durationSpace == 0 && paddleL == LOW) {
     if (durationMark == 0) {
       if (keyerType == keyStraight) {
         durationMark = 10000; // key down straight key
@@ -1743,7 +1890,10 @@ void readPaddleValue() {
 #endif
       }
       lastPaddle = L;
+      memory = -1;
 #ifdef OPT_BETTER_IAMBIC_A
+      /* reset memory and pressed status at the beginning of every mark */
+      paddleR_pressed = 0;
       paddleL_pressed = 0;
 #endif
 #ifdef OPT_TIMING_DEBUG
@@ -1767,8 +1917,11 @@ void readPaddleValue() {
     if (durationMark == 0 && keyerType != keyStraight) {
       durationMark = !paddleRvs ? durationDot * wait : durationDot;
       lastPaddle = R;
+      memory = -1;
 #ifdef OPT_BETTER_IAMBIC_A
+      /* reset memory and pressed status at the beginning of every mark */
       paddleR_pressed = 0;
+      paddleL_pressed = 0;
 #endif
 #ifdef OPT_TWO_TONE
       if (twoTone) {
@@ -2007,7 +2160,7 @@ void readPaddleValue() {
     // memory paddle LR
 #ifdef OPT_BETTER_IAMBIC_A
     if (keyerType == keyIambicA) {
-      if (memory == -1 && paddleL == LOW && paddleL_pressed) {
+      if (memory == -1 && paddleL_pressed && lastPaddle == R) {
 	memory = L;
 #ifdef OPT_MEMORY_CLICK
         if (memoryClick)
@@ -2017,7 +2170,7 @@ void readPaddleValue() {
 #ifdef OPT_TIMING_DEBUG
         serial_timing("ml,270");
 #endif
-      } else if (memory == -1 && paddleR == LOW && paddleR_pressed) {
+      } else if (memory == -1 && paddleR_pressed && lastPaddle == L) {
 	memory = R;
 #ifdef OPT_MEMORY_CLICK
         if (memoryClick)
@@ -2111,6 +2264,13 @@ void readPaddleValue() {
 #ifdef OPT_MEMORY_CLICK
   if (timeEnd && timeEnd < millis()) {
     memory_click_stop();
+  }
+#endif
+
+#ifdef OPT_VIBRATION
+  if (vibration_end > 0 && vibration_end < millis()) {
+    stopVibration();
+    vibration_end = 0;
   }
 #endif
 }
@@ -2728,7 +2888,7 @@ void editSetting() {
 	while (digitalRead(pinSw1) == LOW) {
 	  if (millis() - timeStart > DURATION_SEMILONG_PRESS) {
 	    backward = 1;
-	    tone(pinBz, beepFreq * 2, 20);
+	    buzzer(pinBz, beepFreq * 2, 20);
 	    break;
 	  }
 	}
@@ -2933,7 +3093,7 @@ void editSetting() {
 	if (toneFreqIndex > 0)
 	  toneFreqIndex--;
 	toneFreq = defToneFreq[toneFreqIndex];
-	tone(pinBz, toneFreq, 100);
+	buzzer(pinBz, toneFreq, 100);
 	delay(100);
         lcd.print(toneFreq);
 	if (toneFreq < 1000)
@@ -3097,7 +3257,7 @@ void editSetting() {
 	if (toneFreqIndex < (sizeof(defToneFreq) / sizeof(int)) - 1)
 	  toneFreqIndex++;
 	toneFreq = defToneFreq[toneFreqIndex];
-	tone(pinBz, toneFreq, 100);
+	buzzer(pinBz, toneFreq, 100);
 	delay(100);
         lcd.print(toneFreq);
 	if (toneFreq < 1000)
