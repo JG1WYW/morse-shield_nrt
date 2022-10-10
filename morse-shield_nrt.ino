@@ -55,6 +55,7 @@ String date = "19/12/20";
 #endif
 
 #define MOD_MISC      /* See comments for each modification */
+//#define OPT_NO_SERIAL
 
 #endif /* JG1WYW */
 
@@ -110,7 +111,7 @@ int menuIndexCharSpace;
 int offDelay = 1; // off-delay disabled by default (Experimental)
 
 int off_timer_ratio_dot = 0;     /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 50;   /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dash = 100;   /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
 #define MAX_DASH_RATIO 200
@@ -122,14 +123,14 @@ int menuIndexOffDelayDash;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 1; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 25; // XXX percent (of dot) for look ahead memory
+int look_ahead_memory_ratio = 50; // XXX percent (of dot) for look ahead memory
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
 int avoidChattering = 1; // avoid chattering disabled by default (Experimental)
-int avoidChatteringCount = 50; // Stable count
+int avoidChatteringCount = 10; // Stable count
 
 #define MAX_CHATTERING_COUNT 100
 
@@ -1157,7 +1158,7 @@ void getMorseTone() {
   if (realstate != realstatebefore) {
     laststarttime = millis();
   }
-  if ((millis() - laststarttime) > nbtime) {
+  if ((millis() - laststarttime) >= nbtime) {
     if (realstate != filteredstate) {
       filteredstate = realstate;
     }
@@ -1289,9 +1290,9 @@ void goertzel() {
 
   // write if no more letters
 #ifdef OPT_BETTER_DECODE
-  if (stop == LOW && (millis() - startttimelow) > (hightimesavg * 6)) {
+  if (stop == LOW && (millis() - startttimelow) >= (hightimesavg * 6)) {
 #else
-  if ((millis() - startttimelow) > (highduration * 6) && stop == LOW) {
+  if ((millis() - startttimelow) >= (highduration * 6) && stop == LOW) {
 #endif
 #ifdef OPT_DECODE_DEBUG
     Serial.print(F("(4)"));
@@ -1529,7 +1530,7 @@ void readPaddleValue() {
      */
     if (keyerType != keyStraight) {
       if (paddleL == HIGH && paddleR == LOW) {
-	if (auto_keyer_start + MAX_STRAIGHT_OR_PADDLE < millis()) {
+	if (auto_keyer_start + MAX_STRAIGHT_OR_PADDLE <= millis()) {
 	  keyerType = keyStraight;
           auto_keyer_start = millis();
 	}
@@ -1539,7 +1540,7 @@ void readPaddleValue() {
     }
     if (keyerType == keyStraight) {
       if (paddleL == HIGH && paddleR == HIGH) {
-	if (auto_keyer_start + MAX_STRAIGHT_OR_PADDLE < millis()) {
+	if (auto_keyer_start + MAX_STRAIGHT_OR_PADDLE <= millis()) {
 	  keyerType = autoKeyerTypeElekey;
           auto_keyer_start = millis();
 	}
@@ -1867,6 +1868,11 @@ void readPaddleValue() {
 	//toneTail = 0;
       }
 #else
+#ifdef OPT_MEMORY_CLICK
+      if (memoryClick)
+        memory_click_start();
+      else
+#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
 #endif
     }
@@ -1909,6 +1915,11 @@ void readPaddleValue() {
 	//toneTail = 0;
       }
 #else
+#ifdef OPT_MEMORY_CLICK
+      if (memoryClick)
+        memory_click_start();
+      else
+#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
 #endif
     }
@@ -1947,6 +1958,11 @@ void readPaddleValue() {
 	//toneTail = 0;
       }
 #else
+#ifdef OPT_MEMORY_CLICK
+      if (memoryClick)
+        memory_click_start();
+      else
+#endif
       if (sidetone) tone(pinBz, toneFreq); // side tone
 #endif
     }
@@ -1957,7 +1973,7 @@ void readPaddleValue() {
     if (keyerType == keyIambicA) {
       if (memory == -1 && paddleL == LOW && paddleL_pressed) {
 	memory = L;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
         if (memoryClick)
           memory_click_start();
 #endif
@@ -1967,7 +1983,7 @@ void readPaddleValue() {
 #endif
       } else if (memory == -1 && paddleR == LOW && paddleR_pressed) {
 	memory = R;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
         if (memoryClick)
           memory_click_start();
 #endif
@@ -1977,12 +1993,12 @@ void readPaddleValue() {
 #endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
-      else if (lookAheadMemory && memory == -1 && (millis() - timeStart > durationDot * (100 - look_ahead_memory_ratio) / 100)) {
+      else if (lookAheadMemory && memory == -1 && (millis() - timeStart >= durationDot * (100 - look_ahead_memory_ratio) / 100)) {
         // memory paddle LR
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
             if (memoryClick)
               memory_click_start();
 #endif
@@ -1992,7 +2008,7 @@ void readPaddleValue() {
 #endif
           } else {
             memory = R;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
             if (memoryClick)
               memory_click_start();
 #endif
@@ -2003,7 +2019,7 @@ void readPaddleValue() {
           }
 	} else if (paddleL == LOW) {
           memory = L;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
           if (memoryClick)
             memory_click_start();
 #endif
@@ -2013,7 +2029,7 @@ void readPaddleValue() {
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
           if (memoryClick)
             memory_click_start();
 #endif
@@ -2031,7 +2047,7 @@ void readPaddleValue() {
       // memory paddle LR
       if (memory == -1 && paddleL == LOW && lastPaddle == R) {
         memory = L;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
         if (memoryClick)
           memory_click_start();
 #endif
@@ -2040,7 +2056,7 @@ void readPaddleValue() {
 #endif
       } else if (memory == -1 && paddleR == LOW && lastPaddle == L) {
         memory = R;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
         if (memoryClick)
           memory_click_start();
 #endif
@@ -2049,12 +2065,12 @@ void readPaddleValue() {
 #endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
-      else if (lookAheadMemory && memory == -1 && (millis() - timeStart > durationDot * (100 - look_ahead_memory_ratio) / 100)) {
+      else if (lookAheadMemory && memory == -1 && (millis() - timeStart >= durationDot * (100 - look_ahead_memory_ratio) / 100)) {
         // memory paddle LR
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
             if (memoryClick)
               memory_click_start();
 #endif
@@ -2063,7 +2079,7 @@ void readPaddleValue() {
 #endif
           } else {
             memory = R;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
             if (memoryClick)
               memory_click_start();
 #endif
@@ -2073,7 +2089,7 @@ void readPaddleValue() {
           }
 	} else if (paddleL == LOW) {
           memory = L;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
           if (memoryClick)
             memory_click_start();
 #endif
@@ -2082,7 +2098,7 @@ void readPaddleValue() {
 #endif
 	} else if (paddleR == LOW) {
           memory = R;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
           if (memoryClick)
             memory_click_start();
 #endif
@@ -2094,7 +2110,7 @@ void readPaddleValue() {
 #endif
     }
     // ending of space
-    if (millis() - timeStart > durationSpace) {
+    if (millis() - timeStart >= durationSpace) {
       durationSpace = 0;
       // output memory LR
       if (memory != -1) {
@@ -2144,6 +2160,11 @@ void readPaddleValue() {
 	  //toneTail = 0;
 	}
 #else
+#ifdef OPT_MEMORY_CLICK
+        if (memoryClick)
+          memory_click_start();
+        else
+#endif
         if (sidetone) tone(pinBz, toneFreq); // side tone
 #endif
       }
@@ -2151,7 +2172,7 @@ void readPaddleValue() {
   }
   if (durationMark != 0) {
 #ifdef OPT_TWO_TONE
-    if (twoTone && sidetone && toneTail == 0 && (millis() - timeStart) > durationTail) {
+    if (twoTone && sidetone && toneTail == 0 && (millis() - timeStart) >= durationTail) {
       toneTail = 1;
       noTone(pinBz);
       tone(pinBz, toneFreq*5/8);
@@ -2162,7 +2183,7 @@ void readPaddleValue() {
     if (keyerType == keyIambicA) {
       if (memory == -1 && paddleL_pressed && lastPaddle == R) {
 	memory = L;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
         if (memoryClick)
           memory_click_start();
 #endif
@@ -2172,7 +2193,7 @@ void readPaddleValue() {
 #endif
       } else if (memory == -1 && paddleR_pressed && lastPaddle == L) {
 	memory = R;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
         if (memoryClick)
           memory_click_start();
 #endif
@@ -2183,10 +2204,10 @@ void readPaddleValue() {
       }
     } else
 #endif
-    if (keyerType == keyIambicB || ((keyerType == keySuper) && (millis() - timeStart > durationDot))) {
+    if (keyerType == keyIambicB || ((keyerType == keySuper) && (millis() - timeStart >= durationDot))) {
       if (memory == -1 && paddleL == LOW && lastPaddle == R) {
         memory = L;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
         if (memoryClick)
           memory_click_start();
 #endif
@@ -2195,7 +2216,7 @@ void readPaddleValue() {
 #endif
       } else if (memory == -1 && paddleR == LOW && lastPaddle == L) {
         memory = R;
-#ifdef OPT_MEMORY_CLICK
+#if 0 /*def OPT_MEMORY_CLICK*/
         if (memoryClick)
           memory_click_start();
 #endif
@@ -2205,7 +2226,7 @@ void readPaddleValue() {
       }
     }
     // ending of mark
-    if (millis() - timeStart > durationMark) {
+    if (millis() - timeStart >= durationMark) {
 #ifdef OPT_WORD_SPACE
       durationSpace = endingChar ? durationDot * charSpace : durationDot;
 #else
@@ -2221,9 +2242,9 @@ void readPaddleValue() {
     // key up straight key
     if (keyerType == keyStraight) {
 #ifdef MOD_MISC
-      if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart > durationDot)) { /* pos_read condition prevents from all-dots message output */
+      if (paddleL == HIGH && (pos_read == 0) && (millis() - timeStart >= durationDot)) { /* pos_read condition prevents from all-dots message output */
 #else
-      if (paddleL == HIGH && (millis() - timeStart > durationDot)) {
+      if (paddleL == HIGH && (millis() - timeStart >= durationDot)) {
 #endif
         durationSpace = durationDot;
         durationMark = 0;
@@ -2262,13 +2283,13 @@ void readPaddleValue() {
   }
 #endif /* defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND) */
 #ifdef OPT_MEMORY_CLICK
-  if (timeEnd && timeEnd < millis()) {
+  if (timeEnd && timeEnd <= millis()) {
     memory_click_stop();
   }
 #endif
 
 #ifdef OPT_VIBRATION
-  if (vibration_end > 0 && vibration_end < millis()) {
+  if (vibration_end > 0 && vibration_end <= millis()) {
     stopVibration();
     vibration_end = 0;
   }
@@ -2294,18 +2315,18 @@ void readButtonValue() {
       // button was released
     } else if (sw[i] == HIGH && timeStartSw[i] != 0) {
       //digitalWrite(pinLed, LOW);
-      if (millis() - timeStartSw[i] > durationLongPress)
+      if (millis() - timeStartSw[i] >= durationLongPress)
         fireLongFunction(i); // long press
       else
         fireFunction(i); // short press
       timeStartSw[i] = 0;
       // detect long press
-    } else if (millis() - timeStartSw[i] > durationLongPress && millis() - timeStartSw[i] < durationLongPress + 10) {
+    } else if (millis() - timeStartSw[i] >= durationLongPress && millis() - timeStartSw[i] < durationLongPress + 10) {
       //digitalWrite(pinLed, LOW);
       beep();
 #ifdef OPT_RUNNER
       runner_mode = 0;
-    } else if (millis() - timeStartSw[i] > durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) { /* much longer press */
+    } else if (millis() - timeStartSw[i] >= durationLongPress*2 && millis() - timeStartSw[i] < durationLongPress*2 + 10) { /* much longer press */
       //digitalWrite(pinLed, LOW);
       tone_runner_mode();
       runner_mode = 1;
@@ -2403,7 +2424,7 @@ void fireLongFunction(int no) {
       lcd.setCursor(5, 0);
       for (;;) {
         lcd.setCursor(6, 1);
-        if ((millis() - lasttime) > 1000) {
+        if ((millis() - lasttime) >= 1000) {
           lcd.write((millis() / 1000) % 3 ? 0 : 2);
           lcd.write((millis() / 1000) % 2 ? 1 : 3);
           lasttime = millis();
@@ -2805,7 +2826,9 @@ void printascii(int asciinumber) {
   if (lastLetter == SPACE && asciinumber == SPACE) return;
   lastLetter = asciinumber;
 
+#ifndef OPT_NO_SERIAL
   Serial.write(asciinumber); // Monitor characters
+#endif
 
 #ifdef SCROLL_ROW
   if (lcdIndex > colums - 1) {
@@ -2886,7 +2909,7 @@ void editSetting() {
 	backward = 0;
 	timeStart = millis();
 	while (digitalRead(pinSw1) == LOW) {
-	  if (millis() - timeStart > DURATION_SEMILONG_PRESS) {
+	  if (millis() - timeStart >= DURATION_SEMILONG_PRESS) {
 	    backward = 1;
 	    buzzer(pinBz, beepFreq * 2, 20);
 	    break;
@@ -3483,7 +3506,7 @@ void setNextChar() {
         if (timeStartCq == 0) { // 1st time
           timeStartCq = millis();
         } else {
-          if ((millis() - timeStartCq) > timeCqInterval && CqTimes > 1) {
+          if ((millis() - timeStartCq) >= timeCqInterval && CqTimes > 1) {
             setPresetMessage(0);
             printascii(SPACE);
             timeStartCq = 0;
