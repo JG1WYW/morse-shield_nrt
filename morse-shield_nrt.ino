@@ -17,7 +17,7 @@ String date = "19/12/20";
 //#define SERIAL_PRINT_DIT_DAH
 
 #if 1 /* JG1WYW */
-String mod_date = "23/05/14";
+String mod_date = "23/07/26";
 /*
  * These options were added by JG1WYW
  * So far, off delay and look ahead memory is tested with improved Iambic_A.
@@ -33,7 +33,7 @@ String mod_date = "23/05/14";
  *
  */
 #define OPT_OFF_DELAY			/* off delay timers */
-#define OPT_REPEAT_ADD                  /* addition by repeat */
+//#define OPT_REPEAT_ADD                  /* addition by repeat */
 //#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 //#define OPT_ESP32                       /* ESP32 instead of Arduino Uno */
@@ -52,7 +52,7 @@ String mod_date = "23/05/14";
 #define OPT_BETTER_IAMBIC_A             /* Improved behavior of Iambic_A */
 #define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when running */
 //#define OPT_DECODE_DEBUG
-#define OPT_TIMING_DEBUG                /* Debug flag */
+//#define OPT_TIMING_DEBUG                /* Debug flag */
 #ifdef OPT_ESP32
 //#define OPT_VIBRATION  	                /* vibration feedback */
 #endif
@@ -133,7 +133,7 @@ int menuIndexOffDelayDot;
 int menuIndexOffDelayDash;
 
 #ifdef OPT_REPEAT_ADD
-int off_repeat_add = 20;
+int off_repeat_add = 10;
 int menuIndexOffRepeatAdd = 0;
 int repeatingL = 0;
 int repeatingR = 0;
