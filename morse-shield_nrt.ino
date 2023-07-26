@@ -17,6 +17,7 @@ String date = "19/12/20";
 //#define SERIAL_PRINT_DIT_DAH
 
 #if 1 /* JG1WYW */
+String mod_date = "23/05/14";
 /*
  * These options were added by JG1WYW
  * So far, off delay and look ahead memory is tested with improved Iambic_A.
@@ -32,13 +33,15 @@ String date = "19/12/20";
  *
  */
 #define OPT_OFF_DELAY			/* off delay timers */
-#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
+#define OPT_REPEAT_ADD                  /* addition by repeat */
+//#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 //#define OPT_ESP32                       /* ESP32 instead of Arduino Uno */
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
+//#define OPT_AVOID_CHATTERING_WATCH      /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
-#define OPT_MEMORY_CLICK		/* memory click */
+//#define OPT_MEMORY_CLICK		/* memory click */
 #define OPT_RUNNER			/* runner training of callsigns */
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
@@ -49,9 +52,9 @@ String date = "19/12/20";
 #define OPT_BETTER_IAMBIC_A             /* Improved behavior of Iambic_A */
 #define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when running */
 //#define OPT_DECODE_DEBUG
-//#define OPT_TIMING_DEBUG                /* Debug flag */
+#define OPT_TIMING_DEBUG                /* Debug flag */
 #ifdef OPT_ESP32
-#define OPT_VIBRATION  	                /* vibration feedback */
+//#define OPT_VIBRATION  	                /* vibration feedback */
 #endif
 
 #define MOD_MISC      /* See comments for each modification */
@@ -85,9 +88,14 @@ int paddleRvs = 0; // paddle reverse
 #ifdef OPT_RUNNER
 int runner_mode = 0; // Runner mode instead of just callsigns
 int running = 0; // means Now running
+int runner_repeat = 0;
 int runner_miss = 0;
 int runner_accel = 0;
+int runner_retry = 0;
 int runnerDurationDot = 60;
+int runner_count = 0;
+#define MAX_RUNNER_ACCEL 20
+#define HIGH_RUNNER_ACCEL 10
 #endif
 
 #if defined(OPT_RUNNER) || defined(OPT_INVADER_SOUND)
@@ -110,15 +118,26 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 1; // off-delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 0;     /* XXX extra percent (of dot) for dot */
-int off_timer_ratio_dash = 100;   /* XXX extra percent (of dot) for dash */
+int off_timer_ratio_dot = 50;     /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dash = 150;   /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
+#define MAX_LAM_RATIO  200
 #define MAX_DASH_RATIO 200
+#ifdef OPT_REPEAT_ADD
+#define MAX_REPEAT_ADD 100
+#endif
 
 int menuIndexOffDelay;
 int menuIndexOffDelayDot;
 int menuIndexOffDelayDash;
+
+#ifdef OPT_REPEAT_ADD
+int off_repeat_add = 20;
+int menuIndexOffRepeatAdd = 0;
+int repeatingL = 0;
+int repeatingR = 0;
+#endif
 #endif
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
@@ -130,7 +149,7 @@ int menuIndexLookAheadMemoryRatio;
 
 #ifdef OPT_AVOID_CHATTERING
 int avoidChattering = 1; // avoid chattering disabled by default (Experimental)
-int avoidChatteringCount = 10; // Stable count
+int avoidChatteringCount = 20; // Stable count
 
 #define MAX_CHATTERING_COUNT 100
 
@@ -381,6 +400,10 @@ char *setMenu[] {
   "OffDelay",  // off delay
   "OfDlyDot",  // off delay dot ratio
   "OfDlyDsh"   // off delay dash ratio
+#ifdef OPT_REPEAT_ADD
+  ,
+  "OfRptAdd"   // off delay repeating add
+#endif
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   ,
@@ -432,6 +455,9 @@ typedef struct PARAM_EEPROM {
   int offDelay;
   int off_timer_ratio_dot;
   int off_timer_ratio_dash;
+#ifdef OPT_REPEAT_ADD
+  int off_repeat_add;
+#endif
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   int lookAheadMemory;
@@ -494,6 +520,9 @@ int param_eeprom_load()
     offDelay = param.offDelay;
     off_timer_ratio_dot = param.off_timer_ratio_dot;
     off_timer_ratio_dash = param.off_timer_ratio_dash;
+#ifdef OPT_REPEAT_ADD
+    off_repeat_add = param.off_repeat_add;
+#endif
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
     lookAheadMemory = param.lookAheadMemory;
@@ -544,6 +573,9 @@ void param_eeprom_save()
   param.offDelay = offDelay;
   param.off_timer_ratio_dot = off_timer_ratio_dot;
   param.off_timer_ratio_dash = off_timer_ratio_dash;
+#ifdef OPT_REPEAT_ADD
+  param.off_repeat_add = off_repeat_add;
+#endif
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   param.lookAheadMemory = lookAheadMemory;
@@ -1008,6 +1040,13 @@ void setup() {
   // Set up the LCD
   lcd.begin();
   // Print messages to the LCD
+#if 1
+  lcd.home();
+  lcd.print(F("WakuWaku"));
+  lcd.setCursor(0, 1);
+  lcd.print(mod_date); // yy/mm/dd
+  delay(2000);
+#endif
   lcd.home();
   lcd.print(F("MorseKey"));
   lcd.setCursor(0, 1);
@@ -1049,6 +1088,9 @@ void setup() {
   menuIndexOffDelay = menuIndex++;
   menuIndexOffDelayDot = menuIndex++;
   menuIndexOffDelayDash = menuIndex++;
+#ifdef OPT_REPEAT_ADD
+  menuIndexOffRepeatAdd = menuIndex++;
+#endif
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   menuIndexLookAheadMemory = menuIndex++;
@@ -1103,7 +1145,9 @@ void loop() {
 
   // Put a new character when the keyer is waiting
   if (durationMark == 0 && durationSpace == 0) {
+#ifndef OPT_NO_SERIAL
     readFromSerial();
+#endif
     setNextChar();
   }
 
@@ -1445,15 +1489,17 @@ void tone_invader_clear()
 #ifdef OPT_MEMORY_CLICK
 static unsigned long timeEnd = 0;
 
-#define MEMORY_CLICK_RATIO 5 /* % */
+#define MEMORY_CLICK_RATIO 50 /* % */
 
 void memory_click_start()
 {
   if (timeEnd == 0) {
     tone(pinBz, beepFreq * 3);
+    //tone(pinBz, toneFreq);
     //tone(pinBz, beepFreq * 2);
     //tone(pinBz, toneFreq * 2);
     timeEnd = millis() + durationDot * MEMORY_CLICK_RATIO / 100;
+    //timeEnd = millis() + durationMark - durationDot * MEMORY_CLICK_RATIO / 100;
     if (timeEnd == 0) // zero means not started
       timeEnd = 1;
   }
@@ -1464,6 +1510,7 @@ void memory_click_stop()
   if (durationMark != 0) {
     if (sidetone)
       tone(pinBz, toneFreq); // side tone
+      //tone(pinBz, beepFreq * 3);
     else
       noTone(pinBz);
   } else {
@@ -1486,10 +1533,16 @@ int paddleL_off_delay; /* off delay ms */
 #ifdef OPT_AVOID_CHATTERING
 int paddleL_stable = HIGH;
 int paddleR_stable = HIGH;
+#ifdef OPT_AVOID_CHATTERING_WATCH
+int paddleL_watching = 0;
+int paddleR_watching = 0;
+#endif
 int paddleL_trans = 0;
 int paddleR_trans = 0;
 
-#define AVG_THRESHOLD 0.25 /*0.1*/
+//#define AVG_THRESHOLD 0.25
+#define AVG_THRESHOLD 0.125
+//#define AVG_THRESHOLD 0.5
 
 float paddleL_avg = 0;
 float paddleR_avg = 0;
@@ -1515,13 +1568,58 @@ void accel_durationDot()
 void runner_stop()
 {
   running = 0; // stop running
+  runner_repeat = 0;
   reset_durationDot();
+}
+
+void print_runner_count()
+{
+  printascii(SPACE);
+  printascii('(');
+
+  if (runner_accel >= 10)
+    printascii('0' + (runner_accel % 100) / 10);
+  printascii('0' + (runner_accel % 10));
+
+  printascii('/');
+
+  if (runner_count >= 100)
+    printascii('0' + (runner_count % 1000) / 100);
+  if (runner_count >= 10)
+    printascii('0' + (runner_count % 100) / 10);
+  printascii('0' + (runner_count % 10));
+
+  printascii(')');
+  printascii(SPACE);
 }
 #endif
 
 void readPaddleValue() {
   int paddleL = digitalRead(pinPaddleL);
   int paddleR = digitalRead(pinPaddleR);
+#ifdef OPT_TIMING_DEBUG
+  static int phys_paddleL_prev = HIGH;
+  static int phys_paddleR_prev = HIGH;
+  static int logi_paddleL_prev = HIGH;
+  static int logi_paddleR_prev = HIGH;
+
+  if (phys_paddleL_prev != paddleL) {
+    if (paddleL == LOW) {
+      serial_timing("pL-D,,,");
+    } else {
+      serial_timing("pL-U,,,");
+    }
+    phys_paddleL_prev = paddleL;
+  }
+  if (phys_paddleR_prev != paddleR) {
+    if (paddleR == LOW) {
+      serial_timing(",pR-D,,");
+    } else {
+      serial_timing(",pR-U,,");
+    }
+    phys_paddleR_prev = paddleR;
+  }
+#endif
 
 #ifdef OPT_AUTO_KEYERTYPE
   if (autoKeyerType) {
@@ -1558,10 +1656,29 @@ void readPaddleValue() {
     /*
      * avoid chattering, paddle R
      */
+#ifdef OPT_AVOID_CHATTERING_WATCH
+    if (paddleR_watching == 0 && (paddleR_stable != paddleR))
+      paddleR_watching = avoidChatteringCount;
+#endif
+
     if (paddleR == LOW)
         paddleR_avg += paddleR_avg * (/*1.0*/ - weight) /* + 0 * weight */;
     else
         paddleR_avg += paddleR_avg * (/*1.0*/ - weight) + /* 1 * */ weight;
+
+#ifdef OPT_AVOID_CHATTERING_WATCH
+    if (paddleR_watching > 0) {
+      paddleR_watching--;
+      if (paddleR_watching == 0) {
+        if (paddleR_avg < 0.5)
+            paddleR_stable = LOW;
+        if (paddleR_avg >= 0.5)
+            paddleR_stable = HIGH;
+        paddleR = paddleR_stable;
+      }
+    }
+#endif
+
     if (paddleR_stable == HIGH && paddleR_avg < AVG_THRESHOLD)
         paddleR_stable = LOW;
     if (paddleR_stable == LOW && paddleR_avg > (1.0 - AVG_THRESHOLD))
@@ -1571,10 +1688,29 @@ void readPaddleValue() {
     /*
      * avoid chattering, paddle L
      */
+#ifdef OPT_AVOID_CHATTERING_WATCH
+    if (paddleL_watching == 0 && (paddleL_stable != paddleL))
+      paddleL_watching = avoidChatteringCount;
+#endif
+
     if (paddleL == LOW)
         paddleL_avg += paddleL_avg * (/*1.0*/ - weight) /* + 0 * weight */;
     else
         paddleL_avg += paddleL_avg * (/*1.0*/ - weight) + /* 1 * */ weight;
+
+#ifdef OPT_AVOID_CHATTERING_WATCH
+    if (paddleL_watching > 0) {
+      paddleL_watching--;
+      if (paddleL_watching == 0) {
+        if (paddleL_stable == HIGH && paddleL_avg < 0.5)
+            paddleL_stable = LOW;
+        if (paddleL_stable == LOW && paddleL_avg >= 0.5)
+            paddleL_stable = HIGH;
+        paddleL = paddleL_stable;
+      }
+    }
+#endif
+
     if (paddleL_stable == HIGH && paddleL_avg < AVG_THRESHOLD)
         paddleL_stable = LOW;
     if (paddleL_stable == LOW && paddleL_avg > (1.0 - AVG_THRESHOLD))
@@ -1638,14 +1774,6 @@ void readPaddleValue() {
      */
     if (paddleR == LOW) {
       /* immediately active, clear off delay timer */
-#ifdef OPT_TIMING_DEBUG
-      if (paddleR_highStart != 0) {
-        serial_timing("~R,10");
-      }
-      if (paddleR_prev == HIGH) {
-        serial_timing("_R,20");
-      }
-#endif
 #if 0
       if (paddleL_highStart != 0) {
         // XXX off delay aborted, but actually released
@@ -1657,9 +1785,6 @@ void readPaddleValue() {
 #ifdef OPT_BETTER_IAMBIC_A
       if (paddleR_prev == HIGH) {
          paddleR_pressed = 1;
-#ifdef OPT_TIMING_DEBUG
-         serial_timing(".R,30");
-#endif
       }
 #endif
       paddleR_prev = LOW;
@@ -1668,15 +1793,22 @@ void readPaddleValue() {
       /* R's falling edge */
       paddleR_prev = HIGH;
       paddleR_highStart = millis();
-#ifdef OPT_TIMING_DEBUG
-      serial_timing("^r,30");
-#endif
       if (paddleRvs) {
         /* reversed to DOT */
+#ifdef OPT_REPEAT_ADD
+        paddleR_off_delay = durationDot * (off_timer_ratio_dot + off_repeat_add * repeatingR) / 100;
+        repeatingR = 0;
+#else
         paddleR_off_delay = durationDot * off_timer_ratio_dot / 100;
+#endif
       } else {
         /* normal DASH */
+#ifdef OPT_REPEAT_ADD
+        paddleR_off_delay = durationDot * (off_timer_ratio_dash + off_repeat_add * repeatingR) / 100;
+        repeatingR = 0;
+#else
         paddleR_off_delay = durationDot * off_timer_ratio_dash / 100;
+#endif
       }
       /* paddleR stays active during off delay timer */
       paddleR = LOW;
@@ -1687,9 +1819,6 @@ void readPaddleValue() {
       } else {
         /* off delay expired */
         paddleR_highStart = 0;
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("^R,40");
-#endif
       }
     }
 
@@ -1698,14 +1827,6 @@ void readPaddleValue() {
      */
     if (paddleL == LOW) {
       /* immediately active, clear off delay timer */
-#ifdef OPT_TIMING_DEBUG
-      if (paddleL_highStart != 0) {
-        serial_timing("~L,50");
-      }
-      if (paddleL_prev == HIGH) {
-        serial_timing("_L,60");
-      }
-#endif
 #if 0
       if (paddleR_highStart != 0) {
         // XXX off delay aborted, but actually released
@@ -1717,9 +1838,6 @@ void readPaddleValue() {
 #ifdef OPT_BETTER_IAMBIC_A
       if (paddleL_prev == HIGH) {
          paddleL_pressed = 1;
-#ifdef OPT_TIMING_DEBUG
-         serial_timing(".L,30");
-#endif
       }
 #endif
       paddleL_prev = LOW;
@@ -1728,15 +1846,22 @@ void readPaddleValue() {
       /* L's falling edge */
       paddleL_prev = HIGH;
       paddleL_highStart = millis();
-#ifdef OPT_TIMING_DEBUG
-      serial_timing("^l,70");
-#endif
       if (paddleRvs) {
         /* reversed to DASH */
+#ifdef OPT_REPEAT_ADD
+        paddleL_off_delay = durationDot * (off_timer_ratio_dash + off_repeat_add * repeatingL) / 100;
+        repeatingL = 0;
+#else
         paddleL_off_delay = durationDot * off_timer_ratio_dash / 100;
+#endif
       } else {
         /* normal DOT */
+#ifdef OPT_REPEAT_ADD
+        paddleL_off_delay = durationDot * (off_timer_ratio_dot + off_repeat_add * repeatingL) / 100;
+        repeatingL = 0;
+#else
         paddleL_off_delay = durationDot * off_timer_ratio_dot / 100;
+#endif
       }
       /* paddleL stays active during off delay timer */
       paddleL = LOW;
@@ -1747,13 +1872,11 @@ void readPaddleValue() {
       } else {
         /* off delay expired */
         paddleL_highStart = 0;
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("^L,80");
-#endif
       }
     }
 
   } else if (keyerType != keyStraight) {
+
     /*
      * taking care better Iambic A when offdelay is disabled
      */
@@ -1793,6 +1916,25 @@ void readPaddleValue() {
   if (paddleR == LOW && keyerType == keyStraight) {
     /* ignore R when straight key */
     paddleR = HIGH;
+  }
+#endif
+
+#ifdef OPT_TIMING_DEBUG
+  if (logi_paddleL_prev != paddleL) {
+    if (paddleL == LOW) {
+      serial_timing(",,L-D,");
+    } else {
+      serial_timing(",,L-U,");
+    }
+    logi_paddleL_prev = paddleL;
+  }
+  if (logi_paddleR_prev != paddleR) {
+    if (paddleR == LOW) {
+      serial_timing(",,,R-D");
+    } else {
+      serial_timing(",,,R-U");
+    }
+    logi_paddleR_prev = paddleR;
   }
 #endif
 
@@ -1837,9 +1979,6 @@ void readPaddleValue() {
 	  toneTail = 0;
 	}
 #endif
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("bL,90");
-#endif
       } else {
         durationMark = !paddleRvs ? durationDot * wait : durationDot;
         lastPaddle = R;
@@ -1854,13 +1993,13 @@ void readPaddleValue() {
 	  toneTail = 0;
 	}
 #endif
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("bR,100");
-#endif
       }
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_TIMING_DEBUG
+      serial_timing(",,,,t1-D,");
+#endif
 #ifdef OPT_TWO_TONE
       if (sidetone) {
 	tone(pinBz, toneFreq); // side tone
@@ -1902,12 +2041,12 @@ void readPaddleValue() {
       paddleR_pressed = 0;
       paddleL_pressed = 0;
 #endif
-#ifdef OPT_TIMING_DEBUG
-      serial_timing("L,110");
-#endif
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_TIMING_DEBUG
+      serial_timing(",,,,t2-D,");
+#endif
 #ifdef OPT_TWO_TONE
       if (sidetone) {
 	tone(pinBz, toneFreq); // side tone
@@ -1945,12 +2084,12 @@ void readPaddleValue() {
 	toneTail = 0;
       }
 #endif
-#ifdef OPT_TIMING_DEBUG
-      serial_timing("R,120");
-#endif
       digitalWrite(pinLed, HIGH);
       key = DOWN;
       timeStart = millis();
+#ifdef OPT_TIMING_DEBUG
+      serial_timing(",,,,t3-D,");
+#endif
 #ifdef OPT_TWO_TONE
       if (sidetone) {
 	tone(pinBz, toneFreq); // side tone
@@ -1973,70 +2112,28 @@ void readPaddleValue() {
     if (keyerType == keyIambicA) {
       if (memory == -1 && paddleL == LOW && paddleL_pressed) {
 	memory = L;
-#if 0 /*def OPT_MEMORY_CLICK*/
-        if (memoryClick)
-          memory_click_start();
-#endif
         paddleL_pressed = 0;
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("ml,130");
-#endif
       } else if (memory == -1 && paddleR == LOW && paddleR_pressed) {
 	memory = R;
-#if 0 /*def OPT_MEMORY_CLICK*/
-        if (memoryClick)
-          memory_click_start();
-#endif
         paddleR_pressed = 0;
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("mr,140");
-#endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
-      else if (lookAheadMemory && memory == -1 && (millis() - timeStart >= durationDot * (100 - look_ahead_memory_ratio) / 100)) {
+      else if (lookAheadMemory && memory == -1 && (millis() - timeStart >= durationDot * (100 - min(100,look_ahead_memory_ratio)) / 100)) {
         // memory paddle LR
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
-#if 0 /*def OPT_MEMORY_CLICK*/
-            if (memoryClick)
-              memory_click_start();
-#endif
             paddleL_pressed = 0;
-#ifdef OPT_TIMING_DEBUG
-            serial_timing("lbl,150");
-#endif
           } else {
             memory = R;
-#if 0 /*def OPT_MEMORY_CLICK*/
-            if (memoryClick)
-              memory_click_start();
-#endif
             paddleR_pressed = 0;
-#ifdef OPT_TIMING_DEBUG
-            serial_timing("lbr,160");
-#endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
-#if 0 /*def OPT_MEMORY_CLICK*/
-          if (memoryClick)
-            memory_click_start();
-#endif
           paddleL_pressed = 0;
-#ifdef OPT_TIMING_DEBUG
-            serial_timing("ll,170");
-#endif
 	} else if (paddleR == LOW) {
           memory = R;
-#if 0 /*def OPT_MEMORY_CLICK*/
-          if (memoryClick)
-            memory_click_start();
-#endif
           paddleR_pressed = 0;
-#ifdef OPT_TIMING_DEBUG
-          serial_timing("lr,180");
-#endif
 	}
       }
 #endif
@@ -2047,64 +2144,22 @@ void readPaddleValue() {
       // memory paddle LR
       if (memory == -1 && paddleL == LOW && lastPaddle == R) {
         memory = L;
-#if 0 /*def OPT_MEMORY_CLICK*/
-        if (memoryClick)
-          memory_click_start();
-#endif
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("ml,190");
-#endif
       } else if (memory == -1 && paddleR == LOW && lastPaddle == L) {
         memory = R;
-#if 0 /*def OPT_MEMORY_CLICK*/
-        if (memoryClick)
-          memory_click_start();
-#endif
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("mr,200");
-#endif
       }
 #ifdef OPT_LOOK_AHEAD_MEMORY
-      else if (lookAheadMemory && memory == -1 && (millis() - timeStart >= durationDot * (100 - look_ahead_memory_ratio) / 100)) {
+      else if (lookAheadMemory && memory == -1 && (millis() - timeStart >= durationDot * (100 - min(100,look_ahead_memory_ratio)) / 100)) {
         // memory paddle LR
 	if (paddleL == LOW && paddleR == LOW) {
           if (lastPaddle == R) {
             memory = L;
-#if 0 /*def OPT_MEMORY_CLICK*/
-            if (memoryClick)
-              memory_click_start();
-#endif
-#ifdef OPT_TIMING_DEBUG
-            serial_timing("lbl,210");
-#endif
           } else {
             memory = R;
-#if 0 /*def OPT_MEMORY_CLICK*/
-            if (memoryClick)
-              memory_click_start();
-#endif
-#ifdef OPT_TIMING_DEBUG
-            serial_timing("lbr,220");
-#endif
           }
 	} else if (paddleL == LOW) {
           memory = L;
-#if 0 /*def OPT_MEMORY_CLICK*/
-          if (memoryClick)
-            memory_click_start();
-#endif
-#ifdef OPT_TIMING_DEBUG
-          serial_timing("ll,230");
-#endif
 	} else if (paddleR == LOW) {
           memory = R;
-#if 0 /*def OPT_MEMORY_CLICK*/
-          if (memoryClick)
-            memory_click_start();
-#endif
-#ifdef OPT_TIMING_DEBUG
-          serial_timing("lr,240");
-#endif
 	}
       }
 #endif
@@ -2113,6 +2168,45 @@ void readPaddleValue() {
     if (millis() - timeStart >= durationSpace) {
       durationSpace = 0;
       // output memory LR
+#ifdef OPT_REPEAT_ADD
+      if (off_repeat_add > 0) {
+        if (memory == L) {
+          if (lastPaddle == L) {
+            if (repeatingL < 4) {
+              repeatingL++;
+            } else if (repeatingL >= 4) {
+              repeatingL = 0;
+              memory = -1;
+              //Serial.print(F("MemoryClear"));
+            }
+            repeatingR = 0;
+            //Serial.println();
+            //Serial.print(F("repeatingL="));
+            //Serial.println(repeatingL);
+          } else {
+            repeatingL = 0;
+            repeatingR = 0;
+          }
+        } else if (memory == R) {
+          if (lastPaddle == R) {
+            if (repeatingR < 4) {
+              repeatingR++;
+            } else if (repeatingR >= 4) {
+              repeatingR = 0;
+              memory = -1;
+              //Serial.print(F("MemoryClear"));
+            }
+            repeatingL = 0;
+            //Serial.println();
+            //Serial.print(F("repeatingR="));
+            //Serial.println(repeatingR);
+          } else {
+            repeatingL = 0;
+            repeatingR = 0;
+          }
+        }
+      }
+#endif
       if (memory != -1) {
         if (memory == L) {
           durationMark = !paddleRvs ? durationDot : durationDot * wait;
@@ -2128,9 +2222,6 @@ void readPaddleValue() {
 	    toneTail = 0;
 	  }
 #endif
-#ifdef OPT_TIMING_DEBUG
-          serial_timing("ML,250");
-#endif
         } else if (memory == R) {
           durationMark = !paddleRvs ? durationDot * wait : durationDot;
           lastPaddle = R;
@@ -2145,14 +2236,14 @@ void readPaddleValue() {
 	    toneTail = 0;
 	  }
 #endif
-#ifdef OPT_TIMING_DEBUG
-          serial_timing("MR,260");
-#endif
         }
         memory = -1;
         digitalWrite(pinLed, HIGH);
         key = DOWN;
         timeStart = millis();
+#ifdef OPT_TIMING_DEBUG
+        serial_timing(",,,,t4-D,");
+#endif
 #ifdef OPT_TWO_TONE
 	if (sidetone) {
 	  tone(pinBz, toneFreq); // side tone
@@ -2166,6 +2257,11 @@ void readPaddleValue() {
         else
 #endif
         if (sidetone) tone(pinBz, toneFreq); // side tone
+#endif
+#ifdef OPT_REPEAT_ADD
+      } else {
+        repeatingL = 0;
+        repeatingR = 0;
 #endif
       }
     }
@@ -2183,47 +2279,55 @@ void readPaddleValue() {
     if (keyerType == keyIambicA) {
       if (memory == -1 && paddleL_pressed && lastPaddle == R) {
 	memory = L;
-#if 0 /*def OPT_MEMORY_CLICK*/
-        if (memoryClick)
-          memory_click_start();
-#endif
         paddleL_pressed = 0;
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("ml,270");
-#endif
       } else if (memory == -1 && paddleR_pressed && lastPaddle == L) {
 	memory = R;
-#if 0 /*def OPT_MEMORY_CLICK*/
-        if (memoryClick)
-          memory_click_start();
-#endif
         paddleR_pressed = 0;
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("mr,280");
-#endif
       }
+#ifdef OPT_LOOK_AHEAD_MEMORY
+      else if (lookAheadMemory && look_ahead_memory_ratio > 100 && memory == -1 && (timeStart + durationMark - millis() < durationDot * (look_ahead_memory_ratio - 100) / 100)) {
+        // memory paddle LR
+	if (paddleL == LOW && paddleR == LOW) {
+          if (lastPaddle == R) {
+            memory = L;
+            paddleL_pressed = 0;
+          } else {
+            memory = R;
+            paddleR_pressed = 0;
+          }
+	} else if (paddleL == LOW) {
+          memory = L;
+          paddleL_pressed = 0;
+	} else if (paddleR == LOW) {
+          memory = R;
+          paddleR_pressed = 0;
+	}
+      }
+#endif
     } else
 #endif
     if (keyerType == keyIambicB || ((keyerType == keySuper) && (millis() - timeStart >= durationDot))) {
       if (memory == -1 && paddleL == LOW && lastPaddle == R) {
         memory = L;
-#if 0 /*def OPT_MEMORY_CLICK*/
-        if (memoryClick)
-          memory_click_start();
-#endif
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("ml,290");
-#endif
       } else if (memory == -1 && paddleR == LOW && lastPaddle == L) {
         memory = R;
-#if 0 /*def OPT_MEMORY_CLICK*/
-        if (memoryClick)
-          memory_click_start();
-#endif
-#ifdef OPT_TIMING_DEBUG
-        serial_timing("mr,300");
-#endif
       }
+#ifdef OPT_LOOK_AHEAD_MEMORY
+      else if (lookAheadMemory && look_ahead_memory_ratio > 100 && memory == -1 && (timeStart + durationMark - millis() < durationDot * (look_ahead_memory_ratio - 100) / 100)) {
+        // memory paddle LR
+	if (paddleL == LOW && paddleR == LOW) {
+          if (lastPaddle == R) {
+            memory = L;
+          } else {
+            memory = R;
+          }
+	} else if (paddleL == LOW) {
+          memory = L;
+	} else if (paddleR == LOW) {
+          memory = R;
+	}
+      }
+#endif
     }
     // ending of mark
     if (millis() - timeStart >= durationMark) {
@@ -2238,6 +2342,9 @@ void readPaddleValue() {
       timeStart = millis();
       digitalWrite(pinLed, LOW);
       key = UP;
+#ifdef OPT_TIMING_DEBUG
+      serial_timing(",,,,,t1-U");
+#endif
     }
     // key up straight key
     if (keyerType == keyStraight) {
@@ -2252,6 +2359,9 @@ void readPaddleValue() {
         timeStart = millis();
         digitalWrite(pinLed, LOW);
         key = UP;
+#ifdef OPT_TIMING_DEBUG
+        serial_timing(",,,,,t2-U");
+#endif
       }
     }
   }
@@ -2330,6 +2440,7 @@ void readButtonValue() {
       //digitalWrite(pinLed, LOW);
       tone_runner_mode();
       runner_mode = 1;
+      runner_count = 0;
 #endif
     }
   }
@@ -2540,13 +2651,79 @@ void trainingMode(int pressedSw) {
     lang = langAbc;
     for (i = 0; i < 10; i++) {
 #ifdef MOD_MISC
-     if (rand() / (RAND_MAX / 4) == 0) { /* begin with 7/8 */
+#ifdef OPT_RUNNER
+     int nr = 0;
+     if (runner_mode == 0 /*rand() / (RAND_MAX / 2 + 1) == 0*/) { /* contest number */
+      runner_repeat = 1;
+      int ch;
+      if (rand() / (RAND_MAX / 2 + 1) == 0) {
+        ch = 'M';
+      } else if (rand() / (RAND_MAX / 2 + 1) == 0) {
+        ch = 'H';
+      } else {
+        ch = 'L';
+      }
+
+      nr = 1;
+      presetMessage[k] = '0';
+      k++;
+      presetMessage[k] = '0' + rand() / (RAND_MAX / 10 + 1);
+      k++;
+
+      if (rand() / (RAND_MAX / 2 + 1) == 0) { /* JCC/JCG */
+        /* JCC */
+        presetMessage[k] = '0';
+        k++;
+        presetMessage[k] = '0' + rand() / (RAND_MAX / 15 + 1);
+        k++;
+
+        if (rand() / (RAND_MAX / 2 + 1) == 0) {
+          presetMessage[k] = '0';
+          k++;
+          presetMessage[k] = '0' + rand() / (RAND_MAX / 15 + 1);
+          k++;
+
+          presetMessage[k] = ch;
+          k++;
+
+          runner_call_len = 7;
+        } else {
+          presetMessage[k] = ch;
+          k++;
+
+          runner_call_len = 5;
+        }
+      } else {
+        /* JCG */
+        presetMessage[k] = '0';
+        k++;
+        presetMessage[k] = '0';
+        k++;
+        presetMessage[k] = '0' + rand() / (RAND_MAX / 15 + 1);
+        k++;
+
+        presetMessage[k] = ch;
+        k++;
+
+        runner_call_len = 6;
+      }
+
+      int j;
+      for (j = 0 ; j < k ; j++) {
+        if (presetMessage[j] == '0')
+          presetMessage[j] = 'T';
+        else if (presetMessage[j] >= '9' && presetMessage[j] <= '>')
+          presetMessage[j] = 'N';
+      }
+     } else
+#endif /* OPT_RUNNER */
+     if (rand() / (RAND_MAX / 4 + 1) == 0) { /* begin with 7/8 */
       presetMessage[k] = '7' + rand() / (RAND_MAX / 2 + 1); /* 7-8 */
       k++;
       presetMessage[k] = 'J' + rand() / (RAND_MAX / 5 + 1); /* J-N */
       k++;
      } else { /* begin with J */
-#endif
+#endif /* MOD_MISC */
       presetMessage[k] = 'J';
       k++;
       presetMessage[k] = 'A' + rand() / (RAND_MAX / 17 + 1) ; /* JA, JD-JS */
@@ -2570,6 +2747,10 @@ void trainingMode(int pressedSw) {
 #endif
       k++;
 #ifdef OPT_RUNNER
+      if (nr == 1) {
+        k--;
+        presetMessage[k] = 0x00;
+      } else
       if (presetMessage[k - 3] == '7') {
 	if (presetMessage[k - 2] >= 'K' && presetMessage[k - 2] <= 'N') { // omitting 7{K-N}{0|5-9}
 	  presetMessage[k - 1] = '1' + rand() / (RAND_MAX / 4 + 1) ; /* 1-4 */
@@ -2583,6 +2764,7 @@ void trainingMode(int pressedSw) {
       } else if (presetMessage[k - 2] == 'D') { // omitting JD{0|2-9}
 	presetMessage[k - 1] = '1';
       }
+      if (nr == 0)
 #endif
       for (j = 0; j < 3; j++) {
         presetMessage[k] = 'A' + rand() / (RAND_MAX / 26 + 1) ;
@@ -2595,6 +2777,9 @@ void trainingMode(int pressedSw) {
 	running = 1;
 	runner_ptr = 0;
 
+        if (nr == 1)
+          ; /* fall through */
+        else
         if (rand() / (RAND_MAX / 5 + 1) == 0) {
           presetMessage[k] = '/'; /* stroke */
           k++;
@@ -2664,26 +2849,44 @@ void decode() {
 		for (idx = 0 ; idx < runner_call_len ; idx++) {
 		  presetMessage[idx] = runner_call[idx];
 		}
-		if (runner_accel > 0) {
+                runner_retry++;
+                // retrying 2 attempts (total 3 calls) are allowed.
+                // 3rd retry (total 4th attempts) becomes 1 penalty,
+                // and runner_accel will be immediately decreaased (slowed).
+		if (runner_retry > 2 && runner_accel > 0) {
 		   runner_accel--; // '?' becomes 5% slower
-		   runner_miss = 0;
+		   //runner_miss++;
+		   runner_retry = 0;
 		}
-		accel_durationDot(); // accelerated speed for callsigns
+                accel_durationDot(); // accelerated speed for callsigns
 		runner_ptr = 0;
-		printascii(SPACE);
+                print_runner_count();
+		//printascii(SPACE);
               } else if (CharAbc[i] == runner_call[runner_ptr]) {
 	        if (++runner_ptr == runner_call_len) {
-                  tone_hit();
-		  //runner_beep = RUNNER_HIT;
-		  if (runner_miss == 0) {
-		    runner_accel++; // no miss becomes 5% faster
+		  //if (runner_miss == 0) {
+                  // 1 miss is allowed.
+		  if (runner_miss < 2) {
+		    if (runner_accel < MAX_RUNNER_ACCEL) {
+                      runner_accel++; // no miss becomes 5% faster
+		    }
 		  } else {
 		    if (runner_accel > 0) {
 		      runner_accel--; // miss(es) becomes 5% slower
 		    }
 		  }
+
+                  runner_count++;
+                  if (runner_accel >= HIGH_RUNNER_ACCEL) {
+                    tone_invader_clear();
+                  } else {
+                    tone_hit();
+                  }
+                  print_runner_count();
+
 		  accel_durationDot(); // accelerated speed for callsigns
 		  runner_miss = 0;
+                  runner_retry = 0;
 		  delay(1000);
 		  printascii(SPACE);
                   trainingMode(pinSw3);
@@ -3011,6 +3214,15 @@ void editSetting() {
 	if (off_timer_ratio_dash < 100)
           lcd.print(F(" "));
         lcd.print(F(" "));
+#ifdef OPT_REPEAT_ADD
+      } else if (menuIndex == menuIndexOffRepeatAdd) {
+        lcd.print(off_repeat_add);
+	if (off_repeat_add < 10)
+          lcd.print(F(" "));
+	if (off_repeat_add < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+#endif
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
       } else if (menuIndex == menuIndexLookAheadMemory) {
@@ -3163,6 +3375,19 @@ void editSetting() {
 	if (off_timer_ratio_dash < 100)
           lcd.print(F(" "));
         lcd.print(F(" "));
+#ifdef OPT_REPEAT_ADD
+      } else if (menuIndex == menuIndexOffRepeatAdd) {
+	if (off_repeat_add > 0)
+	  off_repeat_add -= 1;
+	if (off_repeat_add < 0)
+	  off_repeat_add = 0;
+        lcd.print(off_repeat_add);
+	if (off_repeat_add < 10)
+          lcd.print(F(" "));
+	if (off_repeat_add < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+#endif
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
       } else if (menuIndex == menuIndexLookAheadMemory) {
@@ -3327,6 +3552,17 @@ void editSetting() {
 	if (off_timer_ratio_dash < 100)
           lcd.print(F(" "));
         lcd.print(F(" "));
+#ifdef OPT_REPEAT_ADD
+      } else if (menuIndex == menuIndexOffRepeatAdd) {
+	if (off_repeat_add < MAX_REPEAT_ADD)
+	  off_repeat_add += 1;
+        lcd.print(off_repeat_add);
+	if (off_repeat_add < 10)
+          lcd.print(F(" "));
+	if (off_repeat_add < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+#endif
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
       } else if (menuIndex == menuIndexLookAheadMemory) {
@@ -3336,7 +3572,7 @@ void editSetting() {
         else
           lcd.print(F("off "));
       } else if (menuIndex == menuIndexLookAheadMemoryRatio) {
-	if (look_ahead_memory_ratio < MAX_DOT_RATIO)
+	if (look_ahead_memory_ratio < MAX_LAM_RATIO)
 	  look_ahead_memory_ratio += 5;
         lcd.print(look_ahead_memory_ratio);
 	if (look_ahead_memory_ratio < 10)
@@ -3501,6 +3737,11 @@ void setNextChar() {
       clearPresetMessage();
       //Serial.println(F("no preset messages"));
 
+#ifdef OPT_RUNNER
+      if (runner_repeat == 1) {
+        trainingMode(pinSw3);
+      }
+#endif
       // set next beacon message
       if (timeCqInterval > 0) {
         if (timeStartCq == 0) { // 1st time
