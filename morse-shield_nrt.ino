@@ -17,7 +17,7 @@ String date = "19/12/20";
 //#define SERIAL_PRINT_DIT_DAH
 
 #if 1 /* JG1WYW */
-String mod_date = "23/07/26";
+String mod_date = "23/08/24";
 /*
  * These options were added by JG1WYW
  * So far, off delay and look ahead memory is tested with improved Iambic_A.
@@ -34,7 +34,7 @@ String mod_date = "23/07/26";
  */
 #define OPT_OFF_DELAY			/* off delay timers */
 //#define OPT_REPEAT_ADD                  /* addition by repeat */
-//#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
+#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 //#define OPT_ESP32                       /* ESP32 instead of Arduino Uno */
 #define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
@@ -142,7 +142,7 @@ int repeatingR = 0;
 
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 1; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 50; // XXX percent (of dot) for look ahead memory
+int look_ahead_memory_ratio = 20; // XXX percent (of dot) for look ahead memory
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif

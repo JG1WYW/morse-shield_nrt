@@ -1,6 +1,6 @@
 #
-# morse-shield_nrt: arduino_morse_runner_20221010a.diff
-# All rights reserved. Copyright (C) 2020,2021 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
+# morse-shield_nrt: arduino_morse_runner_20230824a.diff
+# All rights reserved. Copyright (C) 2020,2023 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
 # ABSOLUTELY NO WARRANTY
 # 
 
@@ -53,12 +53,12 @@
     * "Word Spc"  : 4
     * "Char Spc"  : 3
     * "OffDelay"  : on
-    * "OffDlyDot" : 0
-    * "OffDlyDsh" : 100
+    * "OffDlyDot" : 50
+    * "OffDlyDsh" : 150
     * "LAMemory"  : on
-    * "LAMratio"  : 50
+    * "LAMratio"  : 20
     * "AvodChtr"  : on
-    * "StbleCnt"  : 10
+    * "StbleCnt"  : 20
     * "AtoKyChg"  : on
     * "AtoKyEle"  : IbcA  (* Iambic A ÇïœçXÇµÇƒìÆçÏämîFÇµÇƒÇ¢Ç‹Ç∑)
 
