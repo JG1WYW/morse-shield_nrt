@@ -17,7 +17,7 @@ String date = "19/12/20";
 //#define SERIAL_PRINT_DIT_DAH
 
 #if 1 /* JG1WYW */
-String mod_date = "23/08/24";
+String mod_date = "23/09/10";
 /*
  * These options were added by JG1WYW
  * So far, off delay and look ahead memory is tested with improved Iambic_A.
@@ -33,11 +33,12 @@ String mod_date = "23/08/24";
  *
  */
 #define OPT_OFF_DELAY			/* off delay timers */
+//#define OPT_ON_DELAY			/* on delay timers */
 //#define OPT_REPEAT_ADD                  /* addition by repeat */
-#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
+//#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 //#define OPT_ESP32                       /* ESP32 instead of Arduino Uno */
-#define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
+//#define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 //#define OPT_AVOID_CHATTERING_WATCH      /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
@@ -49,7 +50,7 @@ String mod_date = "23/08/24";
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
-#define OPT_BETTER_IAMBIC_A             /* Improved behavior of Iambic_A */
+//#define OPT_BETTER_IAMBIC_A             /* Improved behavior of Iambic_A */
 #define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when running */
 //#define OPT_DECODE_DEBUG
 //#define OPT_TIMING_DEBUG                /* Debug flag */
@@ -118,11 +119,12 @@ int menuIndexCharSpace;
 #ifdef OPT_OFF_DELAY
 int offDelay = 1; // off-delay disabled by default (Experimental)
 
-int off_timer_ratio_dot = 50;     /* XXX extra percent (of dot) for dot */
+int off_timer_ratio_dot = 75;     /* XXX extra percent (of dot) for dot */
 int off_timer_ratio_dash = 150;   /* XXX extra percent (of dot) for dash */
 
 #define MAX_DOT_RATIO  100
-#define MAX_LAM_RATIO  200
+//#define MAX_LAM_RATIO  200
+#define MAX_LAM_RATIO  100
 #define MAX_DASH_RATIO 200
 #ifdef OPT_REPEAT_ADD
 #define MAX_REPEAT_ADD 100
@@ -140,16 +142,28 @@ int repeatingR = 0;
 #endif
 #endif
 
+#ifdef OPT_ON_DELAY
+int onDelay = 1; // on-delay disabled by default (Experimental)
+
+int on_timer_ratio_dot = 50;     /* XXX extra percent (of dot) for dot */
+int on_timer_ratio_dash = 150;   /* XXX extra percent (of dot) for dash */
+
+int menuIndexOnDelay;
+int menuIndexOnDelayDot;
+int menuIndexOnDelayDash;
+
+#endif
+
 #ifdef OPT_LOOK_AHEAD_MEMORY
 int lookAheadMemory = 1; // lookAheadMemory is disabled by default (Experimental)
-int look_ahead_memory_ratio = 20; // XXX percent (of dot) for look ahead memory
+int look_ahead_memory_ratio = 25; // XXX percent (of dot) for look ahead memory
 int menuIndexLookAheadMemory;
 int menuIndexLookAheadMemoryRatio;
 #endif
 
 #ifdef OPT_AVOID_CHATTERING
 int avoidChattering = 1; // avoid chattering disabled by default (Experimental)
-int avoidChatteringCount = 20; // Stable count
+int avoidChatteringCount = 10; // Stable count
 
 #define MAX_CHATTERING_COUNT 100
 
@@ -159,7 +173,11 @@ int menuIndexAvoidChatteringCount;
 
 #ifdef OPT_AUTO_KEYERTYPE
 int autoKeyerType = 1; // auto keyer type disabled by default (Experimental)
-int autoKeyerTypeElekey = 0; // XXX Supr, auto keyer type when elekey changed from straight key
+#ifdef OPT_BETTER_IAMBIC_A
+int autoKeyerTypeElekey = 0; // XXX IambicA, auto keyer type when elekey changed from straight key
+#else
+int autoKeyerTypeElekey = 2; // XXX Supr, auto keyer type when elekey changed from straight key
+#endif
 unsigned long auto_keyer_start = 0;
 #define MAX_STRAIGHT_OR_PADDLE 3000 /* 3sec */
 int menuIndexAutoKeyertype;
@@ -405,6 +423,12 @@ char *setMenu[] {
   "OfRptAdd"   // off delay repeating add
 #endif
 #endif
+#ifdef OPT_ON_DELAY
+  ,
+  "OnDelay",   // on delay
+  "OnDlyDot",  // on delay dot ratio
+  "OnDlyDsh"   // on delay dash ratio
+#endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   ,
   "LAMemory",  // look ahead memory
@@ -458,6 +482,11 @@ typedef struct PARAM_EEPROM {
 #ifdef OPT_REPEAT_ADD
   int off_repeat_add;
 #endif
+#endif
+#ifdef OPT_ON_DELAY
+  int onDelay;
+  int on_timer_ratio_dot;
+  int on_timer_ratio_dash;
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   int lookAheadMemory;
@@ -524,6 +553,11 @@ int param_eeprom_load()
     off_repeat_add = param.off_repeat_add;
 #endif
 #endif
+#ifdef OPT_ON_DELAY
+    onDelay = param.onDelay;
+    on_timer_ratio_dot = param.on_timer_ratio_dot;
+    on_timer_ratio_dash = param.on_timer_ratio_dash;
+#endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
     lookAheadMemory = param.lookAheadMemory;
     look_ahead_memory_ratio = param.look_ahead_memory_ratio;
@@ -576,6 +610,11 @@ void param_eeprom_save()
 #ifdef OPT_REPEAT_ADD
   param.off_repeat_add = off_repeat_add;
 #endif
+#endif
+#ifdef OPT_ON_DELAY
+  param.onDelay = onDelay;
+  param.on_timer_ratio_dot = on_timer_ratio_dot;
+  param.on_timer_ratio_dash = on_timer_ratio_dash;
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   param.lookAheadMemory = lookAheadMemory;
@@ -1092,6 +1131,11 @@ void setup() {
   menuIndexOffRepeatAdd = menuIndex++;
 #endif
 #endif
+#ifdef OPT_ON_DELAY
+  menuIndexOnDelay = menuIndex++;
+  menuIndexOnDelayDot = menuIndex++;
+  menuIndexOnDelayDash = menuIndex++;
+#endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
   menuIndexLookAheadMemory = menuIndex++;
   menuIndexLookAheadMemoryRatio = menuIndex++;
@@ -1530,6 +1574,21 @@ int paddleR_off_delay; /* off delay ms */
 int paddleL_off_delay; /* off delay ms */
 #endif
 
+#ifdef OPT_ON_DELAY
+int paddleL_on_prev = HIGH;
+int paddleR_on_prev = HIGH;
+unsigned long paddleL_on_highStart = 0;
+unsigned long paddleR_on_highStart = 0;
+
+int paddleR_on_delay; /* on delay ms */
+int paddleL_on_delay; /* on delay ms */
+#endif
+
+#ifdef OPT_BETTER_IAMBIC_A
+int paddleL_iambic_prev = HIGH;
+int paddleR_iambic_prev = HIGH;
+#endif
+
 #ifdef OPT_AVOID_CHATTERING
 int paddleL_stable = HIGH;
 int paddleR_stable = HIGH;
@@ -1774,19 +1833,6 @@ void readPaddleValue() {
      */
     if (paddleR == LOW) {
       /* immediately active, clear off delay timer */
-#if 0
-      if (paddleL_highStart != 0) {
-        // XXX off delay aborted, but actually released
-        paddleL_prev = HIGH;
-        paddleL_highStart = 0;
-	paddleL = HIGH;
-      }
-#endif
-#ifdef OPT_BETTER_IAMBIC_A
-      if (paddleR_prev == HIGH) {
-         paddleR_pressed = 1;
-      }
-#endif
       paddleR_prev = LOW;
       paddleR_highStart = 0;
     } else if (/*paddleR == HIGH &&*/ paddleR_prev == LOW) {
@@ -1827,19 +1873,6 @@ void readPaddleValue() {
      */
     if (paddleL == LOW) {
       /* immediately active, clear off delay timer */
-#if 0
-      if (paddleR_highStart != 0) {
-        // XXX off delay aborted, but actually released
-        paddleR_prev = HIGH;
-        paddleR_highStart = 0;
-	paddleR = HIGH;
-      }
-#endif
-#ifdef OPT_BETTER_IAMBIC_A
-      if (paddleL_prev == HIGH) {
-         paddleL_pressed = 1;
-      }
-#endif
       paddleL_prev = LOW;
       paddleL_highStart = 0;
     } else if (/*paddleL == HIGH &&*/ paddleL_prev == LOW) {
@@ -1875,41 +1908,127 @@ void readPaddleValue() {
       }
     }
 
-  } else if (keyerType != keyStraight) {
+  } /* (offDelay && keyerType != keyStraight) */
+#endif
+
+/**************************************/
+#ifdef OPT_ON_DELAY
+  /*
+   * on delay is only for electric keyer. (i.e., not incl. straight key)
+   */
+  if (onDelay && keyerType != keyStraight) {
+    /*
+     * on delay, paddle R
+     */
+    if (paddleR == HIGH) {
+      /* immediately active, clear on delay timer */
+      paddleR_on_prev = HIGH;
+      paddleR_on_highStart = 0;
+    } else if (/*paddleR == LOW &&*/ paddleR_on_prev == HIGH) {
+      /* R's rising edge */
+      paddleR_on_prev = LOW;
+      paddleR_on_highStart = millis();
+      if (paddleRvs) {
+        /* reversed to DOT */
+#ifdef OPT_REPEAT_ADD
+        paddleR_on_delay = durationDot * (on_timer_ratio_dot + on_repeat_add * repeatingR) / 100;
+        repeatingR = 0;
+#else
+        paddleR_on_delay = durationDot * on_timer_ratio_dot / 100;
+#endif
+      } else {
+        /* normal DASH */
+#ifdef OPT_REPEAT_ADD
+        paddleR_on_delay = durationDot * (on_timer_ratio_dash + on_repeat_add * repeatingR) / 100;
+        repeatingR = 0;
+#else
+        paddleR_on_delay = durationDot * on_timer_ratio_dash / 100;
+#endif
+      }
+      /* paddleR stays inactive during on delay timer */
+      paddleR = HIGH;
+    } else if (/*paddleR == LOW && paddleR_on_prev != HIGH &&*/ paddleR_on_highStart != 0) {
+      if ((millis() - paddleR_on_highStart) < paddleR_on_delay) {
+        /* paddleR stays inactive during on delay timer */
+        paddleR = HIGH;
+      } else {
+        /* on delay expired */
+        paddleR_on_highStart = 0;
+      }
+    }
 
     /*
-     * taking care better Iambic A when offdelay is disabled
+     * on delay, paddle L
      */
+    if (paddleL == HIGH) {
+      /* immediately active, clear on delay timer */
+      paddleL_on_prev = HIGH;
+      paddleL_on_highStart = 0;
+    } else if (/*paddleL == LOW &&*/ paddleL_on_prev == HIGH) {
+      /* L's rising edge */
+      paddleL_on_prev = LOW;
+      paddleL_on_highStart = millis();
+      if (paddleRvs) {
+        /* reversed to DASH */
+#ifdef OPT_REPEAT_ADD
+        paddleL_on_delay = durationDot * (on_timer_ratio_dash + on_repeat_add * repeatingL) / 100;
+        repeatingL = 0;
+#else
+        paddleL_on_delay = durationDot * on_timer_ratio_dash / 100;
+#endif
+      } else {
+        /* normal DOT */
+#ifdef OPT_REPEAT_ADD
+        paddleL_on_delay = durationDot * (on_timer_ratio_dot + on_repeat_add * repeatingL) / 100;
+        repeatingL = 0;
+#else
+        paddleL_on_delay = durationDot * on_timer_ratio_dot / 100;
+#endif
+      }
+      /* paddleL stays inactive during on delay timer */
+      paddleL = HIGH;
+    } else if (/*paddleL == LOW && paddleL_on_prev != HIGH &&*/ paddleL_on_highStart != 0) {
+      if ((millis() - paddleL_on_highStart) < paddleL_on_delay) {
+        /* paddleL stays inactive during on delay timer */
+        paddleL = HIGH;
+      } else {
+        /* on delay expired */
+        paddleL_on_highStart = 0;
+      }
+    }
+
+  } /* (onDelay && keyerType != keyStraight) */
+#endif
+/**************************************/
+
+#ifdef OPT_BETTER_IAMBIC_A
+  if (keyerType != keyStraight) {
 
     /*
      * paddle R
      */
     if (paddleR == LOW) {
-#ifdef OPT_BETTER_IAMBIC_A
-      if (paddleR_prev == HIGH) {
+      if (paddleR_iambic_prev == HIGH) {
          paddleR_pressed = 1;
       }
-#endif
-      paddleR_prev = LOW;
+      paddleR_iambic_prev = LOW;
     } else {
-      paddleR_prev = HIGH;
+      paddleR_iambic_prev = HIGH;
     }
 
     /*
      * paddle L
      */
     if (paddleL == LOW) {
-#ifdef OPT_BETTER_IAMBIC_A
-      if (paddleL_prev == HIGH) {
+      if (paddleL_iambic_prev == HIGH) {
          paddleL_pressed = 1;
       }
-#endif
-      paddleL_prev = LOW;
+      paddleL_iambic_prev = LOW;
     } else {
-      paddleL_prev = HIGH;
+      paddleL_iambic_prev = HIGH;
     }
 
-  } /* (offDelay && keyerType != keyStraight) */
+  }
 #endif
 
 #ifdef MOD_MISC
@@ -2696,7 +2815,7 @@ void trainingMode(int pressedSw) {
       } else {
         /* JCG */
         presetMessage[k] = '0';
-        k++;
+                k++;
         presetMessage[k] = '0';
         k++;
         presetMessage[k] = '0' + rand() / (RAND_MAX / 15 + 1);
@@ -3224,6 +3343,27 @@ void editSetting() {
         lcd.print(F(" "));
 #endif
 #endif
+#ifdef OPT_ON_DELAY
+      } else if (menuIndex == menuIndexOnDelay) {
+        if (onDelay)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+      } else if (menuIndex == menuIndexOnDelayDot) {
+        lcd.print(on_timer_ratio_dot);
+	if (on_timer_ratio_dot < 10)
+          lcd.print(F(" "));
+	if (on_timer_ratio_dot < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+      } else if (menuIndex == menuIndexOnDelayDash) {
+        lcd.print(on_timer_ratio_dash);
+	if (on_timer_ratio_dash < 10)
+          lcd.print(F(" "));
+	if (on_timer_ratio_dash < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+#endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
       } else if (menuIndex == menuIndexLookAheadMemory) {
         if (lookAheadMemory)
@@ -3388,6 +3528,32 @@ void editSetting() {
           lcd.print(F(" "));
         lcd.print(F(" "));
 #endif
+#endif
+#ifdef OPT_ON_DELAY
+      } else if (menuIndex == menuIndexOnDelay) {
+        onDelay = !onDelay;
+        if (onDelay)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+      } else if (menuIndex == menuIndexOnDelayDot) {
+	if (on_timer_ratio_dot > 0)
+	  on_timer_ratio_dot -= 5;
+        lcd.print(on_timer_ratio_dot);
+	if (on_timer_ratio_dot < 10)
+          lcd.print(F(" "));
+	if (on_timer_ratio_dot < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+      } else if (menuIndex == menuIndexOnDelayDash) {
+	if (on_timer_ratio_dash > 0)
+	  on_timer_ratio_dash -= 5;
+        lcd.print(on_timer_ratio_dash);
+	if (on_timer_ratio_dash < 10)
+          lcd.print(F(" "));
+	if (on_timer_ratio_dash < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
       } else if (menuIndex == menuIndexLookAheadMemory) {
@@ -3563,6 +3729,32 @@ void editSetting() {
           lcd.print(F(" "));
         lcd.print(F(" "));
 #endif
+#endif
+#ifdef OPT_ON_DELAY
+      } else if (menuIndex == menuIndexOnDelay) {
+        onDelay = !onDelay;
+        if (onDelay)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+      } else if (menuIndex == menuIndexOnDelayDot) {
+	if (on_timer_ratio_dot < MAX_DOT_RATIO)
+	  on_timer_ratio_dot += 5;
+        lcd.print(on_timer_ratio_dot);
+	if (on_timer_ratio_dot < 10)
+          lcd.print(F(" "));
+	if (on_timer_ratio_dot < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
+      } else if (menuIndex == menuIndexOnDelayDash) {
+	if (on_timer_ratio_dash < MAX_DASH_RATIO)
+	  on_timer_ratio_dash += 5;
+        lcd.print(on_timer_ratio_dash);
+	if (on_timer_ratio_dash < 10)
+          lcd.print(F(" "));
+	if (on_timer_ratio_dash < 100)
+          lcd.print(F(" "));
+        lcd.print(F(" "));
 #endif
 #ifdef OPT_LOOK_AHEAD_MEMORY
       } else if (menuIndex == menuIndexLookAheadMemory) {
