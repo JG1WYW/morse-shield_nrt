@@ -17,7 +17,7 @@ String date = "19/12/20";
 //#define SERIAL_PRINT_DIT_DAH
 
 #if 1 /* JG1WYW */
-String mod_date = "23/09/10";
+String mod_date = "23/09/12";
 /*
  * These options were added by JG1WYW
  * So far, off delay and look ahead memory is tested with improved Iambic_A.
@@ -38,7 +38,7 @@ String mod_date = "23/09/10";
 //#define OPT_LOOK_AHEAD_MEMORY           /* look ahead memory */
 //#define OPT_TWO_TONE                    /* two tone for marking the trailing dot */
 //#define OPT_ESP32                       /* ESP32 instead of Arduino Uno */
-//#define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
+#define OPT_AVOID_CHATTERING            /* indend to avoid chattering */
 //#define OPT_AVOID_CHATTERING_WATCH      /* indend to avoid chattering */
 #define OPT_AUTO_KEYERTYPE              /* adapt to paddle/straight change */
 #define OPT_INVADER_SOUND		/* invader sound */
@@ -47,10 +47,11 @@ String mod_date = "23/09/10";
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
+#define OPT_DISP_OUT                    /* display output flag */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
-//#define OPT_BETTER_IAMBIC_A             /* Improved behavior of Iambic_A */
+#define OPT_BETTER_IAMBIC_A             /* Improved behavior of Iambic_A */
 #define OPT_DECODE_INVALID_IMMEDIATELY  /* '_' for invalid chars immediately when running */
 //#define OPT_DECODE_DEBUG
 //#define OPT_TIMING_DEBUG                /* Debug flag */
@@ -212,6 +213,10 @@ int defToneFreq[] = {
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
+#ifdef OPT_DISP_OUT
+int menuIndexDispOut;
+int dispOut = 1; // display output flag
+#endif
 #ifdef OPT_TONE_FREQ
 int toneFreq = 220; // side tone frequency 220Hz, A3
 #else
@@ -404,6 +409,10 @@ char *setMenu[] {
   "SideTone", // sidetone on, off / tone[Hz]
   "CQint:ms", // beacon interval
   "CQ times"  // beacon times
+#ifdef OPT_DISP_OUT
+  ,
+  "Display " // display output flag
+#endif
 #ifdef OPT_TONE_FREQ
   ,
   "ToneFreq"  // sidetone frequency
@@ -468,6 +477,9 @@ typedef struct PARAM_EEPROM {
   int sidetone;
   unsigned int defCqInterval;
   unsigned int defCqTimes;
+#ifdef OPT_DISP_OUT
+  int dispOut;
+#endif
 #ifdef OPT_TONE_FREQ
   int toneFreq;
 #endif
@@ -538,6 +550,9 @@ int param_eeprom_load()
     sidetone = param.sidetone;
     defCqInterval = param.defCqInterval;
     defCqTimes = param.defCqTimes;
+#ifdef OPT_DISP_OUT
+    dispOut = param.dispOut;
+#endif
 #ifdef OPT_TONE_FREQ
     toneFreq = param.toneFreq;
 #endif
@@ -596,6 +611,9 @@ void param_eeprom_save()
   param.sidetone = sidetone;
   param.defCqInterval = defCqInterval;
   param.defCqTimes = defCqTimes;
+#ifdef OPT_DISP_OUT
+  param.dispOut = dispOut;
+#endif
 #ifdef OPT_TONE_FREQ
   param.toneFreq = toneFreq;
 #endif
@@ -1116,6 +1134,9 @@ void setup() {
    * set menuIndex dynamically
    */
   int menuIndex = MENU_INDEX_EXTRA;
+#ifdef OPT_DISP_OUT
+  menuIndexDispOut = menuIndex++;
+#endif
 #ifdef OPT_TONE_FREQ
   menuIndexToneFreq = menuIndex++;
 #endif
@@ -1449,11 +1470,13 @@ void setNewWpm(int wpm) {
   runner_accel = 0; // reset acceleration when Wpm is modified manually
 #endif
 
+#ifndef OPT_NO_SERIAL
   Serial.print(F("WPM="));
   Serial.println(Wpm);
 #ifdef DEBUG
   Serial.print(F("duration dot(ms)="));
   Serial.println(durationDot);
+#endif
 #endif
 
   // Print new WPM to the LCD
@@ -3152,6 +3175,11 @@ void printascii(int asciinumber) {
   Serial.write(asciinumber); // Monitor characters
 #endif
 
+#ifdef OPT_DISP_OUT
+  if (dispOut == 0)
+    return;
+#endif
+
 #ifdef SCROLL_ROW
   if (lcdIndex > colums - 1) {
     lcdIndex = 0;
@@ -3295,6 +3323,13 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
+#ifdef OPT_DISP_OUT
+      } else if (menuIndex == menuIndexDispOut) {
+        if (dispOut)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
 #ifdef OPT_TONE_FREQ
       } else if (menuIndex == menuIndexToneFreq) {
         lcd.print(toneFreq);
@@ -3463,6 +3498,14 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
+#ifdef OPT_DISP_OUT
+      } else if (menuIndex == menuIndexDispOut) {
+        dispOut = !dispOut;
+        if (dispOut)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
 #ifdef OPT_TONE_FREQ
       } else if (menuIndex == menuIndexToneFreq) {
 	if (toneFreqIndex > 0)
@@ -3666,6 +3709,14 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
+#ifdef OPT_DISP_OUT
+      } else if (menuIndex == menuIndexDispOut) {
+        dispOut = !dispOut;
+        if (dispOut)
+          lcd.print(F(" on "));
+        else
+          lcd.print(F("off "));
+#endif
 #ifdef OPT_TONE_FREQ
       } else if (menuIndex == menuIndexToneFreq) {
 	if (toneFreqIndex < (sizeof(defToneFreq) / sizeof(int)) - 1)
