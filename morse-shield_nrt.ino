@@ -47,7 +47,7 @@ String mod_date = "23/09/12";
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
-#define OPT_DISP_OUT                    /* display output flag */
+#define OPT_LCD_DISP                    /* on/off of LCD display */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
@@ -213,9 +213,9 @@ int defToneFreq[] = {
   440, 466, 494, 523, 554, 587, 622, 659, 698, 740, 784, 831,
   880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661
 };
-#ifdef OPT_DISP_OUT
-int menuIndexDispOut;
-int dispOut = 1; // display output flag
+#ifdef OPT_LCD_DISP
+int menuIndexLcdDisp;
+int lcdDisp = 1; // LCD display on/off flag
 #endif
 #ifdef OPT_TONE_FREQ
 int toneFreq = 220; // side tone frequency 220Hz, A3
@@ -409,9 +409,9 @@ char *setMenu[] {
   "SideTone", // sidetone on, off / tone[Hz]
   "CQint:ms", // beacon interval
   "CQ times"  // beacon times
-#ifdef OPT_DISP_OUT
+#ifdef OPT_LCD_DISP
   ,
-  "Display " // display output flag
+  "LCD disp" // LCD display on/off flag
 #endif
 #ifdef OPT_TONE_FREQ
   ,
@@ -477,8 +477,8 @@ typedef struct PARAM_EEPROM {
   int sidetone;
   unsigned int defCqInterval;
   unsigned int defCqTimes;
-#ifdef OPT_DISP_OUT
-  int dispOut;
+#ifdef OPT_LCD_DISP
+  int lcdDisp;
 #endif
 #ifdef OPT_TONE_FREQ
   int toneFreq;
@@ -550,8 +550,8 @@ int param_eeprom_load()
     sidetone = param.sidetone;
     defCqInterval = param.defCqInterval;
     defCqTimes = param.defCqTimes;
-#ifdef OPT_DISP_OUT
-    dispOut = param.dispOut;
+#ifdef OPT_LCD_DISP
+    lcdDisp = param.lcdDisp;
 #endif
 #ifdef OPT_TONE_FREQ
     toneFreq = param.toneFreq;
@@ -611,8 +611,8 @@ void param_eeprom_save()
   param.sidetone = sidetone;
   param.defCqInterval = defCqInterval;
   param.defCqTimes = defCqTimes;
-#ifdef OPT_DISP_OUT
-  param.dispOut = dispOut;
+#ifdef OPT_LCD_DISP
+  param.lcdDisp = lcdDisp;
 #endif
 #ifdef OPT_TONE_FREQ
   param.toneFreq = toneFreq;
@@ -1134,8 +1134,8 @@ void setup() {
    * set menuIndex dynamically
    */
   int menuIndex = MENU_INDEX_EXTRA;
-#ifdef OPT_DISP_OUT
-  menuIndexDispOut = menuIndex++;
+#ifdef OPT_LCD_DISP
+  menuIndexLcdDisp = menuIndex++;
 #endif
 #ifdef OPT_TONE_FREQ
   menuIndexToneFreq = menuIndex++;
@@ -3175,8 +3175,8 @@ void printascii(int asciinumber) {
   Serial.write(asciinumber); // Monitor characters
 #endif
 
-#ifdef OPT_DISP_OUT
-  if (dispOut == 0)
+#ifdef OPT_LCD_DISP
+  if (lcdDisp == 0)
     return;
 #endif
 
@@ -3323,9 +3323,9 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_DISP_OUT
-      } else if (menuIndex == menuIndexDispOut) {
-        if (dispOut)
+#ifdef OPT_LCD_DISP
+      } else if (menuIndex == menuIndexLcdDisp) {
+        if (lcdDisp)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -3498,10 +3498,10 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_DISP_OUT
-      } else if (menuIndex == menuIndexDispOut) {
-        dispOut = !dispOut;
-        if (dispOut)
+#ifdef OPT_LCD_DISP
+      } else if (menuIndex == menuIndexLcdDisp) {
+        lcdDisp = !lcdDisp;
+        if (lcdDisp)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
@@ -3709,10 +3709,10 @@ void editSetting() {
         else lcd.print(F(" "));
         lcd.print(defCqTimes);
         lcd.print(F(" "));
-#ifdef OPT_DISP_OUT
-      } else if (menuIndex == menuIndexDispOut) {
-        dispOut = !dispOut;
-        if (dispOut)
+#ifdef OPT_LCD_DISP
+      } else if (menuIndex == menuIndexLcdDisp) {
+        lcdDisp = !lcdDisp;
+        if (lcdDisp)
           lcd.print(F(" on "));
         else
           lcd.print(F("off "));
