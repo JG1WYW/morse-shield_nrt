@@ -1,6 +1,6 @@
 #
-# morse-shield_nrt: arduino_morse_runner_20230912a.diff
-# All rights reserved. Copyright (C) 2020,2023 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
+# morse-shield_nrt
+# All rights reserved. Copyright (C) 2020,2025 by NARITA Tomio <nrt@ff.iij4u.or.jp> (JG1WYW)
 # ABSOLUTELY NO WARRANTY
 # 
 
@@ -110,6 +110,10 @@
     ファイルを生成することができます。
 
   オリジナルの利用許諾に従ってください。
+
+  - 私が拡張した部分のライセンスは GPL v2 とします。(オリジナルのコードにも GPL の
+    コードが含まれるように見えたため、GPL v2 に従うのが適切と考えました。)
+    https://www.gnu.org/licenses/old-licenses/gpl-2.0.ja.html
 
 ■ 参照
 
