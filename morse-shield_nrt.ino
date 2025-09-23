@@ -17,7 +17,8 @@ String date = "19/12/20";
 //#define SERIAL_PRINT_DIT_DAH
 
 #if 1 /* JG1WYW */
-String mod_date = "23/09/12";
+//String mod_date = "23/09/12";
+String mod_date = "24/05/01";
 /*
  * These options were added by JG1WYW
  * So far, off delay and look ahead memory is tested with improved Iambic_A.
@@ -1211,6 +1212,9 @@ void loop() {
   // Put a new character when the keyer is waiting
   if (durationMark == 0 && durationSpace == 0) {
 #ifndef OPT_NO_SERIAL
+#ifdef OPT_LCD_DISP
+   if (lcdDisp)
+#endif
     readFromSerial();
 #endif
     setNextChar();
@@ -3172,6 +3176,9 @@ void printascii(int asciinumber) {
   lastLetter = asciinumber;
 
 #ifndef OPT_NO_SERIAL
+#ifdef OPT_LCD_DISP
+ if (lcdDisp)
+#endif
   Serial.write(asciinumber); // Monitor characters
 #endif
 
@@ -3475,7 +3482,11 @@ void editSetting() {
           lcd.print(F("off "));
       } else if (menuIndex == 2) {
         keyerType -= 1;
+#ifdef OPT_BETTER_IAMBIC_A
         if (keyerType < 0) keyerType = 0;
+#else
+        if (keyerType < 1) keyerType = 1;
+#endif
         lcd.print(keyName[keyerType]);
       } else if (menuIndex == 3) {
         wait -= 0.1;
