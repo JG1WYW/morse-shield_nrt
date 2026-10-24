@@ -50,7 +50,7 @@ String mod_date = "26/10/24";
 #define OPT_BETTER_DECODE		/* better decode */
 #define OPT_BETTER_SRAND		/* random seed using timing */
 #define OPT_PARAM_EEPROM                /* load/save params from/to EEPROM */
-#define OPT_LCD_DISP                    /* on/off of LCD display */
+//#define OPT_LCD_DISP                    /* on/off of LCD display */
 #define OPT_TONE_FREQ                   /* selectable tone frequency */
 #define OPT_LAST_MENUINDEX              /* memory the last menuIndex */
 #define OPT_WORD_SPACE                  /* word space dots */
@@ -1116,6 +1116,11 @@ void setup() {
   Serial.println(F("Designed by nksg"));
   Serial.print(F("20"));
   Serial.println(date);
+#if 1
+  Serial.println(F("Modified by nrt"));
+  Serial.print(F("20"));
+  Serial.println(mod_date);
+#endif
 
   // Create the random seed
   randomSeed(analogRead(pinVol));
