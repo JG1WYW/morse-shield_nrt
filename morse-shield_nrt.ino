@@ -18,7 +18,8 @@ String date = "19/12/20";
 
 #if 1 /* JG1WYW */
 //String mod_date = "23/09/12";
-String mod_date = "24/05/01";
+//String mod_date = "24/05/01";
+String mod_date = "26/10/24";
 /*
  * These options were added by JG1WYW
  * So far, off delay and look ahead memory is tested with improved Iambic_A.
@@ -33,6 +34,7 @@ String mod_date = "24/05/01";
  *  - Avoid chattering
  *
  */
+#define OPT_NEW_REV                     /* morse shield's rev: 2024/06/24 */
 #define OPT_OFF_DELAY			/* off delay timers */
 //#define OPT_ON_DELAY			/* on delay timers */
 //#define OPT_REPEAT_ADD                  /* addition by repeat */
@@ -290,6 +292,44 @@ char *keyName[] {
 #define pinSw3      3
 #define pinSw2      4
 #define pinSw1      5
+
+#endif
+
+#ifdef OPT_NEW_REV /* XXX morse shield's hardware revision 2024/06/24 */
+
+int digitalRead_wrapper(int pin)
+{
+  if (pin == pinSw2 || pin == pinSw3 || pin == pinSw4) {
+    int val = analogRead(A2);
+
+    // 計算値に基づくしきい値判定（チャタリング・誤差を考慮したマージンを設定）
+    // 未入力時  : 約1023
+    // SW2押下時 : 0 (理論値0)      -> 50以下をSW2と判定
+    // SW3押下時 : 約326 (理論値1.6V) -> 200～450の間をSW3と判定
+    // SW4押下時 : 約689 (理論値3.37V)-> 550～800の間をSW4と判定
+
+    if (pin == pinSw2) {
+      if (val < 50) {
+        return LOW;
+      }
+    } if (pin == pinSw3) {
+      if (val >= 200 && val <= 450) {
+        return LOW;
+      }
+    } if (pin == pinSw4) {
+      if (val >= 550 && val <= 800) {
+        return LOW;
+      }
+    }
+
+    // Otherwise
+    return HIGH;
+  }
+
+  return digitalRead(pin);
+}
+
+#define digitalRead(p) digitalRead_wrapper(p)
 
 #endif
 
